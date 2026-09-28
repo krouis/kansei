@@ -31,7 +31,15 @@ export interface OpenDatabaseOptions {
   onVersionChange?: () => void;
 }
 
-export async function openDatabase(options: OpenDatabaseOptions = {}): Promise<Database> {
+/**
+ * Opens the raw idb connection, migrated to the current schema.
+ *
+ * Split out from `openDatabase` so that `backup.ts` — which genuinely needs a
+ * transaction over `settings` and `packState` too, stores the `Database` port
+ * deliberately does not expose (see `ports.ts`'s `Transaction`) — can share
+ * exactly this connection instead of opening the database a second time.
+ */
+export async function openRawConnection(options: OpenDatabaseOptions = {}): Promise<IDBPDatabase<KanseiSchema>> {
   let pendingRun: MigrationRun | null = null;
 
   let idb: IDBPDatabase<KanseiSchema>;
@@ -78,6 +86,17 @@ export async function openDatabase(options: OpenDatabaseOptions = {}): Promise<D
     }
   }
 
+  return idb;
+}
+
+/** Opens the database and wraps it as the `Database` port. The normal entry point. */
+export async function openDatabase(options: OpenDatabaseOptions = {}): Promise<Database> {
+  const idb = await openRawConnection(options);
+  return wrapDatabase(idb);
+}
+
+/** Wraps an already-open, already-migrated connection as the `Database` port. */
+export function wrapDatabase(idb: IDBPDatabase<KanseiSchema>): Database {
   let closed = false;
 
   const database: Database = {
