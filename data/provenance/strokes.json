@@ -1,0 +1,110 @@
+{
+  "dataset": "kansei-stroke-references",
+  "description": "Runtime StrokeReference packs (one JSON per character) derived from KanjiVG, for stroke-order animation and tracing.",
+  "outputs": [
+    "public/content/strokes/index.json",
+    "public/content/strokes/<codepoint-hex-5>.json"
+  ],
+  "generatedBy": "scripts/content/build-strokes.mjs",
+  "generatedAt": "2026-09-29",
+  "documentation": "docs/content/STROKES.md",
+  "derivedLicense": {
+    "spdx": "CC-BY-SA-3.0",
+    "url": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "reason": "The resampled polylines are an adaptation of KanjiVG, so share-alike propagates to the generated files in public/content/strokes/.",
+    "requiredAttribution": "Stroke data from KanjiVG (http://kanjivg.tagaini.net), Copyright (C) 2009-2025 Ulrich Apel, CC BY-SA 3.0."
+  },
+  "sources": [
+    {
+      "name": "KanjiVG",
+      "role": "stroke paths and stroke order (redistributed in adapted form)",
+      "version": "r20250816",
+      "url": "https://github.com/KanjiVG/kanjivg",
+      "releaseUrl": "https://github.com/KanjiVG/kanjivg/releases/tag/r20250816",
+      "downloadUrl": "https://github.com/KanjiVG/kanjivg/releases/download/r20250816/kanjivg-20250816-main.zip",
+      "projectHome": "http://kanjivg.tagaini.net",
+      "copyright": "Copyright (C) 2009-2025 Ulrich Apel",
+      "license": "CC-BY-SA-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "redistribution": "Permitted. Requires (1) attribution stating use of KanjiVG in our own copyright header with a link to the KanjiVG website, and (2) share-alike on derived works.",
+      "fetchedAt": "2026-09-28",
+      "localPath": "data/sources/kanjivg-20250816-main.zip",
+      "sha256": "69a2944ec1183086fdee5ba9c1f48bc306b867480a95b2f337f3203bf50689a3",
+      "bytes": 12589510,
+      "notes": "Archive lays files out as kanji/XXXXX.svg, not svg/XXXXX.svg. Contains no variant (<hex>-<name>.svg) files."
+    },
+    {
+      "name": "KANJIDIC2",
+      "role": "verification only — stroke counts cross-checked; no content redistributed",
+      "version": "database_version 2026-271, date_of_creation 2026-09-28",
+      "url": "http://www.edrdg.org/kanjidic/kanjidic2.xml.gz",
+      "projectHome": "http://www.edrdg.org/wiki/index.php/KANJIDIC_Project",
+      "copyright": "Electronic Dictionary Research and Development Group",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "redistribution": "Not redistributed by this dataset; used at build time to verify stroke counts.",
+      "fetchedAt": "2026-09-28",
+      "localPath": "data/sources/kanjidic2.xml"
+    },
+    {
+      "name": "data/kanji-top1000.json",
+      "role": "input — defines which kanji get stroke references",
+      "license": "see that file's own provenance record",
+      "redistribution": "in-repo input, not an upstream source of this dataset"
+    }
+  ],
+  "unsourced": [
+    "Accepted stroke-order variants. orderVariants is [] for every character: KanjiVG ships no machine-readable alternative-order data and none was invented.",
+    "Kana stroke counts have no machine-readable authority in our sources. They are the KanjiVG path count, hand-spot-checked (ne=2, tsu=3) against standard kana stroke-order charts."
+  ],
+  "reproduce": [
+    "mkdir -p data/sources && cd data/sources",
+    "curl -sSL -O https://github.com/KanjiVG/kanjivg/releases/download/r20250816/kanjivg-20250816-main.zip",
+    "unzip -q -o kanjivg-20250816-main.zip -d kanjivg",
+    "curl -sSL -o kanjidic2.xml.gz http://www.edrdg.org/kanjidic/kanjidic2.xml.gz && gunzip -kf kanjidic2.xml.gz",
+    "cd ../.. && node scripts/content/build-strokes.mjs"
+  ],
+  "counts": {
+    "characters": 1177,
+    "kana": 177,
+    "kanji": 1000,
+    "strokes": 10211,
+    "pointsPerStroke": 24,
+    "bytesCharacterFiles": 4876101,
+    "bytesIndex": 157834,
+    "bytesTotal": 5033935,
+    "missing": 0
+  },
+  "verification": {
+    "hardFailures": 0,
+    "spotCheckStrokeCounts": {
+      "viaKanjidic2": { "一": 1, "川": 3, "水": 4, "曜": 18, "語": 14, "議": 20 },
+      "viaHandAssertedKanaChart": { "ね": 2, "ツ": 3 },
+      "allMatched": true
+    },
+    "allKanjiVsKanjidic2": { "checked": 1000, "disagreements": 0 },
+    "allKanjiVsCurriculumDeclaredStrokeCount": { "checked": 1000, "disagreements": 0 },
+    "geometry": {
+      "pointsPerStrokeExact": 24,
+      "allPointsInsideDesignBox": true,
+      "observedExtent": { "xMin": 8.25, "xMax": 102.5, "yMin": 5.77, "yMax": 101.76 },
+      "allPolylinesStrictlyProgressing": true,
+      "endpointsMatchPathEndsWithin": 0.02
+    },
+    "independentReimplementationCrossCheck": {
+      "method": "Separately written Python parser, t-uniform De Casteljau at 4000 steps/segment, compared over all 10211 strokes. One-off, not committed.",
+      "maxArcLengthDeltaDesignUnits": 0.005408,
+      "maxResampledPointDeltaDesignUnits": 0.009351,
+      "withinRoundingBudget": true
+    },
+    "coarselySampledStrokes": {
+      "count": 6,
+      "threshold": "24-point polyline shorter than 95% of true arc length",
+      "characters": ["ゑ", "そ", "ぞ", "れ", "え", "ぇ"]
+    },
+    "knownUpstreamDisagreement": {
+      "statement": "KanjiVG and KANJIDIC2 stroke counts agree on 98.3% of the 6416 kanji both cover (6307 agree, 109 disagree), usually because KanjiVG draws a different glyph form. None of the 109 is in KANJIDIC2's top 1000 by frequency, and none is in the taught set.",
+      "measuredOver": 6416
+    }
+  }
+}

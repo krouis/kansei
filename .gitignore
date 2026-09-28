@@ -1,9 +1,15 @@
+# Upstream source data: fetched by scripts/assets/fetch-sources.mjs and
+# scripts/assets/build-fonts.mjs, never committed (hundreds of MB).
+#
+# `data/sources/*` rather than `data/sources/` on purpose: git cannot re-include a
+# file inside an excluded *directory*, and the provenance lock below must stay
+# committed so every derived dataset's inputs remain verifiable from a fresh clone.
+data/sources/*
+!data/sources/SOURCES.lock.json
+
+# Locally provisioned python for fonttools subsetting.
+.venv-fonttools/
+
 node_modules/
 dist/
-dist-ssr/
-*.local
 .DS_Store
-.vite/
-coverage/
-# Upstream datasets are fetched by scripts/assets/fetch-sources.mjs, not committed.
-data/sources/

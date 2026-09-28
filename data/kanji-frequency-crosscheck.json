@@ -1,0 +1,1527 @@
+{
+  "schema": "kansei-kanji-frequency-crosscheck/1",
+  "generatedAt": "2026-09-28T22:07:30.006Z",
+  "generatedBy": "scripts/content/crosscheck-kanji-frequency.mjs",
+  "reproduce": [
+    "node scripts/assets/fetch-sources.mjs kanjidic2",
+    "node scripts/content/build-kanji-list.mjs",
+    "node scripts/content/crosscheck-kanji-frequency.mjs"
+  ],
+  "purpose": "Evidence of robustness only. The primary ranking in data/kanji-top1000.json is KANJIDIC2 <freq> and is NOT modified by this comparison.",
+  "primary": {
+    "file": "data/kanji-top1000.json",
+    "ranking": "KANJIDIC2 <freq> (Mainichi Shimbun word-frequency analysis, Girardi 1998)",
+    "kanjidicDatabaseVersion": "2026-271",
+    "topN": 1000
+  },
+  "comparisonSource": {
+    "project": "kanji-frequency",
+    "author": "Dmitry Shpika (scriptin)",
+    "repository": "https://github.com/scriptin/kanji-frequency",
+    "ref": "master",
+    "website": "https://scriptin.github.io/kanji-frequency/",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "attributionRequired": "Kanji usage frequency data © 2015-2026 Dmitry Shpika, used under CC BY 4.0. Used here for comparison only; the counts themselves are not redistributed in Kansei content packs.",
+    "redistribution": "CC BY 4.0: share and adapt freely, including commercially, with credit, a link to the licence and an indication of changes. No share-alike obligation.",
+    "methodology": "Characters are counted directly in the corpus text (a raw character tally), not derived from word frequencies. Counts are per corpus; the project explicitly warns that ranks do not match across corpora.",
+    "notes": [
+      "The repository layout changed since the JSON era: data/wikipedia.json, data/aozora.json and data/news.json now return HTTP 404. The current files are CSVs of the form rank,code_point_hex,char,char_count, with rank 0 being an \"all\" total row.",
+      "Each corpus also has an *_ext.csv variant which additionally resolves the iteration mark 々 into entries such as \"(日)々\". Those are multi-character strings, so the plain *_characters.csv files are used here."
+    ]
+  },
+  "comparisons": [
+    {
+      "id": "wikipedia",
+      "label": "Japanese Wikipedia",
+      "description": "100,000 randomly sampled Japanese Wikipedia articles, collected January 2023. All modern Japanese.",
+      "file": "https://raw.githubusercontent.com/scriptin/kanji-frequency/master/data/wikipedia_characters.csv",
+      "cachedAt": "data/sources/kanji-frequency/wikipedia_characters.csv",
+      "sha256": "d92c147b27ae9616461f6082b831213ac0027fed919f3a9815cce44711165567",
+      "bytes": 146925,
+      "fetchedAt": null,
+      "corpusTotalKanjiFromCsv": 59301009,
+      "corpusTotalKanjiStatedOnSite": 59301009,
+      "corpusTotalMatchesStatedFigure": true,
+      "statedTexts": 100000,
+      "distinctKanjiInCsv": 8437,
+      "distinctKanjiStatedOnSite": 8483,
+      "distinctKanjiMatchesStatedFigure": false,
+      "nonKanjiRowsSkipped": 47,
+      "nonKanjiRowsSkippedSample": [
+        "⽉",
+        "⼤",
+        "⾦",
+        "⽇",
+        "⼀",
+        "⼈",
+        "⼯",
+        "⽥",
+        "⻑",
+        "⾼",
+        "⾒",
+        "⼭",
+        "⽣",
+        "⽂",
+        "⽊",
+        "⽤",
+        "⾂",
+        "⻘",
+        "⾏",
+        "⽌"
+      ],
+      "comparedTopN": 1000,
+      "overlapCount": 870,
+      "overlapPercent": 87,
+      "boundary": {
+        "charCountAtRowN": 9636,
+        "rowsSharingThatCount": 2,
+        "firstRowIndexWithThatCount": 999,
+        "note": "The 1000th row sits inside a 2-way tie at char_count 9636; which tied characters fall inside the cut is decided by file order, not by the data.",
+        "overlapPercentIfWholeBoundaryTieIncluded": 87.1,
+        "overlapPercentIfWholeBoundaryTieExcluded": 87
+      },
+      "inKanjidicTopNButNotTheirs": 130,
+      "inTheirsButNotKanjidicTopN": 130,
+      "spearmanRhoOnSharedCharacters": 0.7258,
+      "ourCharactersAbsentFromTheirCorpusEntirely": [],
+      "medianRankOfOurCharactersInTheirFullRanking": 507,
+      "ourCharactersRankedWorseThan2000ByThem": 1,
+      "examplesOnlyInKanjidicTopN": [
+        {
+          "glyph": "午",
+          "kanjidicRank": 154,
+          "theirRank": 1146
+        },
+        {
+          "glyph": "昨",
+          "kanjidicRank": 226,
+          "theirRank": 2018
+        },
+        {
+          "glyph": "疑",
+          "kanjidicRank": 283,
+          "theirRank": 1040
+        },
+        {
+          "glyph": "税",
+          "kanjidicRank": 289,
+          "theirRank": 999
+        },
+        {
+          "glyph": "欧",
+          "kanjidicRank": 421,
+          "theirRank": 1045
+        },
+        {
+          "glyph": "訴",
+          "kanjidicRank": 427,
+          "theirRank": 1032
+        },
+        {
+          "glyph": "脳",
+          "kanjidicRank": 459,
+          "theirRank": 1147
+        },
+        {
+          "glyph": "核",
+          "kanjidicRank": 475,
+          "theirRank": 1108
+        },
+        {
+          "glyph": "融",
+          "kanjidicRank": 481,
+          "theirRank": 1096
+        },
+        {
+          "glyph": "答",
+          "kanjidicRank": 486,
+          "theirRank": 1123
+        },
+        {
+          "glyph": "申",
+          "kanjidicRank": 492,
+          "theirRank": 1052
+        },
+        {
+          "glyph": "渉",
+          "kanjidicRank": 499,
+          "theirRank": 1225
+        },
+        {
+          "glyph": "針",
+          "kanjidicRank": 505,
+          "theirRank": 1193
+        },
+        {
+          "glyph": "討",
+          "kanjidicRank": 528,
+          "theirRank": 1011
+        },
+        {
+          "glyph": "否",
+          "kanjidicRank": 561,
+          "theirRank": 1047
+        },
+        {
+          "glyph": "摘",
+          "kanjidicRank": 564,
+          "theirRank": 1176
+        },
+        {
+          "glyph": "券",
+          "kanjidicRank": 583,
+          "theirRank": 1015
+        },
+        {
+          "glyph": "捜",
+          "kanjidicRank": 592,
+          "theirRank": 1054
+        },
+        {
+          "glyph": "責",
+          "kanjidicRank": 598,
+          "theirRank": 1104
+        },
+        {
+          "glyph": "苦",
+          "kanjidicRank": 623,
+          "theirRank": 1017
+        },
+        {
+          "glyph": "厳",
+          "kanjidicRank": 638,
+          "theirRank": 1115
+        },
+        {
+          "glyph": "維",
+          "kanjidicRank": 643,
+          "theirRank": 1024
+        },
+        {
+          "glyph": "貿",
+          "kanjidicRank": 652,
+          "theirRank": 1511
+        },
+        {
+          "glyph": "遣",
+          "kanjidicRank": 664,
+          "theirRank": 1088
+        },
+        {
+          "glyph": "冷",
+          "kanjidicRank": 667,
+          "theirRank": 1053
+        },
+        {
+          "glyph": "婦",
+          "kanjidicRank": 671,
+          "theirRank": 1026
+        },
+        {
+          "glyph": "益",
+          "kanjidicRank": 674,
+          "theirRank": 1057
+        },
+        {
+          "glyph": "緊",
+          "kanjidicRank": 677,
+          "theirRank": 1358
+        },
+        {
+          "glyph": "余",
+          "kanjidicRank": 680,
+          "theirRank": 1023
+        },
+        {
+          "glyph": "油",
+          "kanjidicRank": 690,
+          "theirRank": 1062
+        },
+        {
+          "glyph": "僚",
+          "kanjidicRank": 709,
+          "theirRank": 1281
+        },
+        {
+          "glyph": "倍",
+          "kanjidicRank": 714,
+          "theirRank": 1081
+        },
+        {
+          "glyph": "均",
+          "kanjidicRank": 715,
+          "theirRank": 1049
+        },
+        {
+          "glyph": "億",
+          "kanjidicRank": 716,
+          "theirRank": 1013
+        },
+        {
+          "glyph": "踏",
+          "kanjidicRank": 723,
+          "theirRank": 1231
+        },
+        {
+          "glyph": "債",
+          "kanjidicRank": 728,
+          "theirRank": 1395
+        },
+        {
+          "glyph": "儀",
+          "kanjidicRank": 739,
+          "theirRank": 1116
+        },
+        {
+          "glyph": "筋",
+          "kanjidicRank": 744,
+          "theirRank": 1110
+        },
+        {
+          "glyph": "狙",
+          "kanjidicRank": 745,
+          "theirRank": 1345
+        },
+        {
+          "glyph": "努",
+          "kanjidicRank": 749,
+          "theirRank": 1545
+        }
+      ],
+      "examplesOnlyInTheirTopN": [
+        {
+          "glyph": "脚",
+          "theirRank": 185,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "典",
+          "theirRank": 329,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "覧",
+          "theirRank": 368,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "艦",
+          "theirRank": 395,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "津",
+          "theirRank": 400,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "詞",
+          "theirRank": 446,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "概",
+          "theirRank": 458,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "魔",
+          "theirRank": 474,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "御",
+          "theirRank": 523,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "帝",
+          "theirRank": 550,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "之",
+          "theirRank": 559,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "堂",
+          "theirRank": 563,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "徳",
+          "theirRank": 564,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "里",
+          "theirRank": 593,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "泉",
+          "theirRank": 596,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "丁",
+          "theirRank": 599,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "賀",
+          "theirRank": 601,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "倉",
+          "theirRank": 602,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "訳",
+          "theirRank": 618,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "聖",
+          "theirRank": 622,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "陽",
+          "theirRank": 623,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "頃",
+          "theirRank": 624,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "祭",
+          "theirRank": 637,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "宝",
+          "theirRank": 638,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "照",
+          "theirRank": 648,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "瀬",
+          "theirRank": 675,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "群",
+          "theirRank": 688,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "弟",
+          "theirRank": 691,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "奏",
+          "theirRank": 705,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "臣",
+          "theirRank": 719,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "翌",
+          "theirRank": 722,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "鳥",
+          "theirRank": 726,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "華",
+          "theirRank": 727,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "郷",
+          "theirRank": 728,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "恋",
+          "theirRank": 730,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "甲",
+          "theirRank": 734,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "沿",
+          "theirRank": 738,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "舎",
+          "theirRank": 740,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "藩",
+          "theirRank": 741,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "彦",
+          "theirRank": 746,
+          "kanjidicRank": null
+        }
+      ]
+    },
+    {
+      "id": "aozora",
+      "label": "Aozora Bunko",
+      "description": "Books from Aozora Bunko: 17,115 texts. Mostly out-of-copyright literature, so the majority is more than 70 years old; some texts have been modernised.",
+      "file": "https://raw.githubusercontent.com/scriptin/kanji-frequency/master/data/aozora_characters.csv",
+      "cachedAt": "data/sources/kanji-frequency/aozora_characters.csv",
+      "sha256": "66f74f31de3529407ac962111a0bc3e9c0803ccf748df286a6f6f4598a872e14",
+      "bytes": 140649,
+      "fetchedAt": null,
+      "corpusTotalKanjiFromCsv": 67805014,
+      "corpusTotalKanjiStatedOnSite": 67805014,
+      "corpusTotalMatchesStatedFigure": true,
+      "statedTexts": 17115,
+      "distinctKanjiInCsv": 7915,
+      "distinctKanjiStatedOnSite": 7914,
+      "distinctKanjiMatchesStatedFigure": false,
+      "nonKanjiRowsSkipped": 0,
+      "nonKanjiRowsSkippedSample": [],
+      "comparedTopN": 1000,
+      "overlapCount": 757,
+      "overlapPercent": 75.7,
+      "boundary": {
+        "charCountAtRowN": 12906,
+        "rowsSharingThatCount": 1,
+        "firstRowIndexWithThatCount": 999,
+        "note": "No tie straddles the top-N boundary.",
+        "overlapPercentIfWholeBoundaryTieIncluded": 75.7,
+        "overlapPercentIfWholeBoundaryTieExcluded": 75.6
+      },
+      "inKanjidicTopNButNotTheirs": 243,
+      "inTheirsButNotKanjidicTopN": 243,
+      "spearmanRhoOnSharedCharacters": 0.5714,
+      "ourCharactersAbsentFromTheirCorpusEntirely": [],
+      "medianRankOfOurCharactersInTheirFullRanking": 559,
+      "ourCharactersRankedWorseThan2000ByThem": 27,
+      "examplesOnlyInKanjidicTopN": [
+        {
+          "glyph": "党",
+          "kanjidicRank": 39,
+          "theirRank": 1036
+        },
+        {
+          "glyph": "協",
+          "kanjidicRank": 121,
+          "theirRank": 1422
+        },
+        {
+          "glyph": "区",
+          "kanjidicRank": 137,
+          "theirRank": 1071
+        },
+        {
+          "glyph": "県",
+          "kanjidicRank": 140,
+          "theirRank": 1354
+        },
+        {
+          "glyph": "設",
+          "kanjidicRank": 145,
+          "theirRank": 1087
+        },
+        {
+          "glyph": "査",
+          "kanjidicRank": 184,
+          "theirRank": 1008
+        },
+        {
+          "glyph": "委",
+          "kanjidicRank": 187,
+          "theirRank": 1503
+        },
+        {
+          "glyph": "策",
+          "kanjidicRank": 209,
+          "theirRank": 1141
+        },
+        {
+          "glyph": "革",
+          "kanjidicRank": 249,
+          "theirRank": 1136
+        },
+        {
+          "glyph": "減",
+          "kanjidicRank": 261,
+          "theirRank": 1046
+        },
+        {
+          "glyph": "企",
+          "kanjidicRank": 278,
+          "theirRank": 1578
+        },
+        {
+          "glyph": "税",
+          "kanjidicRank": 289,
+          "theirRank": 1575
+        },
+        {
+          "glyph": "検",
+          "kanjidicRank": 290,
+          "theirRank": 1015
+        },
+        {
+          "glyph": "裁",
+          "kanjidicRank": 297,
+          "theirRank": 1196
+        },
+        {
+          "glyph": "球",
+          "kanjidicRank": 302,
+          "theirRank": 1129
+        },
+        {
+          "glyph": "営",
+          "kanjidicRank": 303,
+          "theirRank": 1296
+        },
+        {
+          "glyph": "援",
+          "kanjidicRank": 312,
+          "theirRank": 1820
+        },
+        {
+          "glyph": "費",
+          "kanjidicRank": 321,
+          "theirRank": 1075
+        },
+        {
+          "glyph": "施",
+          "kanjidicRank": 323,
+          "theirRank": 1584
+        },
+        {
+          "glyph": "防",
+          "kanjidicRank": 331,
+          "theirRank": 1124
+        },
+        {
+          "glyph": "補",
+          "kanjidicRank": 332,
+          "theirRank": 1498
+        },
+        {
+          "glyph": "収",
+          "kanjidicRank": 337,
+          "theirRank": 1144
+        },
+        {
+          "glyph": "規",
+          "kanjidicRank": 349,
+          "theirRank": 1107
+        },
+        {
+          "glyph": "展",
+          "kanjidicRank": 352,
+          "theirRank": 999
+        },
+        {
+          "glyph": "導",
+          "kanjidicRank": 354,
+          "theirRank": 1132
+        },
+        {
+          "glyph": "鮮",
+          "kanjidicRank": 355,
+          "theirRank": 1168
+        },
+        {
+          "glyph": "副",
+          "kanjidicRank": 360,
+          "theirRank": 2079
+        },
+        {
+          "glyph": "算",
+          "kanjidicRank": 361,
+          "theirRank": 1146
+        },
+        {
+          "glyph": "幹",
+          "kanjidicRank": 364,
+          "theirRank": 1569
+        },
+        {
+          "glyph": "輸",
+          "kanjidicRank": 371,
+          "theirRank": 1910
+        },
+        {
+          "glyph": "率",
+          "kanjidicRank": 383,
+          "theirRank": 1318
+        },
+        {
+          "glyph": "域",
+          "kanjidicRank": 396,
+          "theirRank": 1572
+        },
+        {
+          "glyph": "監",
+          "kanjidicRank": 408,
+          "theirRank": 1203
+        },
+        {
+          "glyph": "環",
+          "kanjidicRank": 409,
+          "theirRank": 1494
+        },
+        {
+          "glyph": "審",
+          "kanjidicRank": 412,
+          "theirRank": 1437
+        },
+        {
+          "glyph": "欧",
+          "kanjidicRank": 421,
+          "theirRank": 1628
+        },
+        {
+          "glyph": "担",
+          "kanjidicRank": 422,
+          "theirRank": 1512
+        },
+        {
+          "glyph": "準",
+          "kanjidicRank": 425,
+          "theirRank": 1190
+        },
+        {
+          "glyph": "賞",
+          "kanjidicRank": 426,
+          "theirRank": 1328
+        },
+        {
+          "glyph": "訴",
+          "kanjidicRank": 427,
+          "theirRank": 1293
+        }
+      ],
+      "examplesOnlyInTheirTopN": [
+        {
+          "glyph": "云",
+          "theirRank": 36,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "御",
+          "theirRank": 55,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "眼",
+          "theirRank": 113,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "僕",
+          "theirRank": 125,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "其",
+          "theirRank": 147,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "此",
+          "theirRank": 167,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "如",
+          "theirRank": 220,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "誰",
+          "theirRank": 225,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "頃",
+          "theirRank": 230,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "之",
+          "theirRank": 236,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "又",
+          "theirRank": 251,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "來",
+          "theirRank": 259,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "娘",
+          "theirRank": 292,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "寝",
+          "theirRank": 330,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "酒",
+          "theirRank": 338,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "雪",
+          "theirRank": 343,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "暗",
+          "theirRank": 346,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "或",
+          "theirRank": 353,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "兄",
+          "theirRank": 366,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "茶",
+          "theirRank": 367,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "掛",
+          "theirRank": 385,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "奥",
+          "theirRank": 388,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "俺",
+          "theirRank": 396,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "片",
+          "theirRank": 397,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "胸",
+          "theirRank": 404,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "敷",
+          "theirRank": 406,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "皆",
+          "theirRank": 409,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "驚",
+          "theirRank": 415,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "幾",
+          "theirRank": 419,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "悲",
+          "theirRank": 420,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "廻",
+          "theirRank": 426,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "那",
+          "theirRank": 431,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "於",
+          "theirRank": 447,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "忘",
+          "theirRank": 448,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "鳴",
+          "theirRank": 449,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "妙",
+          "theirRank": 452,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "晩",
+          "theirRank": 455,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "奴",
+          "theirRank": 457,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "泣",
+          "theirRank": 461,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "氣",
+          "theirRank": 462,
+          "kanjidicRank": null
+        }
+      ]
+    },
+    {
+      "id": "news",
+      "label": "Japanese Wikinews",
+      "description": "News articles from Japanese Wikinews: 3,753 texts, distributed across roughly 2005-2023. The smallest of the three corpora.",
+      "file": "https://raw.githubusercontent.com/scriptin/kanji-frequency/master/data/news_characters.csv",
+      "cachedAt": "data/sources/kanji-frequency/news_characters.csv",
+      "sha256": "ed335c1bdf089f6be977ab6975285abc56e8f2d41665e7885ba0d5e3ccf256df",
+      "bytes": 47446,
+      "fetchedAt": null,
+      "corpusTotalKanjiFromCsv": 1117683,
+      "corpusTotalKanjiStatedOnSite": 1117683,
+      "corpusTotalMatchesStatedFigure": true,
+      "statedTexts": 3753,
+      "distinctKanjiInCsv": 2940,
+      "distinctKanjiStatedOnSite": 2939,
+      "distinctKanjiMatchesStatedFigure": false,
+      "nonKanjiRowsSkipped": 0,
+      "nonKanjiRowsSkippedSample": [],
+      "comparedTopN": 1000,
+      "overlapCount": 901,
+      "overlapPercent": 90.1,
+      "boundary": {
+        "charCountAtRowN": 135,
+        "rowsSharingThatCount": 9,
+        "firstRowIndexWithThatCount": 993,
+        "note": "The 1000th row sits inside a 9-way tie at char_count 135; which tied characters fall inside the cut is decided by file order, not by the data.",
+        "overlapPercentIfWholeBoundaryTieIncluded": 90.2,
+        "overlapPercentIfWholeBoundaryTieExcluded": 89.7
+      },
+      "inKanjidicTopNButNotTheirs": 99,
+      "inTheirsButNotKanjidicTopN": 99,
+      "spearmanRhoOnSharedCharacters": 0.7851,
+      "ourCharactersAbsentFromTheirCorpusEntirely": [],
+      "medianRankOfOurCharactersInTheirFullRanking": 445,
+      "ourCharactersRankedWorseThan2000ByThem": 0,
+      "examplesOnlyInKanjidicTopN": [
+        {
+          "glyph": "六",
+          "kanjidicRank": 93,
+          "theirRank": 773
+        },
+        {
+          "glyph": "七",
+          "kanjidicRank": 115,
+          "theirRank": 759
+        },
+        {
+          "glyph": "景",
+          "kanjidicRank": 419,
+          "theirRank": 702
+        },
+        {
+          "glyph": "蔵",
+          "kanjidicRank": 468,
+          "theirRank": 714
+        },
+        {
+          "glyph": "易",
+          "kanjidicRank": 571,
+          "theirRank": 768
+        },
+        {
+          "glyph": "色",
+          "kanjidicRank": 621,
+          "theirRank": 703
+        },
+        {
+          "glyph": "友",
+          "kanjidicRank": 622,
+          "theirRank": 703
+        },
+        {
+          "glyph": "献",
+          "kanjidicRank": 637,
+          "theirRank": 730
+        },
+        {
+          "glyph": "彼",
+          "kanjidicRank": 648,
+          "theirRank": 738
+        },
+        {
+          "glyph": "貿",
+          "kanjidicRank": 652,
+          "theirRank": 814
+        },
+        {
+          "glyph": "講",
+          "kanjidicRank": 653,
+          "theirRank": 708
+        },
+        {
+          "glyph": "冷",
+          "kanjidicRank": 667,
+          "theirRank": 734
+        },
+        {
+          "glyph": "婦",
+          "kanjidicRank": 671,
+          "theirRank": 718
+        },
+        {
+          "glyph": "顔",
+          "kanjidicRank": 676,
+          "theirRank": 727
+        },
+        {
+          "glyph": "昭",
+          "kanjidicRank": 697,
+          "theirRank": 701
+        },
+        {
+          "glyph": "僚",
+          "kanjidicRank": 709,
+          "theirRank": 700
+        },
+        {
+          "glyph": "伸",
+          "kanjidicRank": 730,
+          "theirRank": 698
+        },
+        {
+          "glyph": "儀",
+          "kanjidicRank": 739,
+          "theirRank": 706
+        },
+        {
+          "glyph": "筋",
+          "kanjidicRank": 744,
+          "theirRank": 751
+        },
+        {
+          "glyph": "狙",
+          "kanjidicRank": 745,
+          "theirRank": 747
+        },
+        {
+          "glyph": "努",
+          "kanjidicRank": 749,
+          "theirRank": 729
+        },
+        {
+          "glyph": "葬",
+          "kanjidicRank": 754,
+          "theirRank": 734
+        },
+        {
+          "glyph": "略",
+          "kanjidicRank": 774,
+          "theirRank": 734
+        },
+        {
+          "glyph": "浮",
+          "kanjidicRank": 776,
+          "theirRank": 767
+        },
+        {
+          "glyph": "層",
+          "kanjidicRank": 801,
+          "theirRank": 735
+        },
+        {
+          "glyph": "老",
+          "kanjidicRank": 803,
+          "theirRank": 711
+        },
+        {
+          "glyph": "角",
+          "kanjidicRank": 805,
+          "theirRank": 719
+        },
+        {
+          "glyph": "房",
+          "kanjidicRank": 808,
+          "theirRank": 706
+        },
+        {
+          "glyph": "庭",
+          "kanjidicRank": 816,
+          "theirRank": 742
+        },
+        {
+          "glyph": "措",
+          "kanjidicRank": 818,
+          "theirRank": 722
+        },
+        {
+          "glyph": "仏",
+          "kanjidicRank": 819,
+          "theirRank": 755
+        },
+        {
+          "glyph": "貨",
+          "kanjidicRank": 822,
+          "theirRank": 706
+        },
+        {
+          "glyph": "陣",
+          "kanjidicRank": 828,
+          "theirRank": 701
+        },
+        {
+          "glyph": "抑",
+          "kanjidicRank": 834,
+          "theirRank": 718
+        },
+        {
+          "glyph": "雑",
+          "kanjidicRank": 839,
+          "theirRank": 710
+        },
+        {
+          "glyph": "困",
+          "kanjidicRank": 843,
+          "theirRank": 701
+        },
+        {
+          "glyph": "徴",
+          "kanjidicRank": 850,
+          "theirRank": 734
+        },
+        {
+          "glyph": "誌",
+          "kanjidicRank": 851,
+          "theirRank": 704
+        },
+        {
+          "glyph": "秘",
+          "kanjidicRank": 862,
+          "theirRank": 763
+        },
+        {
+          "glyph": "拒",
+          "kanjidicRank": 863,
+          "theirRank": 699
+        }
+      ],
+      "examplesOnlyInTheirTopN": [
+        {
+          "glyph": "典",
+          "theirRank": 80,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "津",
+          "theirRank": 390,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "頃",
+          "theirRank": 438,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "偽",
+          "theirRank": 470,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "縄",
+          "theirRank": 483,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "騎",
+          "theirRank": 513,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "鳥",
+          "theirRank": 516,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "秒",
+          "theirRank": 520,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "臣",
+          "theirRank": 527,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "携",
+          "theirRank": 529,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "賀",
+          "theirRank": 532,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "覇",
+          "theirRank": 534,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "甲",
+          "theirRank": 534,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "訃",
+          "theirRank": 536,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "梅",
+          "theirRank": 546,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "症",
+          "theirRank": 549,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "杯",
+          "theirRank": 552,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "雪",
+          "theirRank": 558,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "撲",
+          "theirRank": 561,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "泉",
+          "theirRank": 565,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "酒",
+          "theirRank": 565,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "謝",
+          "theirRank": 567,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "宙",
+          "theirRank": 570,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "戒",
+          "theirRank": 571,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "麻",
+          "theirRank": 581,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "剤",
+          "theirRank": 585,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "索",
+          "theirRank": 586,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "陽",
+          "theirRank": 593,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "潟",
+          "theirRank": 596,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "盗",
+          "theirRank": 596,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "訳",
+          "theirRank": 600,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "巡",
+          "theirRank": 609,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "牧",
+          "theirRank": 610,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "砂",
+          "theirRank": 612,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "猛",
+          "theirRank": 614,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "銃",
+          "theirRank": 614,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "里",
+          "theirRank": 615,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "熊",
+          "theirRank": 616,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "誤",
+          "theirRank": 622,
+          "kanjidicRank": null
+        },
+        {
+          "glyph": "徳",
+          "theirRank": 626,
+          "kanjidicRank": null
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "overlapPercentByCorpus": {
+      "wikipedia": 87,
+      "aozora": 75.7,
+      "news": 90.1
+    },
+    "overlapPercentRange": [
+      75.7,
+      90.1
+    ],
+    "meanOverlapPercent": 84.27,
+    "charactersCorroboratedByAtLeastOneCorpusTopN": 972,
+    "charactersCorroboratedByAtLeastOneCorpusPercent": 97.2,
+    "charactersMissedByEveryComparisonCorpusTopN": 28,
+    "charactersMissedByEveryComparisonCorpusTopNGlyphs": [
+      {
+        "glyph": "貿",
+        "kanjidicRank": 652
+      },
+      {
+        "glyph": "僚",
+        "kanjidicRank": 709
+      },
+      {
+        "glyph": "狙",
+        "kanjidicRank": 745
+      },
+      {
+        "glyph": "努",
+        "kanjidicRank": 749
+      },
+      {
+        "glyph": "葬",
+        "kanjidicRank": 754
+      },
+      {
+        "glyph": "措",
+        "kanjidicRank": 818
+      },
+      {
+        "glyph": "抑",
+        "kanjidicRank": 834
+      },
+      {
+        "glyph": "拒",
+        "kanjidicRank": 863
+      },
+      {
+        "glyph": "喪",
+        "kanjidicRank": 885
+      },
+      {
+        "glyph": "邸",
+        "kanjidicRank": 905
+      },
+      {
+        "glyph": "汚",
+        "kanjidicRank": 908
+      },
+      {
+        "glyph": "縮",
+        "kanjidicRank": 909
+      },
+      {
+        "glyph": "慮",
+        "kanjidicRank": 916
+      },
+      {
+        "glyph": "枠",
+        "kanjidicRank": 922
+      },
+      {
+        "glyph": "緩",
+        "kanjidicRank": 933
+      },
+      {
+        "glyph": "需",
+        "kanjidicRank": 935
+      },
+      {
+        "glyph": "貢",
+        "kanjidicRank": 956
+      },
+      {
+        "glyph": "賃",
+        "kanjidicRank": 961
+      },
+      {
+        "glyph": "徹",
+        "kanjidicRank": 968
+      },
+      {
+        "glyph": "焦",
+        "kanjidicRank": 973
+      },
+      {
+        "glyph": "析",
+        "kanjidicRank": 980
+      },
+      {
+        "glyph": "預",
+        "kanjidicRank": 981
+      },
+      {
+        "glyph": "簡",
+        "kanjidicRank": 983
+      },
+      {
+        "glyph": "挑",
+        "kanjidicRank": 989
+      },
+      {
+        "glyph": "紛",
+        "kanjidicRank": 994
+      },
+      {
+        "glyph": "貸",
+        "kanjidicRank": 995
+      },
+      {
+        "glyph": "促",
+        "kanjidicRank": 998
+      },
+      {
+        "glyph": "慎",
+        "kanjidicRank": 999
+      }
+    ],
+    "overlapBoundsByCorpus": {
+      "wikipedia": [
+        87,
+        87.1
+      ],
+      "aozora": [
+        75.6,
+        75.7
+      ],
+      "news": [
+        89.7,
+        90.2
+      ]
+    },
+    "caveats": [
+      "The comparison corpora count characters directly; KANJIDIC2 <freq> is derived from WORD frequencies. The two are measuring related but not identical things.",
+      "The comparison corpora are modern (Wikipedia sampled 2023, Wikinews ~2005-2023); KANJIDIC2 <freq> reflects mid-1990s newspaper text. Some disagreement is genuine language change, not error in either list.",
+      "The Wikinews corpus is small (1.1M kanji), so its tail counts are low integers with heavy ties; its top-1000 boundary is correspondingly soft. See each comparison's `boundary` block.",
+      "Aozora is literary and largely pre-war, which is the least similar register to a beginner curriculum; its lower overlap is expected and is not evidence against the primary list.",
+      "For every corpus, the number of distinct kanji found in the CSV is exactly one more than the \"Uniq. kanji\" figure published on the project website. The cause was not determined; it does not affect a top-1000 cut. Reported here rather than smoothed over."
+    ],
+    "interpretation": "A top-1000 cut is a threshold on a continuous, heavy-tailed distribution, so exact set equality between corpora is not expected and would be suspicious. Disagreement concentrates at the boundary and on register-specific vocabulary (newspaper/administrative kanji versus literary kanji). Read the overlap figure as: this fraction of the list is corroborated by an independent modern character count of a different corpus."
+  }
+}

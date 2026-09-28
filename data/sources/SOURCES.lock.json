@@ -1,0 +1,55 @@
+{
+  "schema": "kansei-sources-lock/1",
+  "generatedAt": "2026-09-28T22:08:02.905Z",
+  "files": {
+    "jmdict-e-examp": {
+      "id": "jmdict-e-examp",
+      "file": "data/sources/JMdict_e_examp.gz",
+      "url": "http://ftp.edrdg.org/pub/Nihongo/JMdict_e_examp.gz",
+      "project": "JMdict (English, with examples)",
+      "publisher": "Electronic Dictionary Research and Development Group (EDRDG)",
+      "homepage": "https://www.edrdg.org/jmdict/j_jmdict.html",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://www.edrdg.org/edrdg/licence.html",
+      "redistribution": "Redistribution and derivative works permitted under CC BY-SA 4.0 with attribution to the EDRDG and a statement of changes; derived works must be shared alike.",
+      "notes": "Japanese-English dictionary with example sentence links; source of beginner vocabulary.",
+      "bytes": 13071961,
+      "sha256": "18a075c6312692b1beb2cf2a0ac5f377874e7d3df5e7412eb7a83117603344cb",
+      "fetchedAt": "2026-09-28T21:57:34.697Z",
+      "fetchedBy": "scripts/assets/fetch-sources.mjs"
+    },
+    "kanjidic2": {
+      "id": "kanjidic2",
+      "file": "data/sources/kanjidic2.xml.gz",
+      "url": "http://ftp.edrdg.org/pub/Nihongo/kanjidic2.xml.gz",
+      "project": "KANJIDIC2",
+      "publisher": "Electronic Dictionary Research and Development Group (EDRDG)",
+      "homepage": "http://www.edrdg.org/wiki/index.php/KANJIDIC_Project",
+      "license": "CC-BY-SA-4.0",
+      "licenseUrl": "https://www.edrdg.org/edrdg/licence.html",
+      "redistribution": "Redistribution and derivative works permitted under CC BY-SA 4.0 with attribution to the EDRDG and a statement of changes; derived works must be shared alike.",
+      "notes": "Kanji dictionary: meanings, on/kun readings, radicals, stroke counts, grade, frequency rank.",
+      "bytes": 1488576,
+      "sha256": "5a4c966cddba225f0a33cb866c66ceb4867a3534feb47c24e6f85e535fa42b9d",
+      "fetchedAt": "2026-09-28T22:08:02.905Z",
+      "fetchedBy": "scripts/assets/fetch-sources.mjs"
+    },
+    "kanjivg": {
+      "id": "kanjivg",
+      "file": "data/sources/kanjivg-20250816-main.zip",
+      "url": "https://github.com/KanjiVG/kanjivg/releases/download/r20250816/kanjivg-20250816-main.zip",
+      "project": "KanjiVG r20250816",
+      "publisher": "Ulrich Apel / KanjiVG contributors",
+      "homepage": "https://kanjivg.tagaini.net/",
+      "license": "CC-BY-SA-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "redistribution": "Redistribution and derivative works permitted under CC BY-SA 3.0 with attribution to Ulrich Apel and the KanjiVG project; derived works must be shared alike.",
+      "notes": "Per-stroke SVG outlines and stroke order for kanji and kana.",
+      "bytes": 12589510,
+      "sha256": "69a2944ec1183086fdee5ba9c1f48bc306b867480a95b2f337f3203bf50689a3",
+      "fetchedAt": "2026-09-28T21:57:31.813Z",
+      "fetchedBy": "scripts/assets/fetch-sources.mjs"
+    }
+  },
+  "note": "SHA-256 and size of every upstream file fetched into data/sources/. data/sources/ is gitignored; this lock is committed so downloads are verifiable and reproducible."
+}

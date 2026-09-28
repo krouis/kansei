@@ -1,0 +1,15 @@
+The stroke reference files in this directory (index.json and <codepoint>.json) are
+derived from KanjiVG r20250816 by scripts/content/build-strokes.mjs.
+
+  Stroke data from KanjiVG (http://kanjivg.tagaini.net),
+  Copyright (C) 2009-2025 Ulrich Apel.
+  Licensed under Creative Commons Attribution-Share Alike 3.0
+  (https://creativecommons.org/licenses/by-sa/3.0/).
+
+KanjiVG's licence requires that you state your use of KanjiVG in your own copyright
+header and link to the KanjiVG website. Because these files are an adaptation, the
+share-alike condition applies to them: they remain under CC BY-SA 3.0 regardless of
+the licence covering the rest of this repository.
+
+Any application shipping these files must display the attribution above.
+See docs/content/STROKES.md for full provenance, coverage and verification notes.

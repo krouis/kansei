@@ -299,10 +299,34 @@ async function main() {
 
     try {
       const size = await fileSize(dest);
-      let digest = null;
+      const digest = size == null ? null : await sha256File(dest);
+
+      // --verify never touches the network: it only reports what is on disk
+      // against the lock. Checked before the up-to-date shortcut so that a
+      // verified-good file is still reported explicitly rather than silently.
+      if (verifyOnly) {
+        if (size == null) {
+          process.stderr.write(`  MISSING (run without --verify to fetch)\n`);
+          failures += 1;
+        } else if (!prior) {
+          process.stderr.write(`  UNRECORDED: present (${fmtBytes(size)}, sha256 ${digest}) but absent from the lock\n`);
+          failures += 1;
+        } else if (prior.sha256 !== digest || prior.bytes !== size) {
+          process.stderr.write(`  MISMATCH: on disk ${digest} (${size} B), lock ${prior.sha256} (${prior.bytes} B)\n`);
+          failures += 1;
+        } else {
+          const magicProblem = await checkMagic(src, dest);
+          if (magicProblem) {
+            process.stderr.write(`  FORMAT: ${magicProblem}\n`);
+            failures += 1;
+          } else {
+            process.stderr.write(`  verified ${fmtBytes(size)}, sha256 ${digest}\n`);
+          }
+        }
+        continue;
+      }
 
       if (size != null && !force) {
-        digest = await sha256File(dest);
         if (prior && prior.sha256 === digest && prior.bytes === size) {
           const magicProblem = await checkMagic(src, dest);
           if (magicProblem) throw new Error(`on-disk file fails format check: ${magicProblem}`);
@@ -312,19 +336,6 @@ async function main() {
         if (prior && prior.sha256 !== digest) {
           process.stderr.write(`  digest differs from lock — upstream changed or file corrupt; re-fetching\n`);
         }
-      }
-
-      if (verifyOnly) {
-        if (size == null) {
-          process.stderr.write(`  MISSING (run without --verify to fetch)\n`);
-          failures += 1;
-        } else if (prior && prior.sha256 !== digest) {
-          process.stderr.write(`  MISMATCH: on disk ${digest}, lock ${prior.sha256}\n`);
-          failures += 1;
-        } else {
-          process.stderr.write(`  present, ${fmtBytes(size)}, sha256 ${digest}\n`);
-        }
-        continue;
       }
 
       const wroteTo = size != null && !force && !prior ? dest : await download(src, { force });
@@ -356,8 +367,10 @@ async function main() {
 
   if (!verifyOnly) await writeLock(lock);
   if (failures) {
-    process.stderr.write(`\n${failures} source(s) failed.\n`);
+    process.stderr.write(`\n${failures} source(s) ${verifyOnly ? 'failed verification' : 'failed'}.\n`);
     process.exitCode = 1;
+  } else if (verifyOnly) {
+    process.stderr.write(`\nAll ${selected.length} source(s) match ${path.relative(REPO, LOCK_PATH)}.\n`);
   } else {
     process.stderr.write(`\nAll ${selected.length} source(s) present and recorded in ${path.relative(REPO, LOCK_PATH)}.\n`);
   }
