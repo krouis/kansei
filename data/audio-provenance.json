@@ -1,0 +1,203 @@
+{
+  "generatedAt": "2026-09-28T22:23:18.029Z",
+  "generator": "scripts/assets/fetch-audio.mjs",
+  "reproduce": "npm run audio:fetch",
+  "policy": {
+    "noSpeechSynthesis": "Kansei never substitutes text-to-speech or any synthesised audio for a missing recording. When a key is absent from `clips`, the AudioRef is null and the listening exercise is not generated.",
+    "noPlaceholders": "No silent, generated or stand-in clip is ever written.",
+    "requireDocumentedNativeSpeaker": true,
+    "redistributableLicensesOnly": [
+      "PD",
+      "CC0-1.0",
+      "CC-BY-1.0",
+      "CC-BY-2.0",
+      "CC-BY-2.5",
+      "CC-BY-3.0",
+      "CC-BY-4.0",
+      "CC-BY-SA-1.0",
+      "CC-BY-SA-2.0",
+      "CC-BY-SA-2.5",
+      "CC-BY-SA-3.0",
+      "CC-BY-SA-4.0"
+    ],
+    "noTranscoding": "Files are byte-for-byte as the source serves them; the original container is kept."
+  },
+  "sources": [
+    {
+      "id": "commons-kana",
+      "name": "Wikimedia Commons — isolated Japanese syllable recordings",
+      "url": "https://commons.wikimedia.org/wiki/Category:Pronunciation_of_Japanese_syllables",
+      "api": "https://commons.wikimedia.org/w/api.php",
+      "licenses": [
+        "PD",
+        "CC0-1.0",
+        "CC-BY-*",
+        "CC-BY-SA-*"
+      ],
+      "redistribution": "Permitted. PD/CC0 need no credit; CC BY and CC BY-SA require per-file author + licence credit, and CC BY-SA requires that any adapted clip be released under the same licence. Kansei adapts nothing.",
+      "probedNamePatterns": [
+        "File:Japanese <romaji>.ogg",
+        "File:Japanese <romaji>.oga",
+        "File:Ja-<Romaji>.oga",
+        "File:Ja-<Romaji>.ogg",
+        "intitle:<kana> filetype:audio (e.g. intitle:きゃ)"
+      ]
+    },
+    {
+      "id": "lingualibre-words",
+      "name": "Lingua Libre — Japanese word recordings (hosted on Wikimedia Commons)",
+      "url": "https://commons.wikimedia.org/w/index.php?title=Special:ListFiles&ilshowall=1",
+      "commonsPrefix": "LL-Q5287 (jpn)-",
+      "speakerProficiencySource": "https://lingualibre.org/sparql",
+      "speakerProficiencyCriterion": "speaker P4=Japanese(Q389) with qualifier P16=native(Q15)",
+      "licenses": [
+        "CC0-1.0",
+        "CC-BY-SA-4.0"
+      ],
+      "redistribution": "Permitted. CC BY-SA 4.0 files require per-file credit (speaker name, licence, licence URL, link to the file page) and share-alike on adaptations."
+    }
+  ],
+  "sourcesRejected": [
+    {
+      "id": "shtooka",
+      "name": "Shtooka project",
+      "url": "http://shtooka.net/",
+      "reason": "DEAD. As of 2026-09-28 shtooka.net and www.shtooka.net resolve and 301 to an unrelated commercial domain (xoilaczzw.cc); download.shtooka.net and packs.shtooka.net no longer resolve; the swac-collections.org mirror answers 503 behind an expired TLS certificate. Nothing may be fetched from any of these."
+    },
+    {
+      "id": "tts",
+      "name": "Any speech synthesiser (browser SpeechSynthesis, server-side TTS, neural voices)",
+      "url": null,
+      "reason": "Forbidden by product rule: Kansei only ever plays real human recordings."
+    }
+  ],
+  "coverage": {
+    "kana": {
+      "syllableSoundsTargeted": 104,
+      "syllableSoundsWithAudio": 71,
+      "syllableSoundsWithoutAudio": [
+        "kya",
+        "kyu",
+        "kyo",
+        "sha",
+        "shu",
+        "sho",
+        "cha",
+        "chu",
+        "cho",
+        "nya",
+        "nyu",
+        "nyo",
+        "hya",
+        "hyu",
+        "hyo",
+        "mya",
+        "myu",
+        "myo",
+        "rya",
+        "ryu",
+        "ryo",
+        "gya",
+        "gyu",
+        "gyo",
+        "ja",
+        "ju",
+        "jo",
+        "bya",
+        "byu",
+        "byo",
+        "pya",
+        "pyu",
+        "pyo"
+      ],
+      "note": "A single isolated-syllable recording is used for both the hiragana and the katakana key, because the sound is identical."
+    },
+    "words": {
+      "distinctWordsWithAudio": 358,
+      "note": "Keyed by the Japanese spelling exactly as it appears in the Lingua Libre filename (NFC). The content build joins these keys against VocabEntry.spelling; a vocabulary entry with no matching key keeps audio: null.",
+      "linguaLibreSpeakers": [
+        {
+          "speaker": "CKali",
+          "count": 531,
+          "nativeDocumented": false,
+          "llEntity": null
+        },
+        {
+          "speaker": "葵心",
+          "count": 219,
+          "nativeDocumented": true,
+          "llEntity": "Q1392056"
+        },
+        {
+          "speaker": "Zsrtrgh",
+          "count": 132,
+          "nativeDocumented": true,
+          "llEntity": "Q1564396"
+        },
+        {
+          "speaker": "I_JethroBT",
+          "count": 128,
+          "nativeDocumented": false,
+          "llEntity": null
+        },
+        {
+          "speaker": "フィリピン人",
+          "count": 14,
+          "nativeDocumented": false,
+          "llEntity": null
+        },
+        {
+          "speaker": "LaKoalita",
+          "count": 13,
+          "nativeDocumented": false,
+          "llEntity": null
+        },
+        {
+          "speaker": "Higa4",
+          "count": 12,
+          "nativeDocumented": true,
+          "llEntity": "Q287558"
+        },
+        {
+          "speaker": "AureaCapra",
+          "count": 2,
+          "nativeDocumented": false,
+          "llEntity": null
+        },
+        {
+          "speaker": "Yug",
+          "count": 2,
+          "nativeDocumented": false,
+          "llEntity": null
+        },
+        {
+          "speaker": "higa4_kagoshima_(Higa4)",
+          "count": 2,
+          "nativeDocumented": true,
+          "llEntity": "Q287558"
+        },
+        {
+          "speaker": "DiasAushakhman",
+          "count": 1,
+          "nativeDocumented": false,
+          "llEntity": null
+        },
+        {
+          "speaker": "Wiktionairy",
+          "count": 1,
+          "nativeDocumented": false,
+          "llEntity": null
+        }
+      ],
+      "linguaLibreSparqlFailed": false
+    },
+    "totals": {
+      "clipKeys": 507,
+      "files": 436,
+      "bytes": 36948012
+    }
+  },
+  "speakerNativenessEvidence": {
+    "Hakatanoshio117117": "Commons user page (https://commons.wikimedia.org/wiki/User%3AHakatanoshio117117): {{#babel:…|ja|…}} — bare code, i.e. native"
+  }
+}
