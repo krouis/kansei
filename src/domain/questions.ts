@@ -108,6 +108,18 @@ export interface MatchPair {
   right: { display: string; itemId: ItemId };
 }
 
+/**
+ * Japanese typeface the prompt should be rendered in.
+ *
+ * Legitimate font variation is one rung of the difficulty ladder: a learner who
+ * has only ever seen Noto Sans has learned one font, not the character. The app
+ * bundles a gothic (Noto Sans JP), a serif (Noto Serif JP) and a textbook face
+ * (Klee One); the UI maps these onto --font-jp, --font-jp-serif and
+ * --font-jp-hand. 'textbook' is also the face used whenever the printed form
+ * differs from the taught handwritten form, so a model to copy is never wrong.
+ */
+export type PromptFace = 'gothic' | 'serif' | 'textbook';
+
 /** The prompt shown to the learner. */
 export interface QuestionPrompt {
   /** Main visible text, e.g. the character or the rōmaji. Empty for audio-only. */
@@ -125,6 +137,11 @@ export interface QuestionPrompt {
   context: string | null;
   /** Rōmaji scaffold, shown only while the item is still scaffolded. */
   scaffold: string | null;
+  /**
+   * Typeface to render `text` in. Optional so that existing prompt literals keep
+   * compiling; absent means 'gothic', the default face.
+   */
+  face?: PromptFace;
 }
 
 /**
@@ -196,6 +213,14 @@ export type InputMethod = 'keyboard' | 'touch' | 'mouse' | 'stylus' | 'unknown';
 
 export interface PairResult {
   pairId: string;
+  /**
+   * The right-hand item the learner actually attached to this pair's left-hand
+   * item. Present whenever the presentation layer can report it, which lets the
+   * grader verify the pair itself instead of trusting a precomputed boolean, and
+   * lets a mismatch be recorded in the confusion table. Absent for a legacy or
+   * reduced surface, in which case `correct` is taken as given.
+   */
+  chosenRightItemId?: ItemId | null;
   correct: boolean;
   /**
    * How many options remained when this pair was resolved. The last pair in a

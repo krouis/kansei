@@ -1,6 +1,6 @@
 import type {
-  AnswerSubmission, AttemptRecord, CharacterEntry, ConfusionRecord, Grade, ItemId, Question,
-  SelectionReason, SessionState, Settings, Skill, SkillState, VocabEntry,
+  AnswerSubmission, AttemptRecord, AudioRef, CharacterEntry, ConfusionRecord, Grade, ItemId,
+  KanjiReading, Question, SelectionReason, SessionState, Settings, Skill, SkillState, VocabEntry,
 } from '@/domain';
 
 /**
@@ -92,10 +92,25 @@ export interface Selector {
 export interface GenerationContext {
   now: Date;
   settings: Settings;
-  /** Everything that can legitimately appear as a distractor. */
-  pool: { characters: CharacterEntry[]; vocab: VocabEntry[] };
+  /**
+   * Everything that can legitimately appear as a distractor.
+   *
+   * `readings` is optional because it was added after the first ports were
+   * frozen. When it is supplied the generator can use a reading's type (on/kun)
+   * and its sound-change notes in feedback; when it is absent the generator
+   * falls back to the documented ReadingId grammar (`reading:<kanji>:<kana>`),
+   * which still yields the kana it needs. See generation/pool.ts.
+   */
+  pool: { characters: CharacterEntry[]; vocab: VocabEntry[]; readings?: KanjiReading[] };
   /** Whether a clip actually exists — no audio means no listening question. */
   hasAudio: (key: string) => boolean;
+  /**
+   * The clip itself. `hasAudio` alone cannot fill `Question.prompt.audio`, so a
+   * listening question is only generable when this is supplied; without it the
+   * generator rejects rather than presenting a silent "listening" screen.
+   * Audio keys are item ids — see generation/pool.ts `audioKey`.
+   */
+  audio?: (key: string) => AudioRef | undefined;
   /** Whether stroke data exists — no strokes means no handwriting question. */
   hasStrokes: (glyph: string) => boolean;
   /** Deterministic randomness, so a session can be replayed in a test. */

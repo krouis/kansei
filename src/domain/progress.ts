@@ -1,6 +1,6 @@
 import type { ItemId, QuestionId, SessionId } from './ids';
 import type { HintKind, InputMethod, PromptDirection, QuestionType, SelectionReason } from './questions';
-import type { Skill } from './skills';
+import type { EvidenceStrength, Skill } from './skills';
 
 /**
  * Learning stage for one (item, skill) pair.
@@ -80,6 +80,19 @@ export interface AttemptRecord {
   skill: Skill;
   questionType: QuestionType;
   direction: PromptDirection;
+  /**
+   * Evidence strength of the format that was asked, copied from the Question.
+   *
+   * It is recorded on the attempt rather than re-derived from `questionType`
+   * later, because the scheduler must weight the evidence exactly as it was at
+   * the time: a format's evidence rating can be revised in a later content
+   * pack, and history must not silently change underneath old attempts.
+   *
+   * Optional only while the session engine is being wired up. A scheduler that
+   * receives an attempt without it treats the attempt as WEAK evidence — the
+   * conservative choice, which cannot inflate a pair's stage or interval.
+   */
+  evidence?: EvidenceStrength;
   selectionReason: SelectionReason;
   focusedPractice: boolean;
   /**
