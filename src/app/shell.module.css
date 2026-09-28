@@ -1,0 +1,308 @@
+/*
+ * The app shell: a bottom tab bar on phones, a side rail from tablet upward.
+ *
+ * The breakpoint is deliberate rather than inherited. Below 48rem a thumb
+ * reaches the bottom of the screen far more easily than the top, so navigation
+ * lives there. At 48rem and above there is room for a persistent rail with
+ * always-visible labels, which also gives the section a stable landmark.
+ */
+
+.shell {
+  display: grid;
+  min-height: 100dvh;
+  grid-template-areas: 'header' 'main' 'nav';
+  grid-template-rows: auto 1fr auto;
+  background: var(--paper);
+}
+
+/* ---- Header ------------------------------------------------------------- */
+.header {
+  grid-area: header;
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 3.25rem;
+  padding: var(--space-2) var(--space-4);
+  padding-block-start: max(var(--space-2), env(safe-area-inset-top));
+  border-block-end: 1px solid var(--rule);
+  /* Translucent paper keeps long lists feeling continuous while scrolling. */
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(10px) saturate(1.2);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .header { background: var(--paper); }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+/* The seal: the one place vermilion appears by default. */
+.seal {
+  display: grid;
+  place-items: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  flex: none;
+  border-radius: var(--radius-sm);
+  background: var(--seal);
+  color: #fff;
+  font-family: var(--font-jp-serif);
+  font-size: 1.05rem;
+  line-height: 1;
+  padding-block-start: 0.05em;
+}
+.brandName {
+  font-size: var(--text-md);
+  font-weight: 620;
+  letter-spacing: -0.014em;
+}
+.brandSub {
+  font-family: var(--font-jp);
+  font-size: var(--text-xs);
+  color: var(--ink-faint);
+  letter-spacing: 0.08em;
+}
+
+.headerTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+.headerSpacer { flex: 1; }
+.headerActions { display: flex; align-items: center; gap: var(--space-2); flex: none; }
+
+/* Today's XP, always visible so the goal needs no separate dashboard. */
+.xpBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  padding: 0 var(--space-2) 0 var(--space-1);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+.xpBadge:hover { background: var(--surface-hover); }
+.xpValue { font-variant-numeric: tabular-nums; }
+.xpGoal { color: var(--ink-faint); font-weight: 500; }
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  inline-size: var(--tap-min);
+  block-size: var(--tap-min);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+.iconButton:hover { background: var(--surface-hover); color: var(--ink); }
+
+/* ---- Main -------------------------------------------------------------- */
+.main {
+  grid-area: main;
+  min-width: 0;
+  /* Focusable so route changes can move focus here without a tabindex hack
+     on every screen. Outline suppressed because the heading announces itself. */
+  outline: none;
+}
+.mainInner {
+  margin-inline: auto;
+  inline-size: 100%;
+  max-inline-size: var(--content-max);
+  padding: var(--space-5) var(--space-4) var(--space-10);
+}
+/* Practice needs the full viewport: no max width, no bottom padding fighting
+   the canvas. Screens opt in. */
+.mainFull .mainInner {
+  max-inline-size: none;
+  padding: 0;
+}
+
+/* ---- Bottom tab bar (phone) -------------------------------------------- */
+.tabBar {
+  grid-area: nav;
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 20;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  border-block-start: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(10px) saturate(1.2);
+  padding-block-end: env(safe-area-inset-bottom);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .tabBar { background: var(--paper); }
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  min-block-size: var(--nav-height);
+  padding: var(--space-2) var(--space-1);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.tab:hover { color: var(--ink-soft); }
+.tabCurrent { color: var(--accent-text); }
+/* The current tab is marked by a rule as well as by colour. */
+.tabCurrent .tabIcon::after {
+  content: '';
+  position: absolute;
+  inset-block-end: -0.3125rem;
+  inset-inline: 50%;
+  inline-size: 0.875rem;
+  block-size: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  translate: -50% 0;
+}
+.tabIcon { position: relative; display: grid; place-items: center; }
+/* A dot on Practice when reviews are waiting. Paired with a count in the
+   accessible name so it is never a bare colour cue. */
+.tabDot {
+  position: absolute;
+  inset-block-start: -0.125rem;
+  inset-inline-start: calc(50% + 0.4375rem);
+  inline-size: 0.4375rem;
+  block-size: 0.4375rem;
+  border-radius: 50%;
+  background: var(--due);
+  border: 1.5px solid var(--paper);
+}
+
+/* ---- Side rail (tablet and desktop) ------------------------------------ */
+.rail { display: none; }
+
+@media (min-width: 48rem) {
+  .shell {
+    grid-template-areas: 'rail header' 'rail main';
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  .tabBar { display: none; }
+
+  .rail {
+    grid-area: rail;
+    position: sticky;
+    inset-block-start: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    inline-size: 13.5rem;
+    block-size: 100dvh;
+    padding: var(--space-4) var(--space-3);
+    padding-block-start: max(var(--space-4), env(safe-area-inset-top));
+    border-inline-end: 1px solid var(--rule);
+    background: var(--paper-sunken);
+  }
+
+  .railBrand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2) var(--space-5);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .railLink {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-block-size: var(--tap-min);
+    padding: 0 var(--space-3);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    color: var(--ink-soft);
+    font-size: var(--text-base);
+    font-weight: 550;
+    text-decoration: none;
+    transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  }
+  .railLink:hover { background: var(--surface-hover); color: var(--ink); }
+  .railCurrent {
+    background: var(--surface);
+    border-color: var(--rule);
+    color: var(--accent-text);
+    box-shadow: var(--shadow-sm);
+  }
+  /* A leading bar marks the current item independently of its colour. */
+  .railCurrent::before {
+    content: '';
+    inline-size: 2px;
+    block-size: 1.125rem;
+    margin-inline-start: -0.5rem;
+    margin-inline-end: 0.125rem;
+    border-radius: 1px;
+    background: var(--accent);
+  }
+  .railLabel { flex: 1; min-width: 0; }
+  .railCount {
+    flex: none;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-pill);
+    background: var(--due-soft);
+    color: var(--due);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .railSpacer { flex: 1; }
+  .railRule { margin: var(--space-3) var(--space-2); }
+
+  .header {
+    padding-inline: var(--space-6);
+    background: color-mix(in srgb, var(--paper) 90%, transparent);
+  }
+  /* The brand lives in the rail at this size, so the header drops it. */
+  .headerBrand { display: none; }
+  .mainInner { padding-inline: var(--space-6); }
+}
+
+@media (min-width: 64rem) {
+  .rail { inline-size: var(--nav-width); }
+  .mainInner { padding: var(--space-8) var(--space-8) var(--space-16); }
+}
+
+/* ---- Offline / update notices ------------------------------------------ */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-block-end: 1px solid var(--rule);
+  background: var(--warn-soft);
+  color: var(--warn-text);
+  font-size: var(--text-sm);
+  font-weight: 550;
+}
+.bannerInfo { background: var(--accent-soft); color: var(--ink); border-color: var(--accent-soft-border); }
+.bannerSpacer { flex: 1; }
