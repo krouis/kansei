@@ -1,0 +1,99 @@
+{
+  "schema": "kansei-component-notes/1",
+  "description": "HAND-AUTHORED curriculum judgement about kanji components. This file is a source of truth, not derived data: a script cannot decide that KANJIDIC2's gloss for a shape misleads a learner, or that a stroke count recorded for a standalone codepoint is not the number of strokes actually drawn. Everything here is an override applied by scripts/content/build-components.mjs on top of the derivation from KanjiVG / KANJIDIC2 / the Unicode Character Database. It can narrow or annotate what the derivation found; it can NEVER invent a component KanjiVG does not show, and `include` only rescues a shape the derivation already saw.",
+  "authoredBy": "Kansei curriculum, by hand. Not generated. Reviewed against data/components.provenance.json diagnostics.",
+  "consumedBy": "scripts/content/build-components.mjs",
+  "documentation": "docs/content/COMPONENTS.md",
+  "fields": {
+    "glosses": "Replaces the derived gloss list outright. Used where the derived gloss is a dictionary sense the shape does not carry in the characters it appears in.",
+    "strokeCount": "Replaces the derived stroke count. Used only where KANJIDIC2's count is for the standalone codepoint and differs from the strokes KanjiVG actually draws in every taught kanji.",
+    "meaningIsUnreliable": "Forces the flag. true adds a reason; false would suppress the derived reasons and is deliberately never used in this file.",
+    "meaningIsUnreliableReason": "The reason recorded alongside a forced true.",
+    "addVariants": "Adds a shape variant the kvg:original relation does not state.",
+    "removeVariants": "Removes a derived variant link.",
+    "exclude": "Drops a shape the thresholds would otherwise keep, with a reason.",
+    "include": "Keeps a shape the thresholds reject, with a reason."
+  },
+  "components": {
+    "艹": {
+      "strokeCount": 3,
+      "strokeCountReason": "KANJIDIC2 records 6 strokes for U+8279 because it treats the codepoint as the old 艸-derived form. KanjiVG draws this shape with 3 strokes in all 27 taught kanji that use it (花 草 落 …), and 3 is what the learner writes. The 6 is kept in the diagnostics as strokeCountKanjidic."
+    },
+    "覀": {
+      "strokeCount": 6,
+      "glosses": ["cover", "west"],
+      "strokeCountReason": "KANJIDIC2 records 7 strokes for U+8980; KanjiVG draws 6 in all four taught kanji (要 票 標 覚-family). 6 is what the learner writes.",
+      "glossesReason": "KANJIDIC2's entry for this codepoint is the catalogue string 'variant of radical 146', which cleans down to a fragment. The senses come from the unvaried form 襾."
+    },
+    "乂": {
+      "glosses": ["two crossing strokes"],
+      "meaningIsUnreliable": true,
+      "meaningIsUnreliableReason": "KanjiVG labels the crossed-stroke shape in 交 父 文 希 with the rare kanji 乂, whose dictionary senses (mow, cut grass, subdue) play no part in those characters. This is a shape label only.",
+      "glossesReason": "Same: the derived gloss was 乂's own dictionary meaning, which describes a different thing from the shape being taught."
+    },
+    "マ": {
+      "glosses": ["a マ-shaped element"],
+      "meaningIsUnreliable": true,
+      "meaningIsUnreliableReason": "KanjiVG names this shape with the katakana マ because that is what it looks like (予 矛 務 参). It is a stroke pattern, not a component with a meaning or a reading, and no source gives it one.",
+      "glossesReason": "No source records a meaning for this shape; naming its appearance is the only honest gloss."
+    },
+    "⺍": {
+      "glosses": ["three short strokes on top"],
+      "meaningIsUnreliable": true,
+      "meaningIsUnreliableReason": "Unicode names U+2E8D 'CJK RADICAL SMALL TWO' and so ties it to 小 (radical 42), but in 学 覚 単 常 the shape carries no sense of smallness; KanjiVG variously derives it from U+5405 (a doubled mouth) and from the hiragana tsu. Treat it as a shape.",
+      "glossesReason": "The derived gloss 'small' is sourced from the Unicode name but misleads in every taught kanji that uses this shape."
+    },
+    "禾": {
+      "glosses": ["grain", "rice plant"],
+      "glossesReason": "KANJIDIC2's gloss for U+79BE is 'two-branch tree', a description of the shape rather than its sense. Unicode names radical 115 GRAIN, which is what the shape contributes in 私 科 秋 種 秒."
+    },
+    "邑": { "glosses": ["village", "rural community"], "glossesReason": "Drops KANJIDIC2's 'right village', which is the positional nickname of the radical rather than a meaning." },
+    "阜": { "glosses": ["hill", "mound"], "glossesReason": "Drops KANJIDIC2's 'left village', the positional nickname." },
+    "忄": { "glosses": ["heart", "feelings"], "glossesReason": "Drops 'standing heart', the positional nickname of the radical form." },
+    "刂": { "glosses": ["knife", "sword"], "glossesReason": "Drops 'standing sword', the positional nickname of the radical form." },
+    "厂": { "glosses": ["cliff"], "glossesReason": "Drops KANJIDIC2's 'wild goose', which is the sense of the rare standalone kanji 厂, and 'trailing cliff', a nickname." },
+    "冖": { "glosses": ["cover", "lid"], "glossesReason": "Replaces 'wa-shaped crown', which describes the shape by naming a kana." },
+    "宀": { "glosses": ["roof"], "glossesReason": "Drops 'shaped crown', a fragment of the nickname 'u-shaped crown'." },
+    "勹": { "glosses": ["wrap", "enclose"], "glossesReason": "Drops the duplicated nickname forms 'wrapping enclosure' / 'wrapping'." },
+    "殳": { "glosses": ["weapon", "pike"], "glossesReason": "Drops 'windy-again', a mnemonic nickname rather than a sense." },
+    "巛": { "glosses": ["river"], "glossesReason": "Drops 'curving river', a nickname of the radical form." },
+    "匚": { "glosses": ["right open box"], "glossesReason": "Keeps the Unicode radical name and drops KANJIDIC2's 'box-on-side enclosure', which says the same thing less clearly." },
+    "凵": { "glosses": ["open box"], "glossesReason": "Drops the nickname 'open box enclosure'." },
+    "冂": { "glosses": ["down box"], "glossesReason": "Keeps the Unicode radical name; 'upside-down box' is the same shape described twice." },
+    "几": { "glosses": ["table"], "glossesReason": "Drops the nickname 'table enclosure'." },
+    "亅": { "glosses": ["hook"], "glossesReason": "Drops KANJIDIC2's 'feathered stick' / 'barb', which are names for the rare standalone kanji, not for the hook stroke taught here." },
+    "丨": { "glosses": ["line", "rod"], "glossesReason": "Drops 'number one', which is 一, not this vertical stroke." },
+    "又": {
+      "glosses": ["again"],
+      "meaningIsUnreliable": true,
+      "meaningIsUnreliableReason": "In 取 受 友 反 支 the 又 shape comes from a hand, but that is etymology; the adverb sense 'again' that dictionaries record for the standalone kanji explains none of those characters.",
+      "glossesReason": "Drops 'furthermore' and 'on the other hand', which are uses of the standalone adverb."
+    },
+    "冉": {
+      "meaningIsUnreliable": true,
+      "meaningIsUnreliableReason": "The senses KANJIDIC2 records for 冉 play no part in 再 構 講 購, where it is a shape only."
+    },
+    "父": {
+      "meaningIsUnreliable": true,
+      "meaningIsUnreliableReason": "'father' is right for 父 as a character but not for the 父 shape inside 交 校-family characters, where it is never the dictionary radical."
+    },
+    "百": {
+      "meaningIsUnreliable": true,
+      "meaningIsUnreliableReason": "'hundred' does not explain the characters this shape appears in; it is not the dictionary radical of any of them."
+    },
+    "少": {
+      "meaningIsUnreliable": true,
+      "meaningIsUnreliableReason": "Appears as a part of 省 歩-family characters without being their dictionary radical, so 'few / little' does not carry over."
+    },
+    "入": {
+      "meaningIsUnreliable": true,
+      "meaningIsUnreliableReason": "KanjiVG also gives 人 as this shape's kvg:original in one taught kanji, and it is never the dictionary radical where it appears as a part, so 'enter' is not a dependable reading of the shape."
+    },
+    "舛": {
+      "meaningIsUnreliable": true,
+      "meaningIsUnreliableReason": "KANJIDIC2 records two unrelated senses ('dancing', 'oppose') for a shape that occurs in only one taught kanji, which is not enough to teach a meaning from."
+    }
+  },
+  "exclude": {},
+  "include": {}
+}

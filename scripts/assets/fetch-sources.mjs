@@ -89,6 +89,36 @@ const SOURCES = [
     notes: 'Japanese-English dictionary with example sentence links; source of beginner vocabulary.',
     expectGzip: true,
   },
+  {
+    id: 'ucd-cjk-radicals',
+    file: 'CJKRadicals.txt',
+    url: 'https://www.unicode.org/Public/18.0.0/ucd/CJKRadicals.txt',
+    project: 'Unicode Character Database 18.0.0 — CJKRadicals.txt',
+    publisher: 'Unicode, Inc.',
+    homepage: 'https://www.unicode.org/reports/tr44/',
+    license: 'Unicode-3.0',
+    licenseUrl: 'https://www.unicode.org/license.txt',
+    redistribution:
+      'Permitted under the Unicode License v3: redistribution of the data, with or without modification, requires the copyright notice, this list of conditions and the disclaimer to accompany it. No share-alike obligation.',
+    notes:
+      'Authoritative mapping from Kangxi radical number (1-214) to the Kangxi Radicals block character and to the CJK unified ideograph formed from that radical alone. Version pinned: "latest" moves and would silently change derived radical numbers.',
+    expectText: true,
+  },
+  {
+    id: 'ucd-equivalent-unified-ideograph',
+    file: 'EquivalentUnifiedIdeograph.txt',
+    url: 'https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt',
+    project: 'Unicode Character Database 18.0.0 — EquivalentUnifiedIdeograph.txt',
+    publisher: 'Unicode, Inc.',
+    homepage: 'https://www.unicode.org/reports/tr44/',
+    license: 'Unicode-3.0',
+    licenseUrl: 'https://www.unicode.org/license.txt',
+    redistribution:
+      'Permitted under the Unicode License v3: redistribution of the data, with or without modification, requires the copyright notice, this list of conditions and the disclaimer to accompany it. No share-alike obligation.',
+    notes:
+      'Maps CJK Radicals Supplement / Kangxi Radicals code points to the visually equivalent CJK unified ideograph, e.g. U+2EA1 CJK RADICAL WATER ONE -> U+6C35 氵. Used to give the variant radical shapes KanjiVG emits (⻌ ⻏ ⻖ ⺕ ⺌ ⺍ ⺤ ⺨) a sourced Kangxi number. Version pinned for the same reason as CJKRadicals.txt.',
+    expectText: true,
+  },
 ];
 
 const USER_AGENT = 'kansei-content-fetcher/1.0 (+https://github.com/; offline Japanese learning PWA; contact via repo)';
@@ -169,6 +199,15 @@ async function checkMagic(src, p) {
   if (src.expectZip) {
     if (!(head[0] === 0x50 && head[1] === 0x4b)) {
       return `expected zip magic 50 4b ("PK"), got ${[...head].map((b) => b.toString(16).padStart(2, '0')).join(' ')}`;
+    }
+  }
+  if (src.expectText) {
+    // A Unicode data file starts with a '#' comment line. This catches the usual
+    // failure mode for a plain-text URL: an HTML error page served with 200.
+    if (head[0] !== 0x23) {
+      return `expected a '#' comment as the first byte of a UCD text file, got ${[...head]
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join(' ')} (an HTML error page served with status 200?)`;
     }
   }
   return null;

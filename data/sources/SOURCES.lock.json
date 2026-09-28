@@ -1,6 +1,6 @@
 {
   "schema": "kansei-sources-lock/1",
-  "generatedAt": "2026-09-28T22:08:02.905Z",
+  "generatedAt": "2026-09-28T22:39:34.647Z",
   "files": {
     "jmdict-e-examp": {
       "id": "jmdict-e-examp",
@@ -48,6 +48,38 @@
       "bytes": 12589510,
       "sha256": "69a2944ec1183086fdee5ba9c1f48bc306b867480a95b2f337f3203bf50689a3",
       "fetchedAt": "2026-09-28T21:57:31.813Z",
+      "fetchedBy": "scripts/assets/fetch-sources.mjs"
+    },
+    "ucd-cjk-radicals": {
+      "id": "ucd-cjk-radicals",
+      "file": "data/sources/CJKRadicals.txt",
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/CJKRadicals.txt",
+      "project": "Unicode Character Database 18.0.0 — CJKRadicals.txt",
+      "publisher": "Unicode, Inc.",
+      "homepage": "https://www.unicode.org/reports/tr44/",
+      "license": "Unicode-3.0",
+      "licenseUrl": "https://www.unicode.org/license.txt",
+      "redistribution": "Permitted under the Unicode License v3: redistribution of the data, with or without modification, requires the copyright notice, this list of conditions and the disclaimer to accompany it. No share-alike obligation.",
+      "notes": "Authoritative mapping from Kangxi radical number (1-214) to the Kangxi Radicals block character and to the CJK unified ideograph formed from that radical alone. Version pinned: \"latest\" moves and would silently change derived radical numbers.",
+      "bytes": 5491,
+      "sha256": "689e2e5852699e7115823dc0b6d3e615eb767c7f477b615678f4f989d1f06105",
+      "fetchedAt": "2026-09-28T22:39:34.403Z",
+      "fetchedBy": "scripts/assets/fetch-sources.mjs"
+    },
+    "ucd-equivalent-unified-ideograph": {
+      "id": "ucd-equivalent-unified-ideograph",
+      "file": "data/sources/EquivalentUnifiedIdeograph.txt",
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt",
+      "project": "Unicode Character Database 18.0.0 — EquivalentUnifiedIdeograph.txt",
+      "publisher": "Unicode, Inc.",
+      "homepage": "https://www.unicode.org/reports/tr44/",
+      "license": "Unicode-3.0",
+      "licenseUrl": "https://www.unicode.org/license.txt",
+      "redistribution": "Permitted under the Unicode License v3: redistribution of the data, with or without modification, requires the copyright notice, this list of conditions and the disclaimer to accompany it. No share-alike obligation.",
+      "notes": "Maps CJK Radicals Supplement / Kangxi Radicals code points to the visually equivalent CJK unified ideograph, e.g. U+2EA1 CJK RADICAL WATER ONE -> U+6C35 氵. Used to give the variant radical shapes KanjiVG emits (⻌ ⻏ ⻖ ⺕ ⺌ ⺍ ⺤ ⺨) a sourced Kangxi number. Version pinned for the same reason as CJKRadicals.txt.",
+      "bytes": 18371,
+      "sha256": "c86c80f6a0d1d47c9a5aadfbf1c26f1a732d662d9ccb0ed2d397919ecc47bf72",
+      "fetchedAt": "2026-09-28T22:39:34.647Z",
       "fetchedBy": "scripts/assets/fetch-sources.mjs"
     }
   },
