@@ -98,6 +98,7 @@ export class KanseiSessionEngine implements SessionEngine {
     const session: SessionState = {
       id: asSessionId(`sess_${opts.now.getTime().toString(36)}_${Math.floor(this.random() * 1e9).toString(36)}`),
       kind: opts.kind,
+      seriesCount: opts.seriesCount,
       status: 'active',
       series: [],
       activeSeriesIndex: 0,
@@ -114,16 +115,11 @@ export class KanseiSessionEngine implements SessionEngine {
       version: SCHEMA_VERSION,
     };
 
-    // seriesCount is stored implicitly as session.series.length once every
-    // series has been started; only the first is built now, matching the
-    // lazy-per-series generation this engine uses (see the class doc comment).
     const first = await this.buildSeries(session, 0, [], opts.now, opts.focusItemId ?? null);
     session.series.push(first);
 
     await this.deps.db.transact('readwrite', (tx) => tx.sessions.save(session));
     this.current = session;
-    // Stash the requested total so startNextSeries knows when to stop.
-    seriesTargets.set(session.id, opts.seriesCount);
     return session;
   }
 
@@ -138,191 +134,144 @@ export class KanseiSessionEngine implements SessionEngine {
     return this.current;
   }
 
-  private currentScreen(): { series: SeriesState; screen: SeriesScreen } {
-    const session = this.requireCurrent();
+  private busy = false;
+
+  private async exclusive<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.busy) throw new Error('A session operation is already in progress.');
+    this.busy = true;
+    try { return await fn(); } finally { this.busy = false; }
+  }
+
+  /** Compare inside the write transaction: another tab may have advanced. */
+  private async assertCurrent(tx: Transaction, original: SessionState): Promise<void> {
+    const stored = await tx.sessions.get(original.id);
+    if (JSON.stringify(stored) !== JSON.stringify(original)) {
+      throw new Error('This session changed in another tab. Resume it before continuing.');
+    }
+  }
+
+  private screenOf(session: SessionState): { series: SeriesState; screen: SeriesScreen } {
+    if (session.status !== 'active') throw new Error('This session is no longer active.');
     const series = session.series[session.activeSeriesIndex];
-    if (!series) throw new Error('Active series index is out of range.');
-    const screen = series.screens[series.cursor];
-    if (!screen) throw new Error('Series cursor is out of range.');
+    const screen = series?.screens[series.cursor];
+    if (!series || !screen) throw new Error('Session cursor is out of range.');
     return { series, screen };
   }
 
   async submit(submission: AnswerSubmission, now: Date): Promise<{ grade: Grade; xpAwarded: number; offerRetry: boolean }> {
-    const session = this.requireCurrent();
-    const { series, screen } = this.currentScreen();
-    if (screen.result) {
-      throw new Error('This screen already has a first-attempt result; use submitRetry for a corrected retry.');
-    }
-
-    const detail = await this.deps.grader.gradeDetailed(screen.question, submission, { attemptOrdinal: 0 });
-    const s = stamp(now);
-    const record = this.buildAttemptRecord(session, screen.question, submission, detail.grade, 0, s);
-
-    let xpAwarded = 0;
-    await this.deps.db.transact('readwrite', async (tx) => {
-      await tx.attempts.append(record);
-
-      // The scheduler only ever sees the graded FIRST attempt — a corrected
-      // retry must never look like unaided recall to it.
-      if (record.outcome !== 'uncertain') {
-        const stateKey = { itemId: record.itemId, skill: record.skill, readingId: record.readingId };
-        const existing = await tx.skills.get(stateKey.itemId, stateKey.skill, stateKey.readingId);
-        const state = existing ?? this.deps.scheduler.initial(stateKey.itemId, stateKey.skill, stateKey.readingId, now);
-        const updated = this.deps.scheduler.update(state, record, now);
-        await tx.skills.put(updated);
-      } else {
-        // 'uncertain' leaves memory state untouched but still needs a row to
-        // exist so a near-term recheck can be scheduled from SOMETHING; create
-        // one at its current (possibly unseen) state if none exists yet.
+    return this.exclusive(async () => {
+      const original = this.requireCurrent();
+      const session = structuredClone(original);
+      const { series, screen } = this.screenOf(session);
+      if (submission.questionId !== screen.question.id) throw new Error('Answer belongs to a different question.');
+      if (screen.result) throw new Error('This screen already has a first-attempt result; use submitRetry.');
+      const detail = await this.deps.grader.gradeDetailed(screen.question, submission, { attemptOrdinal: 0 });
+      const s = stamp(now);
+      const record = this.buildAttemptRecord(session, screen.question, submission, detail.grade, 0, s);
+      screen.result = { submission, grade: detail.grade, at: s.at };
+      session.activeMs += submission.elapsedMs;
+      // Asset/generator work must finish BEFORE opening an IndexedDB transaction.
+      if (detail.grade.outcome === 'incorrect') await this.queueRevisit(series, screen, now);
+      await this.deps.db.transact('readwrite', async (tx) => {
+        await this.assertCurrent(tx, original);
+        await tx.attempts.append(record);
         const existing = await tx.skills.get(record.itemId, record.skill, record.readingId);
-        if (!existing) {
-          await tx.skills.put(this.deps.scheduler.initial(record.itemId, record.skill, record.readingId, now));
+        const state = existing ?? this.deps.scheduler.initial(record.itemId, record.skill, record.readingId, now);
+        // The scheduler itself handles uncertainty without a memory penalty.
+        await tx.skills.put(this.deps.scheduler.update(state, record, now));
+        if (record.confusedWithItemId) await tx.confusions.record(record.itemId, record.confusedWithItemId, record.skill, s.at);
+        if (detail.copiedVisibleRomaji || specExercisesIme(screen.question)) {
+          const aux = await tx.auxiliary.get();
+          await tx.auxiliary.put({
+            ...aux,
+            copiedVisibleRomaji: aux.copiedVisibleRomaji + Number(detail.copiedVisibleRomaji),
+            imeQuestions: aux.imeQuestions + Number(specExercisesIme(screen.question)),
+            imeCorrect: aux.imeCorrect + Number(specExercisesIme(screen.question) && detail.grade.outcome === 'correct'),
+            lastAt: s.at,
+          });
         }
-      }
-
-      if (record.confusedWithItemId) {
-        await tx.confusions.record(record.itemId, record.confusedWithItemId, record.skill, s.at);
-      }
-
-      if (detail.copiedVisibleRomaji) {
-        const aux = await tx.auxiliary.get();
-        await tx.auxiliary.put({ ...aux, copiedVisibleRomaji: aux.copiedVisibleRomaji + 1, lastAt: s.at });
-      }
-      if (specExercisesIme(screen.question)) {
-        const aux = await tx.auxiliary.get();
-        await tx.auxiliary.put({
-          ...aux,
-          imeQuestions: aux.imeQuestions + 1,
-          imeCorrect: aux.imeCorrect + (detail.grade.outcome === 'correct' ? 1 : 0),
-          lastAt: s.at,
-        });
-      }
-
-      const award = await this.ledger.awardScreen(tx, {
-        sessionId: session.id,
-        seriesIndex: series.index,
-        screenIndex: screen.index,
-        now,
-        timeZone: s.timeZone,
-        goalXp: this.deps.getSettings().dailyGoalXp,
-        activeMs: submission.elapsedMs,
+        await tx.sessions.save(session);
       });
-      xpAwarded = award.amount;
+      Object.assign(original, session);
+      return { grade: detail.grade, xpAwarded: 0, offerRetry: detail.grade.outcome !== 'correct' && !submission.declined };
     });
-
-    screen.result = { submission, grade: detail.grade, at: s.at };
-    screen.xpAwarded += xpAwarded;
-    session.activeMs += submission.elapsedMs;
-
-    if (detail.grade.outcome === 'incorrect') {
-      this.queueRevisit(series, screen, now);
-    }
-
-    await this.deps.db.transact('readwrite', (tx) => tx.sessions.save(session));
-
-    const offerRetry = detail.grade.outcome !== 'correct' && !submission.declined;
-    return { grade: detail.grade, xpAwarded, offerRetry };
   }
 
   async submitRetry(submission: AnswerSubmission, now: Date): Promise<{ grade: Grade }> {
-    const session = this.requireCurrent();
-    const { screen } = this.currentScreen();
-    if (!screen.result) throw new Error('Cannot retry a screen with no first-attempt result.');
-
-    const ordinal = screen.retries.length + 1;
-    const detail = await this.deps.grader.gradeDetailed(screen.question, submission, { attemptOrdinal: ordinal });
-    const s = stamp(now);
-    const record = this.buildAttemptRecord(session, screen.question, submission, detail.grade, ordinal, s);
-
-    // Recorded for history and for confusion statistics, but deliberately NOT
-    // folded into the scheduler: an immediate corrected retry is answered with
-    // the mistake still fresh, which is not equivalent to unaided delayed
-    // recall, and must never inflate the pair's memory state.
-    await this.deps.db.transact('readwrite', async (tx) => {
-      await tx.attempts.append(record);
-      if (record.confusedWithItemId) {
-        await tx.confusions.record(record.itemId, record.confusedWithItemId, record.skill, s.at);
-      }
+    return this.exclusive(async () => {
+      const original = this.requireCurrent();
+      const session = structuredClone(original);
+      const { screen } = this.screenOf(session);
+      if (submission.questionId !== screen.question.id) throw new Error('Answer belongs to a different question.');
+      if (!screen.result) throw new Error('Cannot retry a screen with no first-attempt result.');
+      const ordinal = screen.retries.length + 1;
+      const detail = await this.deps.grader.gradeDetailed(screen.question, submission, { attemptOrdinal: ordinal });
+      const s = stamp(now);
+      const record = this.buildAttemptRecord(session, screen.question, submission, detail.grade, ordinal, s);
+      screen.retries.push({ submission, grade: detail.grade, at: s.at });
+      await this.deps.db.transact('readwrite', async (tx) => {
+        await this.assertCurrent(tx, original);
+        await tx.attempts.append(record);
+        if (record.confusedWithItemId) await tx.confusions.record(record.itemId, record.confusedWithItemId, record.skill, s.at);
+        await tx.sessions.save(session);
+      });
+      Object.assign(original, session);
+      return { grade: detail.grade };
     });
-
-    screen.retries.push({ submission, grade: detail.grade, at: s.at });
-    await this.deps.db.transact('readwrite', (tx) => tx.sessions.save(session));
-    return { grade: detail.grade };
   }
 
   async advance(now: Date): Promise<{ state: SessionState; finished: boolean }> {
-    const session = this.requireCurrent();
-    const series = session.series[session.activeSeriesIndex];
-    if (!series) throw new Error('Active series index is out of range.');
-    const screen = series.screens[series.cursor];
-    if (!screen) throw new Error('Series cursor is out of range.');
-    if (!screen.result) throw new Error('Cannot advance past a screen with no result.');
-    screen.feedbackAcknowledged = true;
-
-    // Defensive re-bank: normally already credited in submit(); idempotent via
-    // the dedupe key, so this only does anything if that first bank was lost
-    // to an interruption between submit() and this call.
-    if (screen.xpAwarded === 0) {
-      const s = stamp(now);
-      let awarded = 0;
+    return this.exclusive(async () => {
+      const original = this.requireCurrent();
+      if (original.status === 'completed') return { state: original, finished: true };
+      const session = structuredClone(original);
+      const { series, screen } = this.screenOf(session);
+      if (!screen.result) throw new Error('Cannot advance past a screen with no result.');
+      screen.feedbackAcknowledged = true;
+      const last = series.cursor === SERIES_LENGTH - 1;
+      if (!last) series.cursor += 1;
+      else if (session.activeSeriesIndex + 1 < (session.seriesCount ?? 1)) {
+        const carried = series.revisitQueue.filter((r) => r.afterScreenIndex >= SERIES_LENGTH - 1);
+        session.series.push(await this.buildSeries(session, session.activeSeriesIndex + 1, carried, now, session.focusItemId));
+        session.activeSeriesIndex += 1;
+      } else {
+        session.status = 'completed';
+        session.endedAt = now.toISOString();
+      }
+      const input = {
+        sessionId: session.id, seriesIndex: series.index, now,
+        timeZone: stamp(now).timeZone, goalXp: this.deps.getSettings().dailyGoalXp,
+      };
       await this.deps.db.transact('readwrite', async (tx) => {
+        await this.assertCurrent(tx, original);
         const award = await this.ledger.awardScreen(tx, {
-          sessionId: session.id, seriesIndex: series.index, screenIndex: screen.index,
-          now, timeZone: s.timeZone, goalXp: this.deps.getSettings().dailyGoalXp, activeMs: 0,
+          ...input, screenIndex: screen.index, activeMs: screen.result!.submission.elapsedMs,
         });
-        awarded = award.amount;
+        screen.xpAwarded += award.amount;
+        if (last) {
+          await this.ledger.awardSeriesCompletion(tx, { ...input, activeMs: 0 });
+          series.completionBonusAwarded = true;
+          series.completedAt = now.toISOString();
+        }
+        await tx.sessions.save(session);
       });
-      screen.xpAwarded += awarded;
-    }
-
-    const isLastScreen = series.cursor === SERIES_LENGTH - 1;
-    if (!isLastScreen) {
-      series.cursor += 1;
-      await this.deps.db.transact('readwrite', (tx) => tx.sessions.save(session));
-      return { state: session, finished: false };
-    }
-
-    // Series complete: bank the completion bonus once.
-    if (!series.completionBonusAwarded) {
-      const s = stamp(now);
-      let fresh = false;
-      await this.deps.db.transact('readwrite', async (tx) => {
-        const award = await this.ledger.awardSeriesCompletion(tx, {
-          sessionId: session.id, seriesIndex: series.index, now, timeZone: s.timeZone,
-          goalXp: this.deps.getSettings().dailyGoalXp, activeMs: 0,
-        });
-        fresh = award.fresh;
-      });
-      series.completionBonusAwarded = fresh || series.completionBonusAwarded;
-      series.completedAt = s.at;
-    }
-
-    const targetSeriesCount = seriesTargets.get(session.id) ?? 1;
-    const hasMoreSeries = session.activeSeriesIndex + 1 < targetSeriesCount;
-    if (hasMoreSeries) {
-      const carried = series.revisitQueue.filter((r) => r.afterScreenIndex >= SERIES_LENGTH - 1);
-      const next = await this.buildSeries(session, session.activeSeriesIndex + 1, carried, now, session.focusItemId);
-      session.series.push(next);
-      session.activeSeriesIndex += 1;
-      await this.deps.db.transact('readwrite', (tx) => tx.sessions.save(session));
-      return { state: session, finished: false };
-    }
-
-    session.status = 'completed';
-    session.endedAt = stamp(now).at;
-    await this.deps.db.transact('readwrite', (tx) => tx.sessions.save(session));
-    seriesTargets.delete(session.id);
-    return { state: session, finished: true };
+      Object.assign(original, session);
+      return { state: original, finished: session.status === 'completed' };
+    });
   }
 
   async abandon(now: Date): Promise<void> {
-    const session = this.requireCurrent();
-    const s = stamp(now);
-    session.status = 'abandoned';
-    session.endedAt = s.at;
-    await this.deps.db.transact('readwrite', (tx) => tx.sessions.markAbandoned(session.id, s.at));
-    seriesTargets.delete(session.id);
-    this.current = null;
+    return this.exclusive(async () => {
+      const original = this.requireCurrent();
+      const session = structuredClone(original);
+      session.status = 'abandoned';
+      session.endedAt = now.toISOString();
+      await this.deps.db.transact('readwrite', async (tx) => {
+        await this.assertCurrent(tx, original);
+        await tx.sessions.save(session);
+      });
+      this.current = null;
+    });
   }
 
   // ---- Series construction --------------------------------------------
@@ -365,21 +314,23 @@ export class KanseiSessionEngine implements SessionEngine {
 
     // Seed carried-over revisits from a prior series onto this one's early
     // screens, respecting the same minimum-gap rule from the series start.
+    const carriedSlots: number[] = [];
     for (const carried of carriedRevisits) {
       const plan = planRevisit({
         itemId: carried.itemId,
-        skill: 'recognition', // Cross-series carry-over does not track the original skill; see README.
+        skill: carried.skill ?? 'recognition',
         erroredAtScreenIndex: -1,
         seriesLength: SERIES_LENGTH,
-        occupiedScreenIndexes: [],
+        occupiedScreenIndexes: carriedSlots,
       });
       if (plan.screenIndex !== null) {
         const replacement = await this.generateOrFallback(
-          { itemId: carried.itemId, readingId: null, skill: 'recognition', reason: 'confusion-repair', state: null, confusion: null },
+          { itemId: carried.itemId, readingId: carried.readingId ?? null, skill: carried.skill ?? 'recognition', reason: 'confusion-repair', state: null, confusion: null },
           ctx,
         );
         const slot = screens[plan.screenIndex];
         if (slot) slot.question = replacement;
+        carriedSlots.push(plan.screenIndex);
       }
     }
 
@@ -426,8 +377,7 @@ export class KanseiSessionEngine implements SessionEngine {
     );
   }
 
-  private queueRevisit(series: SeriesState, screen: SeriesScreen, now: Date): void {
-    void now;
+  private async queueRevisit(series: SeriesState, screen: SeriesScreen, now: Date): Promise<void> {
     const plan = planRevisit({
       itemId: screen.question.targetItemId,
       skill: screen.question.skill,
@@ -436,7 +386,7 @@ export class KanseiSessionEngine implements SessionEngine {
       seriesLength: SERIES_LENGTH,
       occupiedScreenIndexes: series.revisitQueue.map((r) => r.afterScreenIndex + 1),
     });
-    series.revisitQueue.push({ itemId: screen.question.targetItemId, afterScreenIndex: plan.afterScreenIndex, reason: plan.reason });
+    series.revisitQueue.push({ skill: screen.question.skill, readingId: screen.question.targetReadingId, itemId: screen.question.targetItemId, afterScreenIndex: plan.afterScreenIndex, reason: plan.reason });
 
     if (plan.screenIndex !== null && plan.screenIndex > series.cursor) {
       const target: SelectedTarget = {
@@ -447,20 +397,10 @@ export class KanseiSessionEngine implements SessionEngine {
         state: null,
         confusion: null,
       };
-      const ctx = this.generationContext(this.deps.getSettings(), new Date());
-      // Fire-and-forget replacement is deliberately awaited by the caller of
-      // advance()/submit() via the queueMicrotask below is NOT used — this is
-      // synchronous state mutation territory, so we schedule the regeneration
-      // inline the next time buildSeries would have looked at it. Since
-      // screens are pre-generated, mutate the slot directly and asynchronously
-      // update it before the learner can reach it (screens ahead of cursor are
-      // never shown until reached).
-      void this.deps.generator.generate(target, ctx).then((result) => {
-        if (result.question) {
-          const slot = series.screens[plan.screenIndex as number];
-          if (slot && !slot.result) slot.question = result.question;
-        }
-      });
+      const ctx = this.generationContext(this.deps.getSettings(), now);
+      const result = await this.deps.generator.generate(target, ctx);
+      const slot = series.screens[plan.screenIndex];
+      if (result.question && slot && !slot.result) slot.question = result.question;
     }
   }
 
@@ -523,6 +463,3 @@ function specExercisesIme(question: Question): boolean {
   // generation/specs.ts being the single authored source; see its README.
   return question.type === 'audio-to-typed' || question.type === 'word-reading' || question.type === 'kanji-in-word-context';
 }
-
-/** Session id → requested series count. In-memory only; not part of persisted state. */
-const seriesTargets = new Map<string, number>();

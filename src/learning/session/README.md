@@ -17,12 +17,15 @@ those and persists the result. What it does own:
 - First-attempt preservation: `submit()` always writes `attemptOrdinal: 0`;
   `submitRetry()` appends at `attemptOrdinal >= 1` and never mutates the
   original `screen.result`. Only the ordinal-0 attempt feeds the scheduler.
-- XP idempotence in practice: `submit()` banks the screen's 1 XP through
-  `XpLedger.awardScreen`, keyed by `(session, series, screen)`; `advance()`
-  re-attempts the same bank defensively (a no-op if it already succeeded) so
-  an interruption between `submit()` and `advance()` can never lose or
-  double-award a screen's XP. The series completion bonus is banked once, at
-  the tenth `advance()`, the same way.
+- XP is awarded only by `advance()`, after feedback is acknowledged. The
+  screen award, historical daily goal, cursor and completion bonus commit with
+  the session snapshot in one transaction. Failed writes leave the in-memory
+  session unchanged and can be retried safely.
+- First attempts and immediate retries each commit their attempt record and
+  snapshot together; scheduler updates happen only for first attempts. Uncertain
+  results call the scheduler's no-penalty recheck path.
+- Stale-tab writes are rejected inside the write transaction, and overlapping
+  local submissions are rejected before grading.
 - Delayed revisits (see below).
 - Linked rounds: `advance()` on a series' last screen starts the next series
   (up to the session's requested count) rather than ending the session.
@@ -56,11 +59,11 @@ revisit is simply not re-asked this session. This is not a silent loss: the
 scheduler has already recorded the lapse from the original wrong answer, so
 the item is due again on its own schedule regardless.
 
-**Known simplification:** a cross-series carried revisit is currently always
-re-asked as `recognition`, regardless of which skill the original error was
-on. Fixing this needs `SeriesState.revisitQueue` (or a session-level field) to
-carry the skill, which the current domain type does not. Documented here
-rather than silently dropped.
+Cross-series revisits preserve their skill and word-specific reading. Legacy
+snapshots without those fields fall back to recognition. Revisit generation is
+awaited before the answer transaction opens, so a persisted question never races
+an asynchronous replacement. Requested linked-round length is stored in the
+snapshot; legacy sessions without that field resume as one series.
 
 ## Auxiliary tracking
 

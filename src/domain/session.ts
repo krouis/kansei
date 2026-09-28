@@ -1,3 +1,4 @@
+import type { Skill } from './skills';
 import type { ItemId, SessionId } from './ids';
 import type { AnswerSubmission, Grade, Question } from './questions';
 
@@ -46,6 +47,8 @@ export interface SessionState {
   status: SessionStatus;
   /** Series in this session: 1 for standard, 2–3 for linked rounds. */
   series: SeriesState[];
+  /** Requested round length; absent on legacy snapshots, which resume as one series. */
+  seriesCount?: 1 | 2 | 3;
   /** Index of the series currently being answered. */
   activeSeriesIndex: number;
   startedAt: string;
@@ -74,7 +77,7 @@ export interface SeriesState {
   /** Index of the screen being shown, 0..9. */
   cursor: number;
   /** Items queued for a delayed revisit later in this or a following series. */
-  revisitQueue: Array<{ itemId: ItemId; afterScreenIndex: number; reason: string }>;
+  revisitQueue: Array<{ itemId: ItemId; skill?: Skill; readingId?: string | null; afterScreenIndex: number; reason: string }>;
   completedAt: string | null;
   /** True once the +10 completion bonus has been banked. Idempotency guard. */
   completionBonusAwarded: boolean;

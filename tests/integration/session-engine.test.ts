@@ -12,7 +12,7 @@ import { createFsrsScheduler } from '@/learning/scheduler';
 import { DefaultSelector } from '@/learning/selection/selector';
 import { CompositeGenerator } from '@/learning/generation';
 import { KanseiGrader } from '@/learning/grading/grader';
-import { KanseiSessionEngine } from '@/learning/session/engine';
+import { KanseiSessionEngine, type SessionEngineDeps } from '@/learning/session/engine';
 import { mulberry32 } from '@/learning/generation';
 
 /**
@@ -129,7 +129,7 @@ const FIXTURE_SETTINGS = {
   includeExtended: false, includeHistorical: false,
 } as const;
 
-function buildEngine(db: Database, seed: number): KanseiSessionEngine {
+function buildEngine(db: Database, seed: number, overrides: Partial<SessionEngineDeps> = {}): KanseiSessionEngine {
   const library = new FixtureLibrary();
   const rng = mulberry32(seed);
   return new KanseiSessionEngine({
@@ -141,6 +141,7 @@ function buildEngine(db: Database, seed: number): KanseiSessionEngine {
     grader: new KanseiGrader({ assessor: null, content: null }),
     getSettings: () => FIXTURE_SETTINGS as never,
     random: rng,
+    ...overrides,
   });
 }
 
@@ -199,7 +200,7 @@ describe('session engine: a complete series end to end', () => {
       const submission = answerFor(q, true);
       const now = new Date(`2026-01-01T09:0${i}:00.000Z`);
       const { xpAwarded } = await engine.submit(submission, now);
-      expect(xpAwarded).toBe(XP_RULES.perScreen);
+      expect(xpAwarded).toBe(0);
       const { state: next, finished } = await engine.advance(now);
       state = next;
       screensSeen += 1;
@@ -220,7 +221,7 @@ describe('session engine: a complete series end to end', () => {
     const wrong = answerFor(q, false);
     const { grade: firstGrade, xpAwarded } = await engine.submit(wrong, new Date('2026-01-01T09:00:00.000Z'));
     expect(firstGrade.outcome).toBe('incorrect');
-    expect(xpAwarded).toBe(1);
+    expect(xpAwarded).toBe(0);
 
     const corrected = answerFor(q, true);
     const { grade: retryGrade } = await engine.submitRetry(corrected, new Date('2026-01-01T09:00:05.000Z'));
@@ -278,5 +279,136 @@ describe('session engine: a complete series end to end', () => {
     expect(resumed).toBeDefined();
     expect(resumed!.series[0]!.cursor).toBe(1); // Advanced past screen 0, not restarted.
     expect(resumed!.id).toBe(started.id);
+  });
+});
+
+describe('session durability and operation boundaries', () => {
+  const now = new Date('2026-01-01T09:00:00.000Z');
+
+  function failSessionSave(): () => void {
+    const transact = db.transact.bind(db);
+    db.transact = (scope, fn) => transact(scope, (tx) => fn({
+      ...tx, sessions: new Proxy(tx.sessions, { get(target, key) {
+        if (key === 'save') return async () => { throw new Error('simulated snapshot failure'); };
+        const value = Reflect.get(target, key);
+        return typeof value === 'function' ? value.bind(target) : value;
+      } }),
+    }));
+    return () => { db.transact = transact; };
+  }
+
+  it('rolls back the attempt and scheduling when the session snapshot fails', async () => {
+    const state = await engine.start({ kind: 'standard', seriesCount: 1, now });
+    const q = questionOf(state);
+    const restore = failSessionSave();
+    await expect(engine.submit(answerFor(q, false), now)).rejects.toThrow('snapshot failure');
+    restore();
+    expect(await db.transact('readonly', (tx) => tx.attempts.count())).toBe(0);
+    expect(await db.transact('readonly', (tx) => tx.skills.all())).toHaveLength(0);
+    expect(state.series[0]!.screens[0]!.result).toBeNull();
+    await engine.submit(answerFor(q, true), now);
+    expect(await db.transact('readonly', (tx) => tx.attempts.count())).toBe(1);
+  });
+
+  it('awards no XP until feedback is acknowledged, including after reload', async () => {
+    const state = await engine.start({ kind: 'standard', seriesCount: 1, now });
+    await engine.submit(answerFor(questionOf(state), false), now);
+    expect(await db.transact('readonly', (tx) => tx.xp.total())).toBe(0);
+    const reloaded = buildEngine(db, 8);
+    const resumed = await reloaded.resume();
+    expect(resumed!.series[0]!.screens[0]!.result?.grade.outcome).toBe('incorrect');
+    await reloaded.advance(now);
+    expect(await db.transact('readonly', (tx) => tx.xp.total())).toBe(1);
+  });
+
+  it('rolls back screen XP and cursor together on acknowledgement failure', async () => {
+    const state = await engine.start({ kind: 'standard', seriesCount: 1, now });
+    await engine.submit(answerFor(questionOf(state), true), now);
+    const restore = failSessionSave();
+    await expect(engine.advance(now)).rejects.toThrow('snapshot failure');
+    restore();
+    expect(await db.transact('readonly', (tx) => tx.xp.total())).toBe(0);
+    expect(state.series[0]!.cursor).toBe(0);
+    expect(state.series[0]!.screens[0]!.feedbackAcknowledged).toBe(false);
+    await engine.advance(now);
+    expect(await db.transact('readonly', (tx) => tx.xp.total())).toBe(1);
+  });
+
+  it('rolls back completion bonus with the final snapshot and permits a safe retry', async () => {
+    let state = await engine.start({ kind: 'standard', seriesCount: 1, now });
+    for (let i = 0; i < 9; i++) {
+      await engine.submit(answerFor(questionOf(state), true), now);
+      state = (await engine.advance(now)).state;
+    }
+    await engine.submit(answerFor(questionOf(state), true), now);
+    const restore = failSessionSave();
+    await expect(engine.advance(now)).rejects.toThrow('snapshot failure');
+    restore();
+    expect(await db.transact('readonly', (tx) => tx.xp.total())).toBe(9);
+    expect(state.status).toBe('active');
+    await engine.advance(now);
+    await engine.advance(now);
+    expect(await db.transact('readonly', (tx) => tx.xp.total())).toBe(20);
+  });
+
+  it('rejects simultaneous and stale-tab submissions without another learning update', async () => {
+    const state = await engine.start({ kind: 'standard', seriesCount: 1, now });
+    const other = buildEngine(db, 9);
+    await other.resume();
+    const answer = answerFor(questionOf(state), true);
+    const results = await Promise.allSettled([engine.submit(answer, now), engine.submit(answer, now)]);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    await expect(other.submit(answer, now)).rejects.toThrow('another tab');
+    expect(await db.transact('readonly', (tx) => tx.attempts.count())).toBe(1);
+  });
+
+  it('schedules an uncertain assessment for recheck without changing memory estimates', async () => {
+    const state = await engine.start({ kind: 'standard', seriesCount: 1, now });
+    const q = questionOf(state);
+    const scheduler = createFsrsScheduler({ random: () => 0.5 });
+    const memory = { ...scheduler.initial(q.targetItemId, q.skill, q.targetReadingId, now),
+      stability: 12, difficulty: 4, dueAt: '2026-02-01T09:00:00.000Z' };
+    await db.transact('readwrite', (tx) => tx.skills.put(memory));
+    const grader = new KanseiGrader({ assessor: null, content: null });
+    const uncertain = buildEngine(db, 10, { grader: {
+      grade: grader.grade.bind(grader),
+      gradeDetailed: async (...args) => {
+        const detail = await grader.gradeDetailed(...args);
+        return { ...detail, grade: { ...detail.grade, outcome: 'uncertain', unaidedFirstAttempt: false } };
+      },
+    } });
+    await uncertain.resume();
+    await uncertain.submit(answerFor(q, true), now);
+    const updated = await db.transact('readonly', (tx) => tx.skills.get(q.targetItemId, q.skill, q.targetReadingId));
+    expect(updated!.stability).toBe(memory.stability);
+    expect(updated!.difficulty).toBe(memory.difficulty);
+    expect(updated!.lapses).toBe(memory.lapses);
+    expect(updated!.dueAt).toBe('2026-01-01T09:05:00.000Z');
+  });
+
+  it('does not retain an immediate retry when its snapshot fails', async () => {
+    const state = await engine.start({ kind: 'standard', seriesCount: 1, now });
+    const q = questionOf(state);
+    await engine.submit(answerFor(q, false), now);
+    const restore = failSessionSave();
+    await expect(engine.submitRetry(answerFor(q, true), now)).rejects.toThrow('snapshot failure');
+    restore();
+    expect(await db.transact('readonly', (tx) => tx.attempts.count())).toBe(1);
+    expect(state.series[0]!.screens[0]!.retries).toHaveLength(0);
+  });
+
+  it('retains a three-series round across fresh engine instances', async () => {
+    let state = await engine.start({ kind: 'linked', seriesCount: 3, now });
+    for (let i = 0; i < 30; i++) {
+      const fresh = buildEngine(db, 100 + i);
+      state = (await fresh.resume())!;
+      expect(state.seriesCount).toBe(3);
+      await fresh.submit(answerFor(questionOf(state), true), now);
+      const next = await fresh.advance(now);
+      expect(next.finished).toBe(i === 29);
+      state = next.state;
+    }
+    expect(state.series).toHaveLength(3);
+    expect(await db.transact('readonly', (tx) => tx.xp.total())).toBe(60);
   });
 });

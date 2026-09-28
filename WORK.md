@@ -11,11 +11,11 @@ Updated as implementation proceeds; unchecked items are not release claims.
 - [ ] Preserve useful independent content verifiers in the repository.
 - [ ] Commit inherited unfinished work in focused, reviewed changes.
 - [ ] Fix TypeScript configuration and establish reproducible build/check commands.
-- [ ] Save first attempts, scheduling, and session state atomically.
-- [ ] Award question XP after feedback acknowledgement; atomically save cursor and bonus.
-- [ ] Persist linked-round length across reloads; reject stale/concurrent answers.
-- [ ] Await delayed revisits and preserve their skill and reading across series.
-- [ ] Schedule uncertain handwriting rechecks without a memory penalty.
+- [x] Save first attempts, scheduling, and session state atomically.
+- [x] Award question XP after feedback acknowledgement; atomically save cursor and bonus.
+- [x] Persist linked-round length across reloads; reject stale/concurrent answers.
+- [x] Await delayed revisits and preserve their skill and reading across series.
+- [x] Schedule uncertain handwriting rechecks without a memory penalty.
 
 ## First usable offline learning flow
 - [ ] Assemble reproducible kana packs with byte counts, hashes, and attribution.
@@ -68,3 +68,8 @@ Follow the existing history: imperative descriptive subject, blank line,
 plain-language explanation of behavior and relevant validation. Keep each
 commit scoped to one coherent change. Preserve Claude attribution on inherited
 work; use truthful Codex attribution for new work. Do not commit build caches.
+
+## Validation log
+- Session reliability: 12 integration tests pass, including snapshot-write failure rollback, feedback-gated XP, stale tabs, three-series reloads, and uncertain rechecks.
+- Inherited audio, components/fonts/source mappings, and database migration/pack-state work preserved in separate commits.
+- Parallel continuation attempted; all three subagents hit account usage limits. Root continues integration locally.

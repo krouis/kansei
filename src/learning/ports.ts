@@ -151,8 +151,7 @@ export interface SessionEngine {
   /**
    * Submit an answer for the current screen.
    *
-   * Records the attempt, folds it into the scheduler, banks the screen's XP
-   * once, and returns the grade plus the feedback to show. The first attempt's
+   * Records the attempt and scheduler update atomically with the session, and returns the grade plus the feedback to show. The first attempt's
    * result is preserved for ever; a corrected retry is appended, never merged.
    */
   submit(submission: AnswerSubmission, now: Date): Promise<{
@@ -163,7 +162,7 @@ export interface SessionEngine {
   }>;
   /** Record a guided correction. Never overwrites the first-attempt result. */
   submitRetry(submission: AnswerSubmission, now: Date): Promise<{ grade: Grade }>;
-  /** Acknowledge feedback and advance. Screen XP is banked here if not already. */
+  /** Acknowledge feedback and advance. Screen XP is banked here atomically with the cursor. */
   advance(now: Date): Promise<{ state: SessionState; finished: boolean }>;
   /** Abandon the session. Screen XP already earned is kept. */
   abandon(now: Date): Promise<void>;
