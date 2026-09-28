@@ -1,0 +1,158 @@
+/*
+ * Base styles and resets.
+ *
+ * Deliberately small. Layout lives with the components that own it; this file
+ * establishes the paper, the type, focus visibility, and the accessibility
+ * primitives every screen relies on.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Keep the address bar's colour in step with the theme on mobile. */
+  background-color: var(--paper);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-variant-numeric: tabular-nums;
+  /* The practice surface is a drawing surface: never let a stray drag scroll or
+     trigger pull-to-refresh mid-stroke. Scrolling is re-enabled per region. */
+  overscroll-behavior-y: contain;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  letter-spacing: -0.011em;
+  text-wrap: balance;
+}
+
+p { margin: 0; text-wrap: pretty; }
+ul, ol { margin: 0; padding: 0; }
+li { list-style: none; }
+
+a {
+  color: var(--accent-text);
+  text-decoration-color: var(--accent-soft-border);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+a:hover { text-decoration-color: currentColor; }
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+}
+
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+
+img, svg, canvas { display: block; max-width: 100%; }
+
+[hidden] { display: none !important; }
+
+/* ---- Focus -------------------------------------------------------------- *
+ * Focus is always visible for keyboard users, on every interactive element,
+ * including custom ones. :focus-visible keeps it off pointer interaction, and
+ * the double ring survives both light and dark grounds.
+ */
+:focus-visible {
+  outline: 2px solid var(--rule-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+/* Elements that manage their own focus ring opt out with this class. */
+.focus-custom:focus-visible { outline: none; }
+
+::selection {
+  background: var(--accent-soft-border);
+  color: var(--ink);
+}
+
+/* ---- Japanese text ------------------------------------------------------ *
+ * Japanese glyphs need their own class rather than a global font, so Latin UI
+ * chrome keeps its own face and the two never fight over metrics.
+ */
+.jp {
+  font-family: var(--font-jp);
+  font-feature-settings: 'palt' 1;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+.jp-serif { font-family: var(--font-jp-serif); }
+/* Textbook face: used to show the handwritten letterform where it differs. */
+.jp-hand { font-family: var(--font-jp-hand); }
+
+/* ---- Screen-reader only ------------------------------------------------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Visible again when focused — used by the skip link. */
+.sr-only-focusable:focus-visible {
+  position: fixed;
+  inset-block-start: var(--space-3);
+  inset-inline-start: var(--space-3);
+  z-index: 100;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  overflow: visible;
+  clip-path: none;
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ---- Scrollable regions ------------------------------------------------- *
+ * Wide content (tables, stroke rows, charts) scrolls inside its own container.
+ * The page body must never scroll horizontally.
+ */
+.scroll-x {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+/* ---- Utility ------------------------------------------------------------ */
+.stack { display: flex; flex-direction: column; }
+.row { display: flex; align-items: center; }
+.measure { max-width: var(--measure); }
+
+/* Paper rule — the hairline that separates sections, like a ruled notebook. */
+.rule {
+  border: 0;
+  border-block-start: 1px solid var(--rule);
+  margin: 0;
+}
+
+@media print {
+  body { background: #fff; color: #000; }
+}

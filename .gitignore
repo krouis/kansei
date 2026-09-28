@@ -1,0 +1,9 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+.DS_Store
+.vite/
+coverage/
+# Upstream datasets are fetched by scripts/assets/fetch-sources.mjs, not committed.
+data/sources/

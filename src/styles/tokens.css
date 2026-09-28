@@ -1,0 +1,314 @@
+/*
+ * Kansei design tokens.
+ *
+ * Visual identity: Japanese stationery. Warm paper rather than clinical white,
+ * sumi-ink text rather than pure black, a single indigo for interaction and a
+ * restrained vermilion reserved for the seal mark and genuine emphasis.
+ *
+ * Theme handling follows the viewer in three states:
+ *   :root                                  → the complete light palette
+ *   :root:not([data-theme='light']) @media  → dark when the system asks for it
+ *   :root[data-theme='dark']               → dark when the learner chose it
+ * Every colour is defined on bare :root first, so no token exists only inside a
+ * media query.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Paper and surfaces ------------------------------------------------ */
+  --paper: #fbf9f4;           /* washi-like warm ground */
+  --paper-sunken: #f4f1e9;    /* inset wells, table stripes */
+  --surface: #ffffff;         /* raised cards */
+  --surface-hover: #f8f6f0;
+  --surface-active: #f1ede4;
+  --scrim: rgb(25 28 34 / 0.44);
+
+  /* ---- Ink -------------------------------------------------------------- */
+  --ink: #191c22;             /* sumi, primary text */
+  --ink-soft: #4b525c;        /* secondary text */
+  --ink-faint: #6b727e;       /* tertiary, meets 4.5:1 on --paper */
+  --ink-inverse: #fbf9f4;
+
+  /* ---- Rules and edges -------------------------------------------------- */
+  --rule: #e4dfd4;            /* hairline dividers */
+  --rule-strong: #959085;     /* input borders */
+  --rule-focus: #1f3a5f;
+
+  /* ---- Indigo: the one interactive accent -------------------------------- */
+  --accent: #1f3a5f;          /* 藍 — buttons, links, selection */
+  --accent-hover: #172d4a;
+  --accent-active: #122238;
+  --accent-soft: #e7edf5;     /* tinted fill behind accented content */
+  --accent-soft-border: #c3d2e5;
+  --accent-on: #ffffff;       /* text on --accent */
+  --accent-text: #1a3355;     /* accent-coloured text on paper, 7:1 */
+
+  /* ---- Vermilion: the seal. Used sparingly, never for plain decoration --- */
+  --seal: #b1432c;
+  --seal-soft: #f7e9e5;
+  --seal-text: #93341f;
+
+  /* ---- Semantic status. Always paired with a glyph, never colour alone --- */
+  --ok: #3f6b46;
+  --ok-soft: #e6efe6;
+  --ok-text: #2f5537;
+  --warn: #8a5a15;
+  --warn-soft: #f7eedd;
+  --warn-text: #74490f;
+  --danger: #a3342b;
+  --danger-soft: #f8e8e6;
+  --danger-text: #8a281f;
+  --info: var(--accent);
+  --info-soft: var(--accent-soft);
+
+  /* ---- Learning stages -------------------------------------------------- */
+  --stage-unseen: #969083;
+  --stage-unseen-soft: #f0ece3;
+  --stage-learning: #b07b21;
+  --stage-learning-soft: #faf0da;
+  --stage-consolidating: #3d6491;
+  --stage-consolidating-soft: #e6eef7;
+  --stage-retained: #46704c;
+  --stage-retained-soft: #e6efe6;
+  /* "Due for review" is shown separately from stage, so it has its own token. */
+  --due: #a0522d;
+  --due-soft: #fbeee6;
+
+  /* ---- Typography ------------------------------------------------------- */
+  --font-ui: 'Inter var', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-jp: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', Meiryo, sans-serif;
+  --font-jp-serif: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  /* Textbook/handwriting style, used to show handwritten letterforms. */
+  --font-jp-hand: 'Klee One', 'Yu Kyokasho', 'Hiragino Maru Gothic ProN', var(--font-jp);
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* Learner-adjustable multiplier for Japanese glyph sizes. */
+  --jp-scale: 1;
+
+  --text-2xs: 0.6875rem;  /* 11px */
+  --text-xs: 0.75rem;     /* 12 */
+  --text-sm: 0.8125rem;   /* 13 */
+  --text-base: 0.9375rem; /* 15 — body */
+  --text-md: 1.0625rem;   /* 17 */
+  --text-lg: 1.25rem;     /* 20 */
+  --text-xl: 1.5rem;      /* 24 */
+  --text-2xl: 1.875rem;   /* 30 */
+  --text-3xl: 2.375rem;   /* 38 */
+
+  /* Japanese display sizes. Kana and kanji need markedly more size than Latin
+     at the same optical weight, and these are the sizes practice depends on. */
+  --jp-sm: calc(1.375rem * var(--jp-scale));
+  --jp-md: calc(2rem * var(--jp-scale));
+  --jp-lg: calc(3rem * var(--jp-scale));
+  --jp-xl: calc(4.5rem * var(--jp-scale));
+  --jp-hero: calc(clamp(5rem, 22vmin, 9rem) * var(--jp-scale));
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.55;
+  --leading-relaxed: 1.7;
+  --tracking-wide: 0.02em;
+  --tracking-wider: 0.06em;
+
+  /* ---- Space: a 4px base, named by role not by number ------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* ---- Radii: stationery is squared off, with a soft hand ---------------- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 18px;
+  --radius-pill: 999px;
+
+  /* ---- Elevation: ink-tinted, never grey-black -------------------------- */
+  --shadow-sm: 0 1px 2px rgb(25 28 34 / 0.06), 0 1px 1px rgb(25 28 34 / 0.04);
+  --shadow-md: 0 2px 4px rgb(25 28 34 / 0.05), 0 6px 16px -6px rgb(25 28 34 / 0.12);
+  --shadow-lg: 0 8px 32px -8px rgb(25 28 34 / 0.18), 0 2px 6px rgb(25 28 34 / 0.05);
+  --shadow-focus: 0 0 0 3px var(--accent-soft-border);
+
+  /* ---- Motion: short, and fully removable ------------------------------- */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);
+  --dur-instant: 80ms;
+  --dur-fast: 140ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+
+  /* ---- Layout ----------------------------------------------------------- */
+  --measure: 68ch;            /* comfortable reading width for prose */
+  --content-max: 1180px;
+  --nav-height: 3.75rem;      /* phone bottom bar */
+  --nav-width: 15rem;         /* desktop side rail */
+  --tap-min: 44px;            /* minimum touch target */
+
+  /* ---- Handwriting canvas ----------------------------------------------- */
+  --canvas-paper: #fffefb;
+  --canvas-grid: #e8e2d6;
+  --canvas-guide: #8d939b;
+  --canvas-ink: #1a1d24;
+  --canvas-trace: #b9c7d8;
+}
+
+/* Dark, when the system asks and the learner has not overridden it. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --paper: #14161a;
+    --paper-sunken: #101216;
+    --surface: #1c1f25;
+    --surface-hover: #23272e;
+    --surface-active: #2a2f37;
+    --scrim: rgb(5 6 8 / 0.62);
+
+    --ink: #e9e6e0;
+    --ink-soft: #b3b0aa;
+    --ink-faint: #8b8983;
+    --ink-inverse: #14161a;
+
+    --rule: #2b2f37;
+    --rule-strong: #666a72;
+    --rule-focus: #8fb3dd;
+
+    --accent: #8fb3dd;
+    --accent-hover: #a6c4e6;
+    --accent-active: #bcd4ee;
+    --accent-soft: #1d2530;
+    --accent-soft-border: #35455a;
+    --accent-on: #10151c;
+    --accent-text: #a8c6e8;
+
+    --seal: #e08d76;
+    --seal-soft: #2b1e1a;
+    --seal-text: #eba893;
+
+    --ok: #74a87c;
+    --ok-soft: #18231a;
+    --ok-text: #8ec096;
+    --warn: #d0a055;
+    --warn-soft: #251d12;
+    --warn-text: #e0b876;
+    --danger: #e08a80;
+    --danger-soft: #291917;
+    --danger-text: #eda49b;
+
+    --stage-unseen: #6d6961;
+    --stage-unseen-soft: #1e2025;
+    --stage-learning: #cba25c;
+    --stage-learning-soft: #251e12;
+    --stage-consolidating: #86aad5;
+    --stage-consolidating-soft: #1a212b;
+    --stage-retained: #7cae85;
+    --stage-retained-soft: #18231a;
+    --due: #d9926a;
+    --due-soft: #281a13;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 8px 20px -8px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 10px 38px -10px rgb(0 0 0 / 0.66), 0 2px 8px rgb(0 0 0 / 0.4);
+    --shadow-focus: 0 0 0 3px var(--accent-soft-border);
+
+    --canvas-paper: #191c21;
+    --canvas-grid: #2c3138;
+    --canvas-guide: #606974;
+    --canvas-ink: #eceae5;
+    --canvas-trace: #46525f;
+  }
+}
+
+/* Dark, chosen explicitly. Duplicated so the toggle wins in both directions. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --paper: #14161a;
+  --paper-sunken: #101216;
+  --surface: #1c1f25;
+  --surface-hover: #23272e;
+  --surface-active: #2a2f37;
+  --scrim: rgb(5 6 8 / 0.62);
+
+  --ink: #e9e6e0;
+  --ink-soft: #b3b0aa;
+  --ink-faint: #8b8983;
+  --ink-inverse: #14161a;
+
+  --rule: #2b2f37;
+  --rule-strong: #666a72;
+  --rule-focus: #8fb3dd;
+
+  --accent: #8fb3dd;
+  --accent-hover: #a6c4e6;
+  --accent-active: #bcd4ee;
+  --accent-soft: #1d2530;
+  --accent-soft-border: #35455a;
+  --accent-on: #10151c;
+  --accent-text: #a8c6e8;
+
+  --seal: #e08d76;
+  --seal-soft: #2b1e1a;
+  --seal-text: #eba893;
+
+  --ok: #74a87c;
+  --ok-soft: #18231a;
+  --ok-text: #8ec096;
+  --warn: #d0a055;
+  --warn-soft: #251d12;
+  --warn-text: #e0b876;
+  --danger: #e08a80;
+  --danger-soft: #291917;
+  --danger-text: #eda49b;
+
+  --stage-unseen: #6d6961;
+  --stage-unseen-soft: #1e2025;
+  --stage-learning: #cba25c;
+  --stage-learning-soft: #251e12;
+  --stage-consolidating: #86aad5;
+  --stage-consolidating-soft: #1a212b;
+  --stage-retained: #7cae85;
+  --stage-retained-soft: #18231a;
+  --due: #d9926a;
+  --due-soft: #281a13;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 0.3), 0 8px 20px -8px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 10px 38px -10px rgb(0 0 0 / 0.66), 0 2px 8px rgb(0 0 0 / 0.4);
+  --shadow-focus: 0 0 0 3px var(--accent-soft-border);
+
+  --canvas-paper: #191c21;
+  --canvas-grid: #2c3138;
+  --canvas-guide: #606974;
+  --canvas-ink: #eceae5;
+  --canvas-trace: #46525f;
+}
+
+/*
+ * Reduced motion. Transitions collapse to near-zero rather than being removed
+ * outright, so state changes still read as changes. Stroke animations are
+ * handled in JS: they become a step-through control instead of autoplay.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instant: 1ms;
+    --dur-fast: 1ms;
+    --dur-base: 1ms;
+    --dur-slow: 1ms;
+  }
+}
+
+:root[data-motion='reduce'] {
+  --dur-instant: 1ms;
+  --dur-fast: 1ms;
+  --dur-base: 1ms;
+  --dur-slow: 1ms;
+}
