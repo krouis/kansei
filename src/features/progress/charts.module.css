@@ -72,3 +72,128 @@
   --viz-ink: #b3b0aa;
   --viz-ink-strong: #e9e6e0;
 }
+
+/* ---- Chart frame -------------------------------------------------------- */
+.frame { display: flex; flex-direction: column; gap: var(--space-3); }
+.frameHead { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.frameTitle { font-size: var(--text-md); font-weight: 600; letter-spacing: -0.012em; }
+.frameNote { font-size: var(--text-sm); color: var(--ink-faint); }
+.plotWrap { position: relative; }
+.plot { display: block; inline-size: 100%; block-size: auto; overflow: visible; }
+
+/* Wide charts scroll inside their own container; the page never scrolls sideways. */
+.plotScroll { overflow-x: auto; overscroll-behavior-x: contain; padding-block-end: var(--space-1); }
+
+.axisLine { stroke: var(--viz-axis); stroke-width: 1; }
+.gridLine { stroke: var(--viz-grid); stroke-width: 1; }
+.axisText { fill: var(--viz-ink); font-size: 10px; font-family: var(--font-ui); font-variant-numeric: tabular-nums; }
+.axisTextStrong { fill: var(--viz-ink-strong); font-weight: 600; }
+
+/* Bars: 4px rounded data-end, anchored to the baseline. */
+.bar { fill: var(--viz-seq-4); }
+.barMet { fill: var(--viz-seq-5); }
+.barTrack { fill: var(--viz-track); stroke: var(--viz-track-border); stroke-width: 1; }
+.barHover { fill: var(--viz-ink-strong); opacity: 0; }
+.barHover:hover, .barHover:focus-visible { opacity: 0.06; }
+
+/* The goal that applied on each day: a step line, because the goal can change. */
+.goalStep {
+  fill: none;
+  stroke: var(--viz-goal);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.goalLabel { fill: var(--viz-goal); font-size: 10px; font-weight: 600; font-family: var(--font-ui); }
+/* Goal met is marked by a glyph as well as by the bar reaching the line. */
+.metMark { fill: var(--viz-met); }
+
+.line { fill: none; stroke: var(--viz-seq-5); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lineArea { fill: var(--viz-seq-1); }
+.point { fill: var(--viz-seq-5); stroke: var(--viz-surface); stroke-width: 2; }
+
+/* Stacked segments get a 2px surface gap so neighbours never blend. */
+.seg1 { fill: var(--viz-seq-2); }
+.seg2 { fill: var(--viz-seq-4); }
+.seg3 { fill: var(--viz-seq-5); }
+.segGap { stroke: var(--viz-surface); stroke-width: 2; }
+
+/* ---- Calendar ----------------------------------------------------------- */
+.calGrid { display: flex; gap: 3px; }
+.calWeek { display: flex; flex-direction: column; gap: 3px; }
+.calCell {
+  inline-size: 11px;
+  block-size: 11px;
+  border-radius: 2px;
+  background: var(--viz-track);
+  border: 1px solid var(--viz-track-border);
+}
+.calCell0 { background: var(--viz-track); }
+.calCell1 { background: var(--viz-seq-1); border-color: var(--viz-seq-2); }
+.calCell2 { background: var(--viz-seq-2); border-color: var(--viz-seq-3); }
+.calCell3 { background: var(--viz-seq-3); border-color: var(--viz-seq-4); }
+.calCell4 { background: var(--viz-seq-4); border-color: var(--viz-seq-5); }
+.calCell5 { background: var(--viz-seq-5); border-color: var(--viz-seq-5); }
+/* A day whose goal was met carries a ring, so "met" is not a shade judgement. */
+.calCellMet { box-shadow: inset 0 0 0 1px var(--viz-surface), 0 0 0 1.5px var(--viz-met); }
+.calMonths { display: flex; gap: 3px; margin-block-end: 2px; }
+.calMonthLabel { font-size: var(--text-2xs); color: var(--ink-faint); white-space: nowrap; }
+.calDays { display: flex; flex-direction: column; gap: 3px; margin-inline-end: var(--space-1); }
+.calDayLabel { block-size: 11px; font-size: var(--text-2xs); line-height: 11px; color: var(--ink-faint); }
+.calLegend {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-size: var(--text-2xs); color: var(--ink-faint);
+}
+.calLegendScale { display: flex; gap: 2px; }
+
+/* ---- Horizontal bar list (small multiples) ------------------------------ */
+.hbarList { display: flex; flex-direction: column; gap: var(--space-3); }
+.hbarRow { display: grid; grid-template-columns: minmax(6.5rem, auto) 1fr auto; gap: var(--space-3); align-items: center; }
+.hbarLabel { font-size: var(--text-sm); font-weight: 550; }
+.hbarTrack {
+  position: relative; block-size: 0.5rem; border-radius: var(--radius-pill);
+  background: var(--viz-track); border: 1px solid var(--viz-track-border); overflow: hidden;
+}
+.hbarFill { block-size: 100%; border-radius: var(--radius-pill); background: var(--viz-seq-4); }
+.hbarValue {
+  font-size: var(--text-sm); font-variant-numeric: tabular-nums; color: var(--ink-soft);
+  min-inline-size: 4.5rem; text-align: end;
+}
+/* A row with too little data to report says so instead of drawing a bar. */
+.hbarInsufficient { font-size: var(--text-sm); color: var(--ink-faint); font-style: italic; }
+
+/* ---- Tooltip ------------------------------------------------------------ */
+.tooltip {
+  position: absolute;
+  z-index: 5;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.tooltipTitle { font-weight: 650; color: var(--ink); }
+.tooltipRow { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
+/* ---- Table view --------------------------------------------------------- */
+.tableToggle {
+  align-self: flex-start;
+  min-height: 2rem;
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.table { inline-size: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.table caption { text-align: start; padding-block-end: var(--space-2); color: var(--ink-faint); font-size: var(--text-xs); }
+.table th, .table td { padding: var(--space-1) var(--space-2); text-align: start; border-block-end: 1px solid var(--rule); }
+.table th { font-weight: 600; color: var(--ink-soft); font-size: var(--text-xs); }
+.table td { font-variant-numeric: tabular-nums; }
+.table tbody tr:nth-child(even) { background: var(--paper-sunken); }
