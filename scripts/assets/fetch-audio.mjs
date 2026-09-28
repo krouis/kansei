@@ -963,7 +963,7 @@ async function main() {
     await writeFile(join(OPTIONS.outDir, 'ATTRIBUTION.md'), renderAttribution(index));
     log(`wrote ${relative(REPO_ROOT, join(OPTIONS.outDir, 'ATTRIBUTION.md'))}`);
 
-    const provPath = resolve(REPO_ROOT, 'data/audio-provenance.json');
+    const provPath = resolve(REPO_ROOT, 'data/audio.provenance.json');
     await mkdir(dirname(provPath), { recursive: true });
     await writeFile(
       provPath,

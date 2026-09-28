@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T22:23:18.029Z",
+  "generatedAt": "2026-09-28T22:28:25.908Z",
   "generator": "scripts/assets/fetch-audio.mjs",
   "reproduce": "npm run audio:fetch",
   "policy": {

@@ -15,9 +15,10 @@ redistribute it offline, not a to-do list we quietly papered over.
 
 - Fetcher: `scripts/assets/fetch-audio.mjs` (`npm run audio:fetch`)
 - Output: `public/content/audio/` — clips, `index.json`, `ATTRIBUTION.md`
-- Provenance record: `data/audio-provenance.json`
+- Provenance record: `data/audio.provenance.json`
 - Survey and fetch date: **2026-09-28 / 2026-09-29**
-- Built: **436 files, 36,948,012 bytes**, 507 clip keys
+- Built: **436 files, 36,948,012 bytes (36.9 MB)**, 507 clip keys
+- Headline: **71 of 104 kana syllable sounds**, **358 words**, **nothing else**
 
 ---
 
@@ -69,6 +70,39 @@ of these cannot have one correct spelling — `audioIsAmbiguous()` in
 `src/domain/romanization.ts` is the gate for that, and it applies regardless of
 which clip is playing.
 
+### 1.1a Measured against the real kana dataset — 142 of 268 entries
+
+The figures above count *sounds*. Joined by glyph against the committed
+`data/kana.json` (268 `KanaCharacter` entries, hiragana and katakana counted
+separately):
+
+| `KanaGroup` | Entries | With audio | Without |
+|---|---:|---:|---:|
+| `basic` | 92 | **92** | 0 |
+| `dakuten` | 40 | **40** | 0 |
+| `handakuten` | 10 | **10** | 0 |
+| `yoon` | 72 | 0 | **72** |
+| `special` | 19 | 0 | **19** |
+| `extended` | 31 | 0 | **31** |
+| `historical` | 4 | 0 | **4** |
+| **total** | **268** | **142** | **126** |
+
+Notes on the zero rows:
+
+- `yoon` — 72 entries (36 per script, including ぢゃ ぢゅ ぢょ). None exist; §1.1.
+- `special` — っ ッ, the small vowels ぁ-ぉ ァ-ォ, and ー. These have **no
+  independent sound**, so the absence is correct, not a gap: っ is a pause and
+  ー is length. They should never get a listening question at all.
+  (ん/ン are in `basic` and *do* have audio.)
+- `extended` — ファ ティ ウィ ヴ クァ … 31 katakana forms for foreign sounds.
+  Nothing on Commons. These are `extended` tier and off the beginner path.
+- `historical` — ゐ ゑ ヰ ヱ. Nothing on Commons; also off the beginner path.
+
+The audio index's romaji keys agree with `KanaCharacter.romaji` for all 142
+matched entries, so `kana/hi/<romaji>` and `kana/ka/<romaji>` join directly.
+`index.json` → `kanaKeyGlyphs` also gives the glyph for every key, so the
+content build can join on the glyph and never depend on that agreement holding.
+
 ### 1.2 Words — 365 clips, 358 distinct words
 
 All from Lingua Libre, by three speakers who declare Japanese as a **native**
@@ -113,7 +147,11 @@ attached to a specific reading without a human check.
 - **Every vocabulary word outside the 358 above** — which, once the beginner
   vocabulary list exists, will be most of it.
 - **Sentences and example phrases.** None were sourced.
-- **The small っ/ッ, the long mark ー.** These have no independent sound.
+- **The 31 extended katakana forms** (ファ ティ ウィ ヴ クァ …) and the **4
+  historical kana** (ゐ ゑ ヰ ヱ). Both are off the beginner path anyway.
+- **The small っ/ッ, the small vowels ぁ-ぉ ァ-ォ, the long mark ー.** These have
+  no independent sound; the absence is correct rather than a gap, and they must
+  never be given a listening question.
 
 ---
 
