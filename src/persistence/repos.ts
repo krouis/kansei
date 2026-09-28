@@ -4,7 +4,7 @@ import {
   type AttemptRecord, type AuxiliaryCounters, type ConfusionRecord, type DailyRecord,
   type ItemId, type SessionId, type SessionState, type Skill, type SkillState, type XpAward,
 } from '@/domain';
-import { fail, guard, storageError } from './errors';
+import { fail, guard } from './errors';
 import {
   ALL_STORES, AUXILIARY_KEY, NO_READING, fromSkillRow, keyRanges, toSkillRow,
   type KanseiSchema, type SkillStateRow, type StoreName,
@@ -331,18 +331,23 @@ class Xp implements XpRepo {
 
   async award(award: XpAward): Promise<boolean> {
     if (!award.dedupeKey) fail('unknown', 'An XP award cannot be banked without a dedupeKey.');
-    const store = this.scope.writable('xpAwards', 'banking XP');
-    try {
-      // `add` on a store keyed by dedupeKey: the engine rejects the duplicate, so
-      // idempotence does not depend on a read-then-write race inside the app.
+    return guard('banking XP', async () => {
+      const store = this.scope.writable('xpAwards', 'banking XP');
+      // A `getKey` check before `add`, not `add` wrapped in try/catch for
+      // ConstraintError: IndexedDB aborts the WHOLE transaction on an unhandled
+      // request error, and that abort happens synchronously during the native
+      // event's dispatch — before a JS `catch` on the wrapped promise ever runs.
+      // By the time our catch block executed, the transaction was already gone,
+      // which silently turned "duplicate XP, no-op" into "every write in this
+      // transaction just got rolled back". Checking first avoids ever raising
+      // the constraint error in the first place. Both requests are issued
+      // inside this ONE transaction, so no other writer can interleave between
+      // the check and the add.
+      const existingKey = await store.getKey(award.dedupeKey);
+      if (existingKey !== undefined) return false;
       await store.add(award);
       return true;
-    } catch (cause) {
-      if (cause && typeof cause === 'object' && 'name' in cause && cause.name === 'ConstraintError') {
-        return false;
-      }
-      throw storageError(cause, 'banking XP');
-    }
+    });
   }
 
   async hasAward(dedupeKey: string): Promise<boolean> {
