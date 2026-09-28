@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Kansei — an offline-first PWA for learning Japanese writing and beginner vocabulary.",
+  "description": "Kansei \u2014 an offline-first PWA for learning Japanese writing and beginner vocabulary.",
   "license": "AGPL-3.0-or-later",
   "engines": {
     "node": ">=20"
@@ -12,8 +12,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview --port 4173",
-    "typecheck": "tsc -b --noEmit false --emitDeclarationOnly false --pretty",
-    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "content:fetch": "node scripts/assets/fetch-sources.mjs",
@@ -26,7 +25,8 @@
     "icons:build": "node scripts/assets/build-icons.mjs",
     "audio:fetch": "node scripts/assets/fetch-audio.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
-    "check:viz": "node scripts/check-viz-palette.mjs"
+    "check:viz": "node scripts/check-viz-palette.mjs",
+    "check:kana": "node scripts/checks/verify-kana.mjs && node scripts/checks/verify-kana-schema.mjs"
   },
   "dependencies": {
     "idb": "^8.0.3",

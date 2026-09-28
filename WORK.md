@@ -8,7 +8,7 @@ Updated as implementation proceeds; unchecked items are not release claims.
 - [x] Inspect repository, Claude session/workflow records, and temporary artifacts.
 - [x] Verify all five downloaded source archives/files against the source lock.
 - [x] Establish baseline: 53 automated tests; 32 independent kana checks and schema check pass.
-- [ ] Preserve useful independent content verifiers in the repository.
+- [x] Preserve useful independent content verifiers in the repository.
 - [ ] Commit inherited unfinished work in focused, reviewed changes.
 - [ ] Fix TypeScript configuration and establish reproducible build/check commands.
 - [x] Save first attempts, scheduling, and session state atomically.
