@@ -1,0 +1,77 @@
+{
+  "schema": "kansei-icon-index/1",
+  "generatedAt": "2026-09-28T22:15:31.549Z",
+  "generatedBy": "scripts/assets/build-icons.mjs",
+  "reproduce": [
+    "node scripts/assets/build-icons.mjs"
+  ],
+  "rasteriser": "chrome:chromium",
+  "maskableSafeArea": {
+    "canvas": 512,
+    "inset": 116,
+    "note": "Mark confined to the central 80% safe circle; paper is full bleed."
+  },
+  "palette": {
+    "light": {
+      "paper": "#fbf9f4",
+      "rule": "#e4dfd4",
+      "ink": "#1f3a5f",
+      "seal": "#b1432c"
+    },
+    "dark": {
+      "paper": "#14161a",
+      "rule": "#2b2f37",
+      "ink": "#8fb3dd",
+      "seal": "#e08d76"
+    }
+  },
+  "license": "Original artwork, under the repository licence (AGPL-3.0-or-later). Not derived from any font.",
+  "svg": [
+    {
+      "file": "icon.svg",
+      "bytes": 743
+    },
+    {
+      "file": "icon-dark.svg",
+      "bytes": 743
+    },
+    {
+      "file": "icon-maskable.svg",
+      "bytes": 621
+    },
+    {
+      "file": "favicon.svg",
+      "bytes": 990
+    }
+  ],
+  "png": [
+    {
+      "file": "icon-192.png",
+      "variant": "light",
+      "width": 192,
+      "height": 192,
+      "bytes": 7848
+    },
+    {
+      "file": "icon-512.png",
+      "variant": "light",
+      "width": 512,
+      "height": 512,
+      "bytes": 11936
+    },
+    {
+      "file": "icon-512-maskable.png",
+      "variant": "maskable",
+      "width": 512,
+      "height": 512,
+      "bytes": 11936
+    },
+    {
+      "file": "apple-touch-icon.png",
+      "variant": "maskable",
+      "width": 180,
+      "height": 180,
+      "bytes": 5345
+    }
+  ]
+}

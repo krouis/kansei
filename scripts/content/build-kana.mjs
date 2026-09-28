@@ -109,7 +109,7 @@ const BASIC = [
     hn: 'A long i is written by simply repeating the kana: おおきい, ちいさい.', kn: null },
   { s: 'u', r: 'u', row: '', col: 'u', h: 'う', k: 'ウ', v: ['u', 'wu', 'whu'],
     hn: 'う also writes vowel length: added after an o-column kana it makes a long o (とうきょう = Tokyo), and after a u-column kana a long u (ゆうめい). Modified Hepburn writes these as o and u with a macron, not as "ou".',
-    kn: null },
+    kn: 'ウ does double duty in loanwords: with a small vowel it writes the missing w-sounds (ウィ, ウェ, ウォ), and with dakuten it becomes ヴ for a foreign v.' },
   { s: 'e', r: 'e', row: '', col: 'e', h: 'え', k: 'エ', v: ['e'],
     hn: null, kn: null },
   { s: 'o', r: 'o', row: '', col: 'o', h: 'お', k: 'オ', v: ['o'],
@@ -143,10 +143,12 @@ const BASIC = [
     hn: 'Romanised chi. An IME produces it from either chi or ti.', kn: null },
   { s: 'tsu', r: 'tsu', row: 't', col: 'u', h: 'つ', k: 'ツ', v: ['tsu', 'tu'],
     hn: 'Romanised tsu — one consonant sound, not "t + s". An IME produces it from tsu or tu.',
-    kn: null,
+    kn: 'In loanwords ツ often stands in for a foreign tu (ツアー, tour); the dedicated トゥ spelling is newer and less common. The small ッ is the same shape at half size and doubles the next consonant instead.',
     kp: 'Print does not show stroke direction, and ツ is told apart from シ by exactly that. ツ: two short ticks along the TOP, then a long stroke sweeping down to the LEFT. シ: ticks stacked down the left, final stroke sweeping up to the right.' },
-  { s: 'te', r: 'te', row: 't', col: 'e', h: 'て', k: 'テ', v: ['te'], hn: null, kn: null },
-  { s: 'to', r: 'to', row: 't', col: 'o', h: 'と', k: 'ト', v: ['to'], hn: null, kn: null },
+  { s: 'te', r: 'te', row: 't', col: 'e', h: 'て', k: 'テ', v: ['te'], hn: null,
+    kn: 'テ plus a small ィ writes the ti sound Japanese has no kana for: パーティー, ティッシュ.' },
+  { s: 'to', r: 'to', row: 't', col: 'o', h: 'と', k: 'ト', v: ['to'], hn: null,
+    kn: 'ト plus a small ゥ writes tu: タトゥー.' },
 
   { s: 'na', r: 'na', row: 'n', col: 'a', h: 'な', k: 'ナ', v: ['na'], hn: null, kn: null },
   { s: 'ni', r: 'ni', row: 'n', col: 'i', h: 'に', k: 'ニ', v: ['ni'], hn: null, kn: null },
@@ -160,7 +162,7 @@ const BASIC = [
   { s: 'hi', r: 'hi', row: 'h', col: 'i', h: 'ひ', k: 'ヒ', v: ['hi'], hn: null, kn: null },
   { s: 'fu', r: 'fu', row: 'h', col: 'u', h: 'ふ', k: 'フ', v: ['fu', 'hu'],
     hn: 'The h-row consonant becomes an f-like sound before u, so ふ is romanised fu. An IME accepts fu or hu.',
-    kn: null,
+    kn: 'フ is the base of every foreign f sound: フ + a small vowel gives ファ, フィ, フェ, フォ.',
     hp: 'Printed ふ looks like one flowing shape. It is written as four separate strokes: the top tick, the left curve, then the two short strokes on the right.' },
   { s: 'he', r: 'he', row: 'h', col: 'e', h: 'へ', k: 'ヘ', v: ['he'],
     hn: 'Written へ and read "he" as a character — but as the particle marking a direction or destination it is pronounced "e": とうきょうへ いきます (Tokyo e ikimasu).',
@@ -192,8 +194,8 @@ const BASIC = [
     hn: 'Spelled wo, pronounced "o". In modern Japanese を is used almost only as the object particle: ほんを よむ (hon o yomu). A word that starts with the "o" sound is written お, never を.',
     kn: 'Katakana ヲ is effectively obsolete: modern loanwords use ウォ for the wo sound. You will meet ヲ in pre-war documents and in stylised titles, not in everyday text.' },
   { s: 'n', r: 'n', row: null, col: null, h: 'ん', k: 'ン', v: ['n', 'nn', "n'", 'xn', 'm'],
-    hn: 'The only kana that is a consonant on its own, and it takes a full beat. Its sound follows what comes next: before b, p and m it is pronounced [m] — しんぶん (newspaper) sounds like "shimbun", えんぴつ like "empitsu". Typing it usually needs a doubled n: "kani" gives かに, "kanni" gives かんい. Hepburn writes n’ before a vowel to keep しんあい (shin’ai) distinct from しない.',
-    kn: null },
+    kn: 'The same syllabic n as hiragana ん, with the same [m] colouring before b, p and m: アンパン, テンプラ. Its shape is the classic katakana trap — see ソ for how the long stroke tells them apart.',
+    hn: 'The only kana that is a consonant on its own, and it takes a full beat. Its sound follows what comes next: before b, p and m it is pronounced [m] — しんぶん (newspaper) sounds like "shimbun", えんぴつ like "empitsu". Typing it usually needs a doubled n: "kani" gives かに, "kanni" gives かんい. Hepburn writes n’ before a vowel to keep しんあい (shin’ai) distinct from しない.' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -322,12 +324,12 @@ const SMALL_Y = [
 ];
 
 const SOKUON_NOTE_HI =
-  'The small っ writes consonant LENGTH, not a "tsu" sound. It holds the next consonant for one extra beat: きって (kitte, a stamp) against きて (kite, come); いっぱい against いぱい. Romanised by doubling the following consonant. On an IME you get it by typing that doubled consonant (kitte), or directly with xtu / ltu.';
+  'The small っ writes consonant LENGTH, not a "tsu" sound. It holds the next consonant for one extra beat: きって (kitte, a stamp) against きて (kite, come); and いっぱい needs it where いぱい would be a different word shape. Romanised by doubling the following consonant. On an IME you get it by typing that doubled consonant (kitte), or directly with xtu / ltu.';
 const SOKUON_NOTE_KA =
   'Same consonant-length mark as hiragana っ, and just as common in loanwords: サッカー (soccer), コップ (cup), チケット (ticket). Romanised by doubling the next consonant; typed as that doubled consonant, or as xtu / ltu.';
 
 const CHOONPU_NOTE =
-  'The long-vowel mark. It lengthens the vowel of the kana before it: コーヒー (kohi, coffee), ラーメン, ケーキ. It is a katakana convention — hiragana does not use it in ordinary writing, and lengthens a vowel instead by writing the vowel again (おおきい) or by adding う (とうきょう). Typed as the hyphen key. Written vertically it becomes a vertical line, not a rotated dash.';
+  'The long-vowel mark. It lengthens the vowel of the kana before it: コーヒー (kōhī, coffee), ラーメン, ケーキ. It is a katakana convention — hiragana does not use it in ordinary writing, and lengthens a vowel instead by writing the vowel again (おおきい) or by adding う (とうきょう). Typed as the hyphen key. Written vertically it becomes a vertical line, not a rotated dash.';
 
 // ---------------------------------------------------------------------------
 // AUTHORED TABLE 5 — extended katakana for loanwords
@@ -349,12 +351,12 @@ const EXTENDED = [
 
   { s: 'ti', r: 'ti', g: 'ティ', derives: ['te', 'i'], v: ['ti', 'thi', 'texi', 'teli'],
     hn: 'テ + small ィ for a foreign ti, which Japanese has no native syllable for: パーティー (party), チケット vs ティーシャツ, ティッシュ. Older borrowings used チ instead (チーム for "team"). The IME key is thi — plain ti gives ち.' },
-  { s: 'di', r: 'di', g: 'ディ', derives: ['de', 'i'], v: ['di', 'dhi', 'dexi', 'deli'],
+  { s: 'di-ext', r: 'di', g: 'ディ', derives: ['de', 'i'], v: ['di', 'dhi', 'dexi', 'deli'],
     hn: 'ディスク (disc), ディズニー (Disney), メディア (media). The IME key is dhi — plain di gives ぢ.' },
 
   { s: 'tu', r: 'tu', g: 'トゥ', derives: ['to', 'u'], v: ['tu', 'twu', 'toxu', 'tolu'],
     hn: 'ト + small ゥ for a foreign tu: タトゥー (tattoo), トゥモロー. Many words use ツ or ト instead. The IME key is twu — plain tu gives つ.' },
-  { s: 'du', r: 'du', g: 'ドゥ', derives: ['do', 'u'], v: ['du', 'dwu', 'doxu', 'dolu'],
+  { s: 'du-ext', r: 'du', g: 'ドゥ', derives: ['do', 'u'], v: ['du', 'dwu', 'doxu', 'dolu'],
     hn: 'ヒンドゥー (Hindu), ドゥーワップ. Rarer than トゥ. The IME key is dwu.' },
 
   { s: 'wi', r: 'wi', g: 'ウィ', derives: ['u', 'i'], v: ['wi', 'uxi', 'whi'],
@@ -365,7 +367,7 @@ const EXTENDED = [
     hn: 'ウォーター (water), ストップウォッチ (stopwatch), ウォン (won). This, not ヲ, is how the wo sound is written in modern loanwords.' },
 
   { s: 'vu', r: 'vu', g: 'ヴ', derives: ['u'], v: ['vu'],
-    hn: 'ウ with dakuten, used for a foreign v. Most loanwords now use the b-row instead (バイオリン rather than ヴァイオリン), and Japanese speakers usually pronounce ヴ as b anyway; the Ministry of Education treats the b-row spelling as standard. You will still meet ヴ in names and in careful transcription: ラヴ, ヴ単独 in ヴィヴァルディ.' },
+    hn: 'ウ with dakuten, used for a foreign v. Most loanwords now use the b-row instead (バイオリン rather than ヴァイオリン), and Japanese speakers usually pronounce ヴ as b anyway; the 1991 Cabinet notification on loanword spelling (外来語の表記) puts the b-row in its general table and ヴ in the table of accepted alternatives. You will still meet ヴ on its own in ラヴ (love), ライヴ (live) and イヴ (Eve).' },
   { s: 'va', r: 'va', g: 'ヴァ', derives: ['vu', 'a'], v: ['va', 'vuxa'],
     hn: 'ヴァイオリン (violin), ヴァージョン — both usually written バイオリン, バージョン today.' },
   { s: 'vi', r: 'vi', g: 'ヴィ', derives: ['vu', 'i'], v: ['vi', 'vuxi'],
@@ -466,7 +468,7 @@ const CONFUSE_KA = [
   // extended spellings against the native kana they compete with
   ['wi', 'wi-historical'], ['we', 'we-historical'], ['wo-ext', 'wo'],
   ['va', 'ba'], ['vi', 'bi'], ['vu', 'bu'], ['ve', 'be'], ['vo', 'bo'],
-  ['ti', 'chi'], ['tu', 'tsu'], ['di', 'ji'], ['fa', 'ha'],
+  ['ti', 'chi'], ['tu', 'tsu'], ['di-ext', 'ji'], ['fa', 'ha'],
 ];
 
 /** Cross-script pairs: near-identical shapes, or the same sound in both scripts. */
@@ -868,7 +870,7 @@ const kaPlan = buildScriptPlan('katakana');
 const EXT_LESSONS = [
   ['kana-ka-ext-f', 'Katakana extended: ファ フィ フェ フォ', ['fa', 'fi', 'fe', 'fo'], 'h',
     'Japanese has only ふ in the h-row u-column, so every foreign f sound is built on フ plus a small vowel.'],
-  ['kana-ka-ext-t', 'Katakana extended: ティ ディ トゥ ドゥ', ['ti', 'di', 'tu', 'du'], 't',
+  ['kana-ka-ext-t', 'Katakana extended: ティ ディ トゥ ドゥ', ['ti', 'di-ext', 'tu', 'du-ext'], 't',
     'The t/d row has no ti, tu, di or du cell — ち, つ, ぢ, づ sit there instead. Loanwords rebuild the missing sounds with テ, デ, ト, ド plus a small vowel. Note the IME keys: thi, dhi, twu, dwu.'],
   ['kana-ka-ext-w', 'Katakana extended: ウィ ウェ ウォ', ['wi', 'we', 'wo-ext'], '',
     'The w-row lost wi, we and wo. Modern loanwords write them with ウ plus a small vowel, not with the historical ヰ, ヱ, ヲ.'],

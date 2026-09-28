@@ -191,11 +191,16 @@ function baseCodepoints() {
   // romaji is shown capitalised at the start of example sentences.
   for (const ch of 'ĀāĒēĪīŌōŪū') cps.add(ch.codePointAt(0));
   add(0x3000, 0x303f);            // CJK symbols and punctuation 、。〜「」『』…
-  add(0x3040, 0x30ff);            // Hiragana + Katakana (the whole curriculum's kana)
+  // Hiragana and katakana. Requested as the assigned sub-ranges rather than the
+  // whole 3040-30FF block: U+3040, U+3097 and U+3098 are unassigned, and asking
+  // for them makes the coverage report below flag phantom gaps in every font.
+  add(0x3041, 0x3096);            // Hiragana letters
+  add(0x3099, 0x309f);            // Combining dakuten/handakuten, iteration marks
+  add(0x30a0, 0x30ff);            // Katakana
   add(0x31f0, 0x31ff);            // Katakana phonetic extensions (small kana)
   add(0xff61, 0xff9f);            // Halfwidth katakana
   // General punctuation the UI actually types.
-  for (const ch of '‘’“”„†‡•…‰′″‹›€₂₃←↑→↓↔⇄∀∞≈≠≤≥　') cps.add(ch.codePointAt(0));
+  for (const ch of '‘’“”„†‡•…‰′″‹›€←↑→↓↔∞≠　') cps.add(ch.codePointAt(0));
   // Fullwidth forms used in Japanese example text.
   for (const ch of '！？（）［］｛｝：；，．　') cps.add(ch.codePointAt(0));
   return cps;
@@ -302,6 +307,32 @@ print(TTFont(sys.argv[1], lazy=True)['maxp'].numGlyphs)`;
   return Number(execFileSync(py, ['-c', code, file], { encoding: 'utf8' }).trim());
 }
 
+/**
+ * Which of the requested codepoints does this face actually carry?
+ *
+ * A subsetter silently drops what the source font does not have, so without
+ * this check a face could ship missing half the curriculum and nothing would
+ * say so. Any gap is recorded in index.json; a gap in the *kanji* set is
+ * treated as a build failure.
+ */
+function coverageGaps(py, ttf, cps) {
+  const code = `
+import json,sys
+from fontTools.ttLib import TTFont
+want = json.load(open(sys.argv[2]))
+cm = TTFont(sys.argv[1], lazy=True).getBestCmap()
+print(json.dumps(sorted(c for c in want if c not in cm)))`;
+  const tmpf = path.join(path.dirname(ttf), `.want-${process.pid}.json`);
+  fs.writeFileSync(tmpf, JSON.stringify([...cps]));
+  try {
+    return JSON.parse(execFileSync(py, ['-c', code, ttf, tmpf], { encoding: 'utf8' }));
+  } finally {
+    fs.rmSync(tmpf, { force: true });
+  }
+}
+
+const describeCps = (list) => list.map((c) => `U+${c.toString(16).toUpperCase().padStart(4, '0')} ${String.fromCodePoint(c)}`);
+
 function writeUnicodesFile(cps, dest) {
   const body = [...cps].sort((a, b) => a - b).map((c) => c.toString(16).toUpperCase().padStart(4, '0')).join('\n');
   fs.writeFileSync(dest, body + '\n');
@@ -379,6 +410,7 @@ async function main() {
 
   let totalBefore = 0;
   let totalAfter = 0;
+  let hardFailure = false;
 
   for (const face of FACES) {
     log(`\n=== ${face.family} ===`);
@@ -396,6 +428,19 @@ async function main() {
     const licDest = path.join(LIC_DIR, `${face.key}-OFL.txt`);
     await download(licUrl, path.join(SRC_DIR, `OFL-${face.dir}.txt`));
     fs.copyFileSync(path.join(SRC_DIR, `OFL-${face.dir}.txt`), licDest);
+
+    // What does this face actually cover of what we asked for?
+    const gapBase = coverageGaps(py, ttf, base);
+    const gapKanji = kanji.size ? coverageGaps(py, ttf, kanji) : [];
+    if (gapKanji.length) {
+      console.error(`  ERROR ${face.family} is missing ${gapKanji.length} curriculum kanji:`);
+      console.error('        ' + describeCps(gapKanji).join(' '));
+      hardFailure = true;
+    }
+    if (gapBase.length) {
+      log(`  note: ${gapBase.length} requested base codepoints absent from this face`);
+      log(`        ${describeCps(gapBase).join(' ')}`);
+    }
 
     // Optional weight instancing / axis narrowing.
     let input = ttf;
@@ -432,6 +477,9 @@ async function main() {
         axis: face.instance && face.instance.includes(':') ? face.instance : null,
         group: g.id,
         codepoints: g.cps.size,
+        /** Requested codepoints this face does not carry. Kanji gaps fail the build. */
+        missingCodepoints: (g.id === 'base' ? gapBase : gapKanji)
+          .map((c) => `U+${c.toString(16).toUpperCase().padStart(4, '0')}`),
         glyphs,
         bytes: buf.length,
         sha256: sha256(buf),
@@ -470,7 +518,12 @@ async function main() {
 
   log(`\ntotal upstream ${totalBefore} bytes -> subset ${totalAfter} bytes (${index.totals.reductionPercent}% smaller)`);
   log(`wrote ${path.relative(REPO, path.join(OUT_DIR, 'index.json'))}`);
-  if (!kanjiListPresent) process.exitCode = 2;
+  if (hardFailure) {
+    console.error('\nFAILED: at least one face cannot render the whole curriculum kanji set.');
+    process.exitCode = 1;
+  } else if (!kanjiListPresent) {
+    process.exitCode = 2;
+  }
 }
 
 main().catch((err) => { console.error(err); process.exit(1); });

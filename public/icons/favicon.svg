@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+<title>Kansei</title>
+<style>
+  .dark { display: none }
+  @media (prefers-color-scheme: dark) {
+    .light { display: none }
+    .dark { display: inline }
+  }
+</style>
+<g class="light"><rect width="64" height="64" fill="#fbf9f4"/><g transform="translate(7 7) scale(0.5)" fill="#1f3a5f"><path d="M8.5,31.4C31,26.4 58,21.9 88.6,18.6L89.8,23.6C59.8,27.6 32,32.4 10.6,39.9Z"/><path d="M62.4,12.8C60.6,33.6 58.6,53.4 55.4,69.8C53.2,81.6 44.6,88.4 32.8,90.8L29.4,84.6C39.8,82.4 46.4,77.2 47.6,68.4C49.6,52.2 50.8,32.8 51.8,12.8Z"/></g></g>
+<g class="dark"><rect width="64" height="64" fill="#14161a"/><g transform="translate(7 7) scale(0.5)" fill="#8fb3dd"><path d="M8.5,31.4C31,26.4 58,21.9 88.6,18.6L89.8,23.6C59.8,27.6 32,32.4 10.6,39.9Z"/><path d="M62.4,12.8C60.6,33.6 58.6,53.4 55.4,69.8C53.2,81.6 44.6,88.4 32.8,90.8L29.4,84.6C39.8,82.4 46.4,77.2 47.6,68.4C49.6,52.2 50.8,32.8 51.8,12.8Z"/></g></g>
+</svg>

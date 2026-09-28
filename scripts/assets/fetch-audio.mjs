@@ -76,7 +76,7 @@ const USER_AGENT =
 const RATE_LIMIT_MS = {
   'commons.wikimedia.org': 250,
   'lingualibre.org': 1000,
-  'upload.wikimedia.org': 120,
+  'upload.wikimedia.org': 1800, // measured: the upload host 429s bulk callers below ~1.5s
 };
 const DEFAULT_RATE_LIMIT_MS = 500;
 
@@ -331,7 +331,7 @@ async function politeFetch(url, init = {}) {
   lastRequestAt.set(host, Date.now());
 
   let lastError = null;
-  for (let attempt = 0; attempt < 4; attempt += 1) {
+  for (let attempt = 0; attempt < 6; attempt += 1) {
     try {
       const res = await fetch(url, {
         ...init,
@@ -339,13 +339,19 @@ async function politeFetch(url, init = {}) {
       });
       if (res.status === 429 || res.status >= 500) {
         lastError = new Error(`HTTP ${res.status} for ${url}`);
-        await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+        // Honour Retry-After when the server sends it; otherwise back off
+        // exponentially. Wikimedia's upload host does rate-limit bulk callers,
+        // and the correct response is to slow down, not to hammer it.
+        const retryAfter = Number(res.headers.get('retry-after'));
+        const backoffMs = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 2000 * 2 ** attempt;
+        warn(`  ! HTTP ${res.status} on ${url} — waiting ${backoffMs}ms (attempt ${attempt + 1}/6)`);
+        await new Promise((r) => setTimeout(r, backoffMs));
         continue;
       }
       return res;
     } catch (err) {
       lastError = err;
-      await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+      await new Promise((r) => setTimeout(r, 2000 * 2 ** attempt));
     }
   }
   throw lastError ?? new Error(`fetch failed: ${url}`);
@@ -363,6 +369,20 @@ async function commonsApi(params) {
 }
 
 const stripHtml = (s) => String(s ?? '').replace(/<[^>]*>/gu, ' ').replace(/\s+/gu, ' ').trim();
+
+/**
+ * Commons `Artist` is an HTML fragment. Lingua Libre puts two roles in it as a
+ * <ul>, which flattens to "Speaker: X Recorder: Y" — readable enough for a log
+ * but not for a credit line. Re-insert the separator that the markup carried.
+ * The credit keeps BOTH designated roles: CC BY-SA requires crediting the
+ * author as the source designates them, and we are not the ones to decide that
+ * the recorder does not count.
+ */
+const normaliseArtist = (s) => {
+  const flat = stripHtml(s);
+  if (!flat) return null;
+  return flat.replace(/\s+(?=(?:Speaker|Recorder|Author|Locuteur|Enregistreur):)/gu, '; ').replace(/^;\s*/u, '');
+};
 
 /** Collapse an upload.wikimedia.org URL to its canonical, parameter-free form. */
 function cleanUploadUrl(url) {
@@ -525,7 +545,7 @@ async function commonsFileInfo(titles) {
         mime: ii.mime ?? null,
         durationMs: typeof ii.duration === 'number' ? Math.round(ii.duration * 1000) : null,
         uploader: ii.user ?? null,
-        artist: stripHtml(em.Artist?.value) || null,
+        artist: normaliseArtist(em.Artist?.value),
         licenseSlug,
         licenseShortName: stripHtml(em.LicenseShortName?.value) || null,
         licenseUrlFromSource: em.LicenseUrl?.value ?? null,
@@ -615,9 +635,14 @@ const EXT_BY_MIME = {
   'audio/mpeg': 'mp3',
 };
 
+/**
+ * The extension comes from the DOWNLOAD URL, not from the queried title: some
+ * Commons titles are file redirects (File:Japanese A.ogg → File:Ja-A.oga), so
+ * the title can carry a different extension from the bytes we actually store.
+ */
 function extensionFor(record) {
-  const fromTitle = record.title.split('.').pop()?.toLowerCase();
-  if (fromTitle && /^[a-z0-9]{2,5}$/u.test(fromTitle)) return fromTitle;
+  const fromUrl = decodeURIComponent(new URL(record.downloadUrl).pathname).split('.').pop()?.toLowerCase();
+  if (fromUrl && /^[a-z0-9]{2,5}$/u.test(fromUrl)) return fromUrl;
   return EXT_BY_MIME[record.mime ?? ''] ?? 'bin';
 }
 

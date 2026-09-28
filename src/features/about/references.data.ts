@@ -188,9 +188,9 @@ export const SCIENCE_REFERENCES: readonly ScienceReference[] = Object.freeze([
     doi: '10.3758/MC.36.3.604',
     url: 'https://doi.org/10.3758/MC.36.3.604',
     pmid: '18491500',
-    openAccessUrl: null,
+    openAccessUrl: 'https://link.springer.com/content/pdf/10.3758/MC.36.3.604.pdf',
     publicationNote:
-      'Journal title checked: both Crossref and PubMed give "Memory & Cognition" with an ampersand (PubMed abbreviation "Mem Cognit", ISSN 0090-502X) — not "Memory and Cognition". Crossref normalises the DOI to lowercase (10.3758/mc.36.3.604); DOIs are case-insensitive and the registered form 10.3758/MC.36.3.604 resolves identically. PubMed abbreviates the page range as 604-16; the full range is 604-616.',
+      'Journal title checked: both Crossref and PubMed give "Memory & Cognition" with an ampersand (PubMed abbreviation "Mem Cognit", ISSN 0090-502X) — not "Memory and Cognition". Crossref normalises the DOI to lowercase (10.3758/mc.36.3.604); DOIs are case-insensitive and the registered form 10.3758/MC.36.3.604 resolves identically. PubMed abbreviates the page range as 604-16; the full range is 604-616. Unpaywall classes this as BRONZE open access: the publisher’s PDF is free to read but carries no open licence, so access is at Springer’s discretion and could be withdrawn — it is not a guaranteed-permanent copy.',
     summary:
       'Participants read prose passages and then took a multiple-choice test with immediate feedback, delayed feedback, or no feedback at all. The point is that multiple-choice testing is double-edged: answering the question helps you remember, but reading the wrong options exposes you to plausible-looking misinformation, and picking a wrong option can leave you believing it. Compared with getting no feedback, both immediate and delayed feedback raised correct answers on a later short-answer test *and* reduced intrusions — answers carried over from the wrong options of the earlier multiple-choice test. In other words, feedback is what stops a wrong option from being learned.',
     informsFeature:
@@ -247,9 +247,9 @@ export const SCIENCE_REFERENCES: readonly ScienceReference[] = Object.freeze([
     doi: '10.1177/0956797621993111',
     url: 'https://doi.org/10.1177/0956797621993111',
     pmid: '34184564',
-    openAccessUrl: null,
+    openAccessUrl: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8641140/',
     publicationNote:
-      'July 2021 issue; online first (epub) 29 June 2021. An author manuscript exists as PMC8641140, but Unpaywall reports the article is not open access and the PMC full text was not retrievable, so `openAccessUrl` is null rather than a link that may not open.',
+      'July 2021 issue; online first (epub) 29 June 2021. The free copy is a GREEN open-access author manuscript deposited in PubMed Central (PMC8641140), which Unpaywall classifies as a SUBMITTED version — that is, not the peer-reviewed version of record. Wording, figures and page numbers there may differ from the published article, so the DOI link remains the citable one. Automated retrieval of that manuscript is blocked to non-browser clients, which is why some method details below are marked unverified.',
     summary:
       'Forty-two adults learned the letters of a writing system unfamiliar to them, assigned to one of three practice conditions: handwriting the letters, typing them, or studying them visually. Handwriting produced faster learning and transferred more widely to tasks the participants had not practised than the two non-motor conditions did. The study also asked what kind of memory handwriting builds, and found that only the handwriting group showed evidence of both motor representations and abstract, modality-independent letter representations — so the benefit is not merely muscle memory for the act of writing.',
     informsFeature:
@@ -340,6 +340,27 @@ export const METADATA_CORRECTIONS: readonly MetadataCorrection[] = Object.freeze
     was: '604-16 (the form PubMed prints)',
     now: '604-616',
     authority: 'Crossref page field',
+  }),
+  Object.freeze({
+    referenceId: 'butler2008',
+    field: 'openAccessUrl',
+    was: 'null (assumed paywalled)',
+    now: 'https://link.springer.com/content/pdf/10.3758/MC.36.3.604.pdf — free to read, but BRONZE open access: publisher-hosted with no open licence, so it can be withdrawn.',
+    authority: 'Unpaywall (is_oa true, oa_status "bronze")',
+  }),
+  Object.freeze({
+    referenceId: 'wiley2021',
+    field: 'openAccessUrl',
+    was: 'null (Europe PMC reports isOpenAccess: N)',
+    now: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC8641140/ — GREEN open access, but Unpaywall classifies the deposit as a SUBMITTED (pre-peer-review) version, so it is not the version of record.',
+    authority: 'Unpaywall (is_oa true, oa_status "green", version "submittedVersion")',
+  }),
+  Object.freeze({
+    referenceId: 'karpicke2008',
+    field: 'title capitalisation',
+    was: 'n/a',
+    now: 'Kept Crossref’s published capitalisation ("The Critical Importance of Retrieval for Learning"). PubMed prints it downcased ("The critical importance of retrieval for learning") as MEDLINE house style; PubMed is the authority for a title’s words and subtitle, not its capitalisation.',
+    authority: 'Crossref title vs PubMed title',
   }),
   Object.freeze({
     referenceId: 'sailer2020',

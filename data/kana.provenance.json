@@ -1,0 +1,56 @@
+{
+  "schema": "kansei-provenance/1",
+  "dataset": "kana",
+  "files": [
+    "data/kana.json",
+    "data/kana-lessons.json"
+  ],
+  "producedBy": "scripts/content/build-kana.mjs",
+  "reproduce": [
+    "node scripts/assets/fetch-sources.mjs",
+    "unzip -q -o data/sources/kanjivg-20250816-main.zip -d data/sources/kanjivg",
+    "node scripts/content/build-kana.mjs"
+  ],
+  "deterministic": true,
+  "authored": {
+    "what": "Every field except strokeCount: coverage, romaji, inputVariants, gojuon position, derivesFrom, confusableWith, printVsHandwritten, notes, teachingOrder, lessonId, lessons.",
+    "where": "The tables at the top of scripts/content/build-kana.mjs (hand-authored curriculum source of truth, committed).",
+    "by": "Kansei curriculum author",
+    "license": "AGPL-3.0-or-later, as the rest of this repository"
+  },
+  "sources": [
+    {
+      "field": "strokeCount",
+      "name": "KanjiVG",
+      "version": "r20250816",
+      "url": "https://github.com/KanjiVG/kanjivg/releases/tag/r20250816",
+      "license": "CC-BY-SA-3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "redistribution": "CC BY-SA 3.0: redistribution and derivative works permitted with attribution to Ulrich Apel and the KanjiVG project; derived works share-alike. Only per-character stroke COUNTS are taken here (integers derived by counting <path> elements); no KanjiVG path data is copied into data/kana.json.",
+      "method": "strokeCount = number of <path> elements in data/sources/kanjivg/kanji/<codepoint>.svg, summed over the code points of a multi-kana glyph. Voiced kana are single code points in KanjiVG, which counts the dakuten as 2 strokes and the handakuten as 1."
+    }
+  ],
+  "counts": {
+    "records": 268,
+    "lessons": 67,
+    "byScriptGroupTier": {
+      "hiragana/basic/modern-core": 46,
+      "katakana/basic/modern-core": 46,
+      "hiragana/special/modern-core": 1,
+      "hiragana/special/extended": 8,
+      "katakana/special/modern-core": 2,
+      "katakana/special/extended": 8,
+      "hiragana/dakuten/modern-core": 20,
+      "hiragana/handakuten/modern-core": 5,
+      "katakana/dakuten/modern-core": 20,
+      "katakana/handakuten/modern-core": 5,
+      "hiragana/yoon/modern-core": 33,
+      "hiragana/yoon/extended": 3,
+      "katakana/yoon/modern-core": 33,
+      "katakana/yoon/extended": 3,
+      "katakana/extended/extended": 31,
+      "hiragana/historical/historical": 2,
+      "katakana/historical/historical": 2
+    }
+  }
+}

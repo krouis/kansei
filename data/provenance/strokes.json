@@ -58,11 +58,8 @@
     "Kana stroke counts have no machine-readable authority in our sources. They are the KanjiVG path count, hand-spot-checked (ne=2, tsu=3) against standard kana stroke-order charts."
   ],
   "reproduce": [
-    "mkdir -p data/sources && cd data/sources",
-    "curl -sSL -O https://github.com/KanjiVG/kanjivg/releases/download/r20250816/kanjivg-20250816-main.zip",
-    "unzip -q -o kanjivg-20250816-main.zip -d kanjivg",
-    "curl -sSL -o kanjidic2.xml.gz http://www.edrdg.org/kanjidic/kanjidic2.xml.gz && gunzip -kf kanjidic2.xml.gz",
-    "cd ../.. && node scripts/content/build-strokes.mjs"
+    "npm run content:fetch     # KanjiVG + KANJIDIC2 into data/sources/, recorded in data/sources/SOURCES.lock.json",
+    "npm run content:strokes   # node scripts/content/build-strokes.mjs"
   ],
   "counts": {
     "characters": 1177,
@@ -78,16 +75,37 @@
   "verification": {
     "hardFailures": 0,
     "spotCheckStrokeCounts": {
-      "viaKanjidic2": { "一": 1, "川": 3, "水": 4, "曜": 18, "語": 14, "議": 20 },
-      "viaHandAssertedKanaChart": { "ね": 2, "ツ": 3 },
+      "viaKanjidic2": {
+        "一": 1,
+        "川": 3,
+        "水": 4,
+        "曜": 18,
+        "語": 14,
+        "議": 20
+      },
+      "viaHandAssertedKanaChart": {
+        "ね": 2,
+        "ツ": 3
+      },
       "allMatched": true
     },
-    "allKanjiVsKanjidic2": { "checked": 1000, "disagreements": 0 },
-    "allKanjiVsCurriculumDeclaredStrokeCount": { "checked": 1000, "disagreements": 0 },
+    "allKanjiVsKanjidic2": {
+      "checked": 1000,
+      "disagreements": 0
+    },
+    "allKanjiVsCurriculumDeclaredStrokeCount": {
+      "checked": 1000,
+      "disagreements": 0
+    },
     "geometry": {
       "pointsPerStrokeExact": 24,
       "allPointsInsideDesignBox": true,
-      "observedExtent": { "xMin": 8.25, "xMax": 102.5, "yMin": 5.77, "yMax": 101.76 },
+      "observedExtent": {
+        "xMin": 8.25,
+        "xMax": 102.5,
+        "yMin": 5.77,
+        "yMax": 101.76
+      },
       "allPolylinesStrictlyProgressing": true,
       "endpointsMatchPathEndsWithin": 0.02
     },
@@ -100,11 +118,23 @@
     "coarselySampledStrokes": {
       "count": 6,
       "threshold": "24-point polyline shorter than 95% of true arc length",
-      "characters": ["ゑ", "そ", "ぞ", "れ", "え", "ぇ"]
+      "characters": [
+        "ゑ",
+        "そ",
+        "ぞ",
+        "れ",
+        "え",
+        "ぇ"
+      ]
     },
     "knownUpstreamDisagreement": {
       "statement": "KanjiVG and KANJIDIC2 stroke counts agree on 98.3% of the 6416 kanji both cover (6307 agree, 109 disagree), usually because KanjiVG draws a different glyph form. None of the 109 is in KANJIDIC2's top 1000 by frequency, and none is in the taught set.",
       "measuredOver": 6416
     }
-  }
+  },
+  "reproduceNotes": "No unzip/gunzip needed: the build reads kanjivg-*-main.zip directly (node:zlib) and accepts kanjidic2.xml or kanjidic2.xml.gz. An already-extracted directory is used if present; zip and directory builds were verified byte-identical. Output is deterministic across runs.",
+  "dependencies": "none — node builtins only (crypto, fs, path, url, zlib)",
+  "consumedBy": [
+    "scripts/assets/build-fonts.mjs (uses the <hex>.json filenames to decide font subset coverage)"
+  ]
 }

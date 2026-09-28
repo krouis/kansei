@@ -12,19 +12,25 @@
  *   public/content/strokes/index.json   — metadata + glyph -> {file,strokeCount,bytes,sha256}
  *
  * Reproduce:
- *   mkdir -p data/sources && cd data/sources
- *   curl -sSL -O https://github.com/KanjiVG/kanjivg/releases/download/r20250816/kanjivg-20250816-main.zip
- *   unzip -q -o kanjivg-20250816-main.zip -d kanjivg
- *   # optional, only used by --verify to check stroke counts:
- *   curl -sSL -o kanjidic2.xml.gz http://www.edrdg.org/kanjidic/kanjidic2.xml.gz && gunzip -kf kanjidic2.xml.gz
- *   node scripts/content/build-strokes.mjs
+ *   npm run content:fetch     # KanjiVG + KANJIDIC2 into data/sources/
+ *   npm run content:strokes   # this script
  *
- * Node builtins only — no npm dependencies. The SVG path parser below is
- * deliberately minimal and FAILS LOUDLY on any command KanjiVG does not use,
- * rather than silently emitting a wrong polyline.
+ * No unzip or gunzip step: the archive is read directly, and KANJIDIC2 is accepted
+ * as either kanjidic2.xml or kanjidic2.xml.gz. An already-extracted KanjiVG
+ * directory is used when present; all input forms produce identical output.
+ * KANJIDIC2 is used only to verify stroke counts — if it is absent the report says
+ * so rather than quietly passing.
+ *
+ * Node builtins only — no npm dependencies. The SVG path parser and the ZIP reader
+ * below are deliberately minimal and FAIL LOUDLY on anything they were not audited
+ * against, rather than silently emitting wrong data.
+ *
+ * See docs/content/STROKES.md for provenance, licence obligations, coverage and the
+ * verification results; data/provenance/strokes.json is the machine-readable copy.
  */
 
 import { createHash } from 'node:crypto';
+import { gunzipSync, inflateRawSync } from 'node:zlib';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -315,24 +321,102 @@ function resample({ pts, cum, total }, n = POINTS_PER_STROKE) {
 }
 
 // ---------------------------------------------------------------------------
+// Minimal ZIP reader (stored + deflate), so the build works straight from the
+// archive that scripts/assets/fetch-sources.mjs downloads — no unzip step, and
+// still node-builtins only. Fails loudly on anything it does not understand.
+// ---------------------------------------------------------------------------
+
+const EOCD_SIG = 0x06054b50;
+const CEN_SIG = 0x02014b50;
+const LOC_SIG = 0x04034b50;
+
+/** Read a zip's central directory: basename -> {offset, method, compressedSize, size}. */
+function readZipCentralDirectory(buf) {
+  // EOCD is at the end, after a comment of up to 65535 bytes.
+  let eocd = -1;
+  for (let i = buf.length - 22; i >= Math.max(0, buf.length - 22 - 0xffff); i -= 1) {
+    if (buf.readUInt32LE(i) === EOCD_SIG) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('Not a zip archive: no end-of-central-directory record');
+  const entryCount = buf.readUInt16LE(eocd + 10);
+  const cenSize = buf.readUInt32LE(eocd + 12);
+  const cenOffset = buf.readUInt32LE(eocd + 16);
+  if (entryCount === 0xffff || cenSize === 0xffffffff || cenOffset === 0xffffffff) {
+    throw new Error('ZIP64 archive — unsupported by this reader');
+  }
+  const entries = new Map();
+  let p = cenOffset;
+  for (let n = 0; n < entryCount; n += 1) {
+    if (buf.readUInt32LE(p) !== CEN_SIG) throw new Error(`Bad central directory entry at ${p}`);
+    const flags = buf.readUInt16LE(p + 8);
+    const method = buf.readUInt16LE(p + 10);
+    const compressedSize = buf.readUInt32LE(p + 20);
+    const size = buf.readUInt32LE(p + 24);
+    const nameLen = buf.readUInt16LE(p + 28);
+    const extraLen = buf.readUInt16LE(p + 30);
+    const commentLen = buf.readUInt16LE(p + 32);
+    const offset = buf.readUInt32LE(p + 42);
+    const name = buf.toString('utf8', p + 46, p + 46 + nameLen);
+    if ((flags & 0x0001) !== 0) throw new Error(`Encrypted zip entry: ${name}`);
+    if (!name.endsWith('/')) entries.set(basename(name), { name, offset, method, compressedSize, size });
+    p += 46 + nameLen + extraLen + commentLen;
+  }
+  return entries;
+}
+
+/** Extract one entry's bytes. */
+function readZipEntry(buf, entry) {
+  if (buf.readUInt32LE(entry.offset) !== LOC_SIG) {
+    throw new Error(`Bad local header for ${entry.name}`);
+  }
+  const nameLen = buf.readUInt16LE(entry.offset + 26);
+  const extraLen = buf.readUInt16LE(entry.offset + 28);
+  const start = entry.offset + 30 + nameLen + extraLen;
+  const raw = buf.subarray(start, start + entry.compressedSize);
+  let out;
+  if (entry.method === 0) out = raw;
+  else if (entry.method === 8) out = inflateRawSync(raw);
+  else throw new Error(`Unsupported zip compression method ${entry.method} for ${entry.name}`);
+  if (out.length !== entry.size) {
+    throw new Error(`Size mismatch for ${entry.name}: ${out.length} != ${entry.size}`);
+  }
+  return out;
+}
+
+/** Locate the KanjiVG archive next to (or at) the given path. */
+function findKanjivgZip(target) {
+  // The path may BE the zip, or a directory holding it, or that directory's parent
+  // (data/sources/kanjivg -> data/sources/kanjivg-20250816-main.zip).
+  if (target.endsWith('.zip') && existsSync(target)) return target;
+  for (const base of [target, dirname(target)]) {
+    let names;
+    try { names = readdirSync(base); } catch { continue; }
+    const hit = names.filter((f) => /^kanjivg-\d+-main\.zip$/.test(f)).sort();
+    if (hit.length > 0) return join(base, hit[hit.length - 1]); // newest release
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // KanjiVG reading
 // ---------------------------------------------------------------------------
 
 /** Locate the directory holding <hex>.svg files (the zip uses kanji/, docs say svg/). */
 function findSvgDir(root) {
-  const candidates = [root, join(root, 'kanji'), join(root, 'svg')];
-  for (const c of candidates) {
-    if (!existsSync(c)) continue;
-    const hit = readdirSync(c).some((f) => /^[0-9a-f]{5}(-[A-Za-z0-9]+)?\.svg$/.test(f));
-    if (hit) return c;
+  // `root` may be a file (a .zip), a missing path, or a directory — readdirSync
+  // throws ENOTDIR on the first of those, so every read is guarded.
+  const list = (dir, opts) => {
+    try { return readdirSync(dir, opts); } catch { return null; }
+  };
+  for (const c of [root, join(root, 'kanji'), join(root, 'svg')]) {
+    const names = list(c);
+    if (names && names.some((f) => /^[0-9a-f]{5}(-[A-Za-z0-9]+)?\.svg$/.test(f))) return c;
   }
   // one level of nesting (e.g. kanjivg-20250816/kanji)
-  if (existsSync(root)) {
-    for (const d of readdirSync(root, { withFileTypes: true })) {
-      if (!d.isDirectory()) continue;
-      const found = findSvgDir(join(root, d.name));
-      if (found) return found;
-    }
+  for (const d of list(root, { withFileTypes: true }) ?? []) {
+    if (!d.isDirectory()) continue;
+    const found = findSvgDir(join(root, d.name));
+    if (found) return found;
   }
   return null;
 }
@@ -361,17 +445,16 @@ const STROKEPATHS_RX = /<g id="kvg:StrokePaths_[^"]*"[\s\S]*?(?=<g id="kvg:Strok
  * Extract the stroke paths of one KanjiVG file in document order.
  * Document order IS the stroke order — KanjiVG's -sN ids follow it.
  */
-function readStrokes(file) {
-  const svg = readFileSync(file, 'utf8');
+function readStrokes(svg, label) {
   const scoped = STROKEPATHS_RX.exec(svg);
   const region = scoped ? scoped[0] : svg;
   const strokes = [];
   for (const tag of region.match(PATH_TAG_RX) ?? []) {
     const d = D_RX.exec(tag);
-    if (!d) throw new Error(`<path> without d in ${basename(file)}`);
+    if (!d) throw new Error(`<path> without d in ${label}`);
     strokes.push({ d: d[1].trim(), type: TYPE_RX.exec(tag)?.[1] ?? null, tag });
   }
-  if (strokes.length === 0) throw new Error(`No stroke paths in ${basename(file)}`);
+  if (strokes.length === 0) throw new Error(`No stroke paths in ${label}`);
   // Sanity: ids, when present, must ascend 1..n so we know order is intact.
   const nums = strokes
     .map((s) => /id="kvg:[0-9a-f]+(?:-[^"]*?)?-s(\d+)"/.exec(s.tag)?.[1])
@@ -379,7 +462,7 @@ function readStrokes(file) {
   if (nums.every((n) => n !== null)) {
     for (let i = 0; i < nums.length; i += 1) {
       if (nums[i] !== i + 1) {
-        throw new Error(`Stroke ids out of order in ${basename(file)}: ${nums.join(',')}`);
+        throw new Error(`Stroke ids out of order in ${label}: ${nums.join(',')}`);
       }
     }
   }
@@ -387,8 +470,8 @@ function readStrokes(file) {
 }
 
 /** Build a StrokeReference for one glyph. */
-function buildReference(glyph, svgFile) {
-  const raw = readStrokes(svgFile);
+function buildReference(glyph, svg, label) {
+  const raw = readStrokes(svg, label);
   const strokes = raw.map(({ d, type }) => {
     const flat = flatten(pathToCubics(d));
     return {
@@ -411,10 +494,19 @@ function buildReference(glyph, svgFile) {
 // Verification
 // ---------------------------------------------------------------------------
 
-/** Parse KANJIDIC2 for glyph -> first <stroke_count>. Returns null if absent. */
+/**
+ * Parse KANJIDIC2 for glyph -> first <stroke_count>. Returns null if absent.
+ * Accepts either the plain XML or the gzip the repo's own fetcher stores
+ * (scripts/assets/fetch-sources.mjs writes data/sources/kanjidic2.xml.gz), so the
+ * cross-check works from a fresh clone with no manual gunzip step.
+ */
 function loadKanjidicStrokeCounts(path) {
-  if (!existsSync(path)) return null;
-  const xml = readFileSync(path, 'utf8');
+  const gz = path.endsWith('.gz') ? path : `${path}.gz`;
+  const plain = path.endsWith('.gz') ? path.slice(0, -3) : path;
+  let xml;
+  if (existsSync(plain)) xml = readFileSync(plain, 'utf8');
+  else if (existsSync(gz)) xml = gunzipSync(readFileSync(gz)).toString('utf8');
+  else return null;
   const counts = new Map();
   const entryRx = /<character>([\s\S]*?)<\/character>/g;
   let m;
@@ -518,15 +610,52 @@ function pathEndpoints(d) {
 // main
 // ---------------------------------------------------------------------------
 
-function main() {
-  const opts = parseArgs(process.argv);
-  const svgDir = findSvgDir(opts.kanjivgDir);
-  if (!svgDir) {
+/**
+ * A uniform view over KanjiVG regardless of how it is on disk: an extracted
+ * directory if one exists, otherwise the downloaded zip read in memory.
+ * Returns { describe, index } where index is hex -> {plain, variants, read()}.
+ */
+function openKanjivg(kanjivgDir) {
+  const dir = findSvgDir(kanjivgDir);
+  if (dir) {
+    const byHex = indexSvgDir(dir);
+    const index = new Map();
+    for (const [hex, e] of byHex) {
+      index.set(hex, {
+        plain: e.plain,
+        variants: e.variants,
+        read: () => readFileSync(e.plain, 'utf8'),
+      });
+    }
+    return { describe: dir, index };
+  }
+  const zipPath = findKanjivgZip(kanjivgDir);
+  if (!zipPath) {
     throw new Error(
-      `No KanjiVG svg directory under ${opts.kanjivgDir}. Fetch and unzip kanjivg-20250816-main.zip first (see header).`,
+      `No KanjiVG data under ${kanjivgDir}: expected either an extracted svg/kanji directory or kanjivg-*-main.zip. Run \`npm run content:fetch\` first.`,
     );
   }
-  const svgIndex = indexSvgDir(svgDir);
+  const buf = readFileSync(zipPath);
+  const entries = readZipCentralDirectory(buf);
+  const index = new Map();
+  for (const [base, entry] of entries) {
+    const m = /^([0-9a-f]{5})(?:-([A-Za-z0-9]+))?\.svg$/.exec(base);
+    if (!m) continue;
+    const rec = index.get(m[1]) ?? { plain: null, variants: [], read: null };
+    if (m[2] === undefined) {
+      rec.plain = `${basename(zipPath)}!${entry.name}`;
+      rec.read = () => readZipEntry(buf, entry).toString('utf8');
+    } else rec.variants.push({ name: m[2], file: base });
+    index.set(m[1], rec);
+  }
+  for (const e of index.values()) e.variants.sort((a, b) => a.name.localeCompare(b.name));
+  if (index.size === 0) throw new Error(`No <hex>.svg entries in ${zipPath}`);
+  return { describe: zipPath, index };
+}
+
+function main() {
+  const opts = parseArgs(process.argv);
+  const { describe: svgDir, index: svgIndex } = openKanjivg(opts.kanjivgDir);
 
   const kana = enumerateKana();
   const kanjiList = loadKanjiList(opts.kanjiList);
@@ -553,7 +682,7 @@ function main() {
       continue;
     }
     if (entry.variants.length > 0) variantsSeen[glyph] = entry.variants.map((v) => v.name);
-    const ref = buildReference(glyph, entry.plain);
+    const ref = buildReference(glyph, entry.read(), entry.plain);
     if (opts.verify) verifyReference(ref, problems, advisories);
     const json = JSON.stringify(ref);
     const file = `${hex}.json`;
@@ -577,7 +706,7 @@ function main() {
     let expected = c.expected;
     let via = c.via;
     if (expected === null && via === 'kanjidic2') {
-      if (kanjidic === null) via = 'kanjidic2 unavailable — NOT CHECKED';
+      if (kanjidic === null) via = 'KANJIDIC2 not fetched — NOT CHECKED';
       else {
         expected = kanjidic.get(c.glyph) ?? null;
         if (expected === null) via = 'kanjidic2 has no entry — NOT CHECKED';
@@ -665,7 +794,7 @@ function main() {
 
   // --- report ------------------------------------------------------------
   const report = {
-    svgDir,
+    kanjivgSource: svgDir,
     characters: Object.keys(characters).length,
     kana: kana.length,
     kanji: kanji === null ? 'PENDING — data/kanji-top1000.json does not exist' : kanji.length,

@@ -1,0 +1,1143 @@
+[
+  {
+    "id": "kana-hi-row-vowel",
+    "title": "Hiragana: the five vowels",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:a",
+      "kana:hi:i",
+      "kana:hi:u",
+      "kana:hi:e",
+      "kana:hi:o"
+    ],
+    "prerequisites": [],
+    "note": "The five vowels. Every other kana is one of these with a consonant in front, so the five sounds a-i-u-e-o are the whole phonetic system in miniature. Japanese u is said with flat, unrounded lips.",
+    "order": 1
+  },
+  {
+    "id": "kana-hi-row-k",
+    "title": "Hiragana: the か row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:ka",
+      "kana:hi:ki",
+      "kana:hi:ku",
+      "kana:hi:ke",
+      "kana:hi:ko"
+    ],
+    "prerequisites": [
+      "kana-hi-row-vowel"
+    ],
+    "note": null,
+    "order": 2
+  },
+  {
+    "id": "kana-hi-row-s",
+    "title": "Hiragana: the さ row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:sa",
+      "kana:hi:shi",
+      "kana:hi:su",
+      "kana:hi:se",
+      "kana:hi:so"
+    ],
+    "prerequisites": [
+      "kana-hi-row-k"
+    ],
+    "note": "Watch the i-column: し is shi, not \"si\".",
+    "order": 3
+  },
+  {
+    "id": "kana-hi-row-t",
+    "title": "Hiragana: the た row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:ta",
+      "kana:hi:chi",
+      "kana:hi:tsu",
+      "kana:hi:te",
+      "kana:hi:to"
+    ],
+    "prerequisites": [
+      "kana-hi-row-s"
+    ],
+    "note": "Two irregular cells here: ち is chi and つ is tsu, not \"ti\" and \"tu\".",
+    "order": 4
+  },
+  {
+    "id": "kana-hi-row-n",
+    "title": "Hiragana: the な row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:na",
+      "kana:hi:ni",
+      "kana:hi:nu",
+      "kana:hi:ne",
+      "kana:hi:no"
+    ],
+    "prerequisites": [
+      "kana-hi-row-t"
+    ],
+    "note": null,
+    "order": 5
+  },
+  {
+    "id": "kana-hi-row-h",
+    "title": "Hiragana: the は row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:ha",
+      "kana:hi:hi",
+      "kana:hi:fu",
+      "kana:hi:he",
+      "kana:hi:ho"
+    ],
+    "prerequisites": [
+      "kana-hi-row-n"
+    ],
+    "note": "ふ is fu, not \"hu\" — the consonant is lighter than an English f, made with the lips alone. は has a second life as the topic particle, where it is pronounced \"wa\".",
+    "order": 6
+  },
+  {
+    "id": "kana-hi-row-m",
+    "title": "Hiragana: the ま row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:ma",
+      "kana:hi:mi",
+      "kana:hi:mu",
+      "kana:hi:me",
+      "kana:hi:mo"
+    ],
+    "prerequisites": [
+      "kana-hi-row-h"
+    ],
+    "note": null,
+    "order": 7
+  },
+  {
+    "id": "kana-hi-row-y",
+    "title": "Hiragana: the や row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:ya",
+      "kana:hi:yu",
+      "kana:hi:yo"
+    ],
+    "prerequisites": [
+      "kana-hi-row-m"
+    ],
+    "note": "Only three cells: yi and ye do not exist in modern Japanese.",
+    "order": 8
+  },
+  {
+    "id": "kana-hi-row-r",
+    "title": "Hiragana: the ら row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:ra",
+      "kana:hi:ri",
+      "kana:hi:ru",
+      "kana:hi:re",
+      "kana:hi:ro"
+    ],
+    "prerequisites": [
+      "kana-hi-row-y"
+    ],
+    "note": "One tapped consonant for the whole row, between an English r and l.",
+    "order": 9
+  },
+  {
+    "id": "kana-hi-row-w",
+    "title": "Hiragana: the わ row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:wa",
+      "kana:hi:wo",
+      "kana:hi:n"
+    ],
+    "prerequisites": [
+      "kana-hi-row-r"
+    ],
+    "note": "A three-cell row, and the only one with leftovers: わ is a normal syllable, を survives only as the object particle (pronounced \"o\"), and ん is a consonant on its own.",
+    "order": 10
+  },
+  {
+    "id": "kana-hi-small",
+    "title": "Hiragana: small っ, ゃ, ゅ, ょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:sokuon",
+      "kana:hi:small-ya",
+      "kana:hi:small-yu",
+      "kana:hi:small-yo"
+    ],
+    "prerequisites": [
+      "kana-hi-row-w",
+      "kana-hi-row-t",
+      "kana-hi-row-y"
+    ],
+    "note": "Four half-size kana that change the beat rather than adding a sound: っ holds the next consonant, and ゃ/ゅ/ょ fuse with the kana before them. Size is the whole distinction — きや is two beats, きゃ is one.",
+    "order": 11
+  },
+  {
+    "id": "kana-hi-small-vowels",
+    "title": "Hiragana: the small vowels ぁぃぅぇぉ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:small-a",
+      "kana:hi:small-i",
+      "kana:hi:small-u",
+      "kana:hi:small-e",
+      "kana:hi:small-o"
+    ],
+    "prerequisites": [
+      "kana-hi-small"
+    ],
+    "note": "Half-size vowels. Hiragana barely uses them; they are here so you recognise them, and because the katakana versions build every loanword sound Japanese lacks a kana for.",
+    "order": 12
+  },
+  {
+    "id": "kana-hi-row-g",
+    "title": "Hiragana: the が row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:ga",
+      "kana:hi:gi",
+      "kana:hi:gu",
+      "kana:hi:ge",
+      "kana:hi:go"
+    ],
+    "prerequisites": [
+      "kana-hi-row-k"
+    ],
+    "note": "The か row with two dots. Voiced kana are never new shapes — learn the mark, not ten more characters.",
+    "order": 13
+  },
+  {
+    "id": "kana-hi-row-z",
+    "title": "Hiragana: the ざ row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:za",
+      "kana:hi:ji",
+      "kana:hi:zu",
+      "kana:hi:ze",
+      "kana:hi:zo"
+    ],
+    "prerequisites": [
+      "kana-hi-row-s"
+    ],
+    "note": "じ is ji. ぢ in the だ row sounds the same but is almost never the right spelling.",
+    "order": 14
+  },
+  {
+    "id": "kana-hi-row-d",
+    "title": "Hiragana: the だ row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:da",
+      "kana:hi:di",
+      "kana:hi:du",
+      "kana:hi:de",
+      "kana:hi:do"
+    ],
+    "prerequisites": [
+      "kana-hi-row-t"
+    ],
+    "note": "ぢ and づ sound exactly like じ and ず. They appear only where a ち or つ is voiced inside a word (ちぢむ, つづく).",
+    "order": 15
+  },
+  {
+    "id": "kana-hi-row-b",
+    "title": "Hiragana: the ば row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:ba",
+      "kana:hi:bi",
+      "kana:hi:bu",
+      "kana:hi:be",
+      "kana:hi:bo"
+    ],
+    "prerequisites": [
+      "kana-hi-row-h"
+    ],
+    "note": null,
+    "order": 16
+  },
+  {
+    "id": "kana-hi-row-p",
+    "title": "Hiragana: the ぱ row",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:pa",
+      "kana:hi:pi",
+      "kana:hi:pu",
+      "kana:hi:pe",
+      "kana:hi:po"
+    ],
+    "prerequisites": [
+      "kana-hi-row-h",
+      "kana-hi-row-b"
+    ],
+    "note": "The only row that uses the small circle (handakuten) instead of two dots.",
+    "order": 17
+  },
+  {
+    "id": "kana-hi-yoon-k",
+    "title": "Hiragana: きゃ きゅ きょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:kya",
+      "kana:hi:kyu",
+      "kana:hi:kyo"
+    ],
+    "prerequisites": [
+      "kana-hi-small",
+      "kana-hi-row-k"
+    ],
+    "note": null,
+    "order": 18
+  },
+  {
+    "id": "kana-hi-yoon-s",
+    "title": "Hiragana: しゃ しゅ しょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:sha",
+      "kana:hi:shu",
+      "kana:hi:sho"
+    ],
+    "prerequisites": [
+      "kana-hi-small",
+      "kana-hi-row-s"
+    ],
+    "note": null,
+    "order": 19
+  },
+  {
+    "id": "kana-hi-yoon-t",
+    "title": "Hiragana: ちゃ ちゅ ちょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:cha",
+      "kana:hi:chu",
+      "kana:hi:cho"
+    ],
+    "prerequisites": [
+      "kana-hi-small",
+      "kana-hi-row-t"
+    ],
+    "note": null,
+    "order": 20
+  },
+  {
+    "id": "kana-hi-yoon-n",
+    "title": "Hiragana: にゃ にゅ にょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:nya",
+      "kana:hi:nyu",
+      "kana:hi:nyo"
+    ],
+    "prerequisites": [
+      "kana-hi-small",
+      "kana-hi-row-n"
+    ],
+    "note": null,
+    "order": 21
+  },
+  {
+    "id": "kana-hi-yoon-h",
+    "title": "Hiragana: ひゃ ひゅ ひょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:hya",
+      "kana:hi:hyu",
+      "kana:hi:hyo"
+    ],
+    "prerequisites": [
+      "kana-hi-small",
+      "kana-hi-row-h"
+    ],
+    "note": null,
+    "order": 22
+  },
+  {
+    "id": "kana-hi-yoon-m",
+    "title": "Hiragana: みゃ みゅ みょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:mya",
+      "kana:hi:myu",
+      "kana:hi:myo"
+    ],
+    "prerequisites": [
+      "kana-hi-small",
+      "kana-hi-row-m"
+    ],
+    "note": null,
+    "order": 23
+  },
+  {
+    "id": "kana-hi-yoon-r",
+    "title": "Hiragana: りゃ りゅ りょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:rya",
+      "kana:hi:ryu",
+      "kana:hi:ryo"
+    ],
+    "prerequisites": [
+      "kana-hi-small",
+      "kana-hi-row-r"
+    ],
+    "note": null,
+    "order": 24
+  },
+  {
+    "id": "kana-hi-yoon-g",
+    "title": "Hiragana: ぎゃ ぎゅ ぎょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:gya",
+      "kana:hi:gyu",
+      "kana:hi:gyo"
+    ],
+    "prerequisites": [
+      "kana-hi-small",
+      "kana-hi-row-g"
+    ],
+    "note": null,
+    "order": 25
+  },
+  {
+    "id": "kana-hi-yoon-z",
+    "title": "Hiragana: じゃ じゅ じょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:ja",
+      "kana:hi:ju",
+      "kana:hi:jo"
+    ],
+    "prerequisites": [
+      "kana-hi-small",
+      "kana-hi-row-z"
+    ],
+    "note": null,
+    "order": 26
+  },
+  {
+    "id": "kana-hi-yoon-b",
+    "title": "Hiragana: びゃ びゅ びょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:bya",
+      "kana:hi:byu",
+      "kana:hi:byo"
+    ],
+    "prerequisites": [
+      "kana-hi-small",
+      "kana-hi-row-b"
+    ],
+    "note": null,
+    "order": 27
+  },
+  {
+    "id": "kana-hi-yoon-p",
+    "title": "Hiragana: ぴゃ ぴゅ ぴょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:pya",
+      "kana:hi:pyu",
+      "kana:hi:pyo"
+    ],
+    "prerequisites": [
+      "kana-hi-small",
+      "kana-hi-row-p"
+    ],
+    "note": null,
+    "order": 28
+  },
+  {
+    "id": "kana-hi-yoon-d",
+    "title": "Hiragana: ぢゃ ぢゅ ぢょ",
+    "script": "hiragana",
+    "introduces": [
+      "kana:hi:dya",
+      "kana:hi:dyu",
+      "kana:hi:dyo"
+    ],
+    "prerequisites": [
+      "kana-hi-small",
+      "kana-hi-row-d"
+    ],
+    "note": "Rare forms, included only so you can read them. They sound exactly like the じゃ set and are practically never the right spelling.",
+    "order": 29
+  },
+  {
+    "id": "kana-ka-row-vowel",
+    "title": "Katakana: the five vowels",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:a",
+      "kana:ka:i",
+      "kana:ka:u",
+      "kana:ka:e",
+      "kana:ka:o"
+    ],
+    "prerequisites": [
+      "kana-hi-row-w",
+      "kana-hi-row-vowel"
+    ],
+    "note": "The five vowels. Every other kana is one of these with a consonant in front, so the five sounds a-i-u-e-o are the whole phonetic system in miniature. Japanese u is said with flat, unrounded lips.",
+    "order": 30
+  },
+  {
+    "id": "kana-ka-row-k",
+    "title": "Katakana: the カ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:ka",
+      "kana:ka:ki",
+      "kana:ka:ku",
+      "kana:ka:ke",
+      "kana:ka:ko"
+    ],
+    "prerequisites": [
+      "kana-ka-row-vowel",
+      "kana-hi-row-k"
+    ],
+    "note": null,
+    "order": 31
+  },
+  {
+    "id": "kana-ka-row-s",
+    "title": "Katakana: the サ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:sa",
+      "kana:ka:shi",
+      "kana:ka:su",
+      "kana:ka:se",
+      "kana:ka:so"
+    ],
+    "prerequisites": [
+      "kana-ka-row-k",
+      "kana-hi-row-s"
+    ],
+    "note": "Watch the i-column: し is shi, not \"si\".",
+    "order": 32
+  },
+  {
+    "id": "kana-ka-row-t",
+    "title": "Katakana: the タ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:ta",
+      "kana:ka:chi",
+      "kana:ka:tsu",
+      "kana:ka:te",
+      "kana:ka:to"
+    ],
+    "prerequisites": [
+      "kana-ka-row-s",
+      "kana-hi-row-t"
+    ],
+    "note": "Two irregular cells here: ち is chi and つ is tsu, not \"ti\" and \"tu\".",
+    "order": 33
+  },
+  {
+    "id": "kana-ka-row-n",
+    "title": "Katakana: the ナ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:na",
+      "kana:ka:ni",
+      "kana:ka:nu",
+      "kana:ka:ne",
+      "kana:ka:no"
+    ],
+    "prerequisites": [
+      "kana-ka-row-t",
+      "kana-hi-row-n"
+    ],
+    "note": null,
+    "order": 34
+  },
+  {
+    "id": "kana-ka-row-h",
+    "title": "Katakana: the ハ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:ha",
+      "kana:ka:hi",
+      "kana:ka:fu",
+      "kana:ka:he",
+      "kana:ka:ho"
+    ],
+    "prerequisites": [
+      "kana-ka-row-n",
+      "kana-hi-row-h"
+    ],
+    "note": "ふ is fu, not \"hu\" — the consonant is lighter than an English f, made with the lips alone. は has a second life as the topic particle, where it is pronounced \"wa\".",
+    "order": 35
+  },
+  {
+    "id": "kana-ka-row-m",
+    "title": "Katakana: the マ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:ma",
+      "kana:ka:mi",
+      "kana:ka:mu",
+      "kana:ka:me",
+      "kana:ka:mo"
+    ],
+    "prerequisites": [
+      "kana-ka-row-h",
+      "kana-hi-row-m"
+    ],
+    "note": null,
+    "order": 36
+  },
+  {
+    "id": "kana-ka-row-y",
+    "title": "Katakana: the ヤ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:ya",
+      "kana:ka:yu",
+      "kana:ka:yo"
+    ],
+    "prerequisites": [
+      "kana-ka-row-m",
+      "kana-hi-row-y"
+    ],
+    "note": "Only three cells: yi and ye do not exist in modern Japanese.",
+    "order": 37
+  },
+  {
+    "id": "kana-ka-row-r",
+    "title": "Katakana: the ラ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:ra",
+      "kana:ka:ri",
+      "kana:ka:ru",
+      "kana:ka:re",
+      "kana:ka:ro"
+    ],
+    "prerequisites": [
+      "kana-ka-row-y",
+      "kana-hi-row-r"
+    ],
+    "note": "One tapped consonant for the whole row, between an English r and l.",
+    "order": 38
+  },
+  {
+    "id": "kana-ka-row-w",
+    "title": "Katakana: the ワ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:wa",
+      "kana:ka:wo",
+      "kana:ka:n"
+    ],
+    "prerequisites": [
+      "kana-ka-row-r",
+      "kana-hi-row-w"
+    ],
+    "note": "A three-cell row, and the only one with leftovers: わ is a normal syllable, を survives only as the object particle (pronounced \"o\"), and ん is a consonant on its own.",
+    "order": 39
+  },
+  {
+    "id": "kana-ka-small",
+    "title": "Katakana: ー, small ッ, ャ, ュ, ョ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:chouonpu",
+      "kana:ka:sokuon",
+      "kana:ka:small-ya",
+      "kana:ka:small-yu",
+      "kana:ka:small-yo"
+    ],
+    "prerequisites": [
+      "kana-ka-row-w",
+      "kana-hi-small"
+    ],
+    "note": "The marks that make katakana work for loanwords: ー lengthens the vowel before it, ッ doubles the next consonant, and ャ/ュ/ョ fuse into one beat. コーヒー, サッカー, キャベツ.",
+    "order": 40
+  },
+  {
+    "id": "kana-ka-small-vowels",
+    "title": "Katakana: the small vowels ァィゥェォ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:small-a",
+      "kana:ka:small-i",
+      "kana:ka:small-u",
+      "kana:ka:small-e",
+      "kana:ka:small-o"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-hi-small-vowels"
+    ],
+    "note": "Half-size vowels. These are the building blocks of ファ, ティ, ウィ and ヴォ: a full-size kana keeps its consonant and borrows the small vowel.",
+    "order": 41
+  },
+  {
+    "id": "kana-ka-row-g",
+    "title": "Katakana: the ガ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:ga",
+      "kana:ka:gi",
+      "kana:ka:gu",
+      "kana:ka:ge",
+      "kana:ka:go"
+    ],
+    "prerequisites": [
+      "kana-ka-row-k",
+      "kana-hi-row-g"
+    ],
+    "note": "The か row with two dots. Voiced kana are never new shapes — learn the mark, not ten more characters.",
+    "order": 42
+  },
+  {
+    "id": "kana-ka-row-z",
+    "title": "Katakana: the ザ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:za",
+      "kana:ka:ji",
+      "kana:ka:zu",
+      "kana:ka:ze",
+      "kana:ka:zo"
+    ],
+    "prerequisites": [
+      "kana-ka-row-s",
+      "kana-hi-row-z"
+    ],
+    "note": "じ is ji. ぢ in the だ row sounds the same but is almost never the right spelling.",
+    "order": 43
+  },
+  {
+    "id": "kana-ka-row-d",
+    "title": "Katakana: the ダ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:da",
+      "kana:ka:di",
+      "kana:ka:du",
+      "kana:ka:de",
+      "kana:ka:do"
+    ],
+    "prerequisites": [
+      "kana-ka-row-t",
+      "kana-hi-row-d"
+    ],
+    "note": "ぢ and づ sound exactly like じ and ず. They appear only where a ち or つ is voiced inside a word (ちぢむ, つづく).",
+    "order": 44
+  },
+  {
+    "id": "kana-ka-row-b",
+    "title": "Katakana: the バ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:ba",
+      "kana:ka:bi",
+      "kana:ka:bu",
+      "kana:ka:be",
+      "kana:ka:bo"
+    ],
+    "prerequisites": [
+      "kana-ka-row-h",
+      "kana-hi-row-b"
+    ],
+    "note": null,
+    "order": 45
+  },
+  {
+    "id": "kana-ka-row-p",
+    "title": "Katakana: the パ row",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:pa",
+      "kana:ka:pi",
+      "kana:ka:pu",
+      "kana:ka:pe",
+      "kana:ka:po"
+    ],
+    "prerequisites": [
+      "kana-ka-row-h",
+      "kana-hi-row-p",
+      "kana-ka-row-b"
+    ],
+    "note": "The only row that uses the small circle (handakuten) instead of two dots.",
+    "order": 46
+  },
+  {
+    "id": "kana-ka-yoon-k",
+    "title": "Katakana: キャ キュ キョ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:kya",
+      "kana:ka:kyu",
+      "kana:ka:kyo"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-ka-row-k",
+      "kana-hi-yoon-k"
+    ],
+    "note": null,
+    "order": 47
+  },
+  {
+    "id": "kana-ka-yoon-s",
+    "title": "Katakana: シャ シュ ショ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:sha",
+      "kana:ka:shu",
+      "kana:ka:sho"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-ka-row-s",
+      "kana-hi-yoon-s"
+    ],
+    "note": null,
+    "order": 48
+  },
+  {
+    "id": "kana-ka-yoon-t",
+    "title": "Katakana: チャ チュ チョ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:cha",
+      "kana:ka:chu",
+      "kana:ka:cho"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-ka-row-t",
+      "kana-hi-yoon-t"
+    ],
+    "note": null,
+    "order": 49
+  },
+  {
+    "id": "kana-ka-yoon-n",
+    "title": "Katakana: ニャ ニュ ニョ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:nya",
+      "kana:ka:nyu",
+      "kana:ka:nyo"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-ka-row-n",
+      "kana-hi-yoon-n"
+    ],
+    "note": null,
+    "order": 50
+  },
+  {
+    "id": "kana-ka-yoon-h",
+    "title": "Katakana: ヒャ ヒュ ヒョ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:hya",
+      "kana:ka:hyu",
+      "kana:ka:hyo"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-ka-row-h",
+      "kana-hi-yoon-h"
+    ],
+    "note": null,
+    "order": 51
+  },
+  {
+    "id": "kana-ka-yoon-m",
+    "title": "Katakana: ミャ ミュ ミョ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:mya",
+      "kana:ka:myu",
+      "kana:ka:myo"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-ka-row-m",
+      "kana-hi-yoon-m"
+    ],
+    "note": null,
+    "order": 52
+  },
+  {
+    "id": "kana-ka-yoon-r",
+    "title": "Katakana: リャ リュ リョ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:rya",
+      "kana:ka:ryu",
+      "kana:ka:ryo"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-ka-row-r",
+      "kana-hi-yoon-r"
+    ],
+    "note": null,
+    "order": 53
+  },
+  {
+    "id": "kana-ka-yoon-g",
+    "title": "Katakana: ギャ ギュ ギョ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:gya",
+      "kana:ka:gyu",
+      "kana:ka:gyo"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-ka-row-g",
+      "kana-hi-yoon-g"
+    ],
+    "note": null,
+    "order": 54
+  },
+  {
+    "id": "kana-ka-yoon-z",
+    "title": "Katakana: ジャ ジュ ジョ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:ja",
+      "kana:ka:ju",
+      "kana:ka:jo"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-ka-row-z",
+      "kana-hi-yoon-z"
+    ],
+    "note": null,
+    "order": 55
+  },
+  {
+    "id": "kana-ka-yoon-b",
+    "title": "Katakana: ビャ ビュ ビョ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:bya",
+      "kana:ka:byu",
+      "kana:ka:byo"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-ka-row-b",
+      "kana-hi-yoon-b"
+    ],
+    "note": null,
+    "order": 56
+  },
+  {
+    "id": "kana-ka-yoon-p",
+    "title": "Katakana: ピャ ピュ ピョ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:pya",
+      "kana:ka:pyu",
+      "kana:ka:pyo"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-ka-row-p",
+      "kana-hi-yoon-p"
+    ],
+    "note": null,
+    "order": 57
+  },
+  {
+    "id": "kana-ka-yoon-d",
+    "title": "Katakana: ヂャ ヂュ ヂョ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:dya",
+      "kana:ka:dyu",
+      "kana:ka:dyo"
+    ],
+    "prerequisites": [
+      "kana-ka-small",
+      "kana-ka-row-d",
+      "kana-hi-yoon-d"
+    ],
+    "note": "Rare forms, included only so you can read them. They sound exactly like the じゃ set and are practically never the right spelling.",
+    "order": 58
+  },
+  {
+    "id": "kana-ka-ext-f",
+    "title": "Katakana extended: ファ フィ フェ フォ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:fa",
+      "kana:ka:fi",
+      "kana:ka:fe",
+      "kana:ka:fo"
+    ],
+    "prerequisites": [
+      "kana-ka-small-vowels",
+      "kana-ka-row-h"
+    ],
+    "note": "Japanese has only ふ in the h-row u-column, so every foreign f sound is built on フ plus a small vowel.",
+    "order": 59
+  },
+  {
+    "id": "kana-ka-ext-t",
+    "title": "Katakana extended: ティ ディ トゥ ドゥ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:ti",
+      "kana:ka:di-ext",
+      "kana:ka:tu",
+      "kana:ka:du-ext"
+    ],
+    "prerequisites": [
+      "kana-ka-small-vowels",
+      "kana-ka-row-t"
+    ],
+    "note": "The t/d row has no ti, tu, di or du cell — ち, つ, ぢ, づ sit there instead. Loanwords rebuild the missing sounds with テ, デ, ト, ド plus a small vowel. Note the IME keys: thi, dhi, twu, dwu.",
+    "order": 60
+  },
+  {
+    "id": "kana-ka-ext-w",
+    "title": "Katakana extended: ウィ ウェ ウォ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:wi",
+      "kana:ka:we",
+      "kana:ka:wo-ext"
+    ],
+    "prerequisites": [
+      "kana-ka-small-vowels",
+      "kana-ka-row-w"
+    ],
+    "note": "The w-row lost wi, we and wo. Modern loanwords write them with ウ plus a small vowel, not with the historical ヰ, ヱ, ヲ.",
+    "order": 61
+  },
+  {
+    "id": "kana-ka-ext-v",
+    "title": "Katakana extended: ヴ ヴァ ヴィ ヴェ ヴォ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:vu",
+      "kana:ka:va",
+      "kana:ka:vi",
+      "kana:ka:ve",
+      "kana:ka:vo"
+    ],
+    "prerequisites": [
+      "kana-ka-small-vowels",
+      "kana-ka-row-vowel",
+      "kana-ka-row-b"
+    ],
+    "note": "ウ with dakuten writes a foreign v. Read it, but know that the b-row spelling (バイオリン) is now standard and far more common.",
+    "order": 62
+  },
+  {
+    "id": "kana-ka-ext-e",
+    "title": "Katakana extended: シェ ジェ チェ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:she",
+      "kana:ka:je",
+      "kana:ka:che"
+    ],
+    "prerequisites": [
+      "kana-ka-small-vowels",
+      "kana-ka-row-s"
+    ],
+    "note": "し, じ and ち have no e-column cell. A small ェ supplies one, and these three are the most frequent extended combinations in everyday loanwords.",
+    "order": 63
+  },
+  {
+    "id": "kana-ka-ext-ts",
+    "title": "Katakana extended: ツァ ツィ ツェ ツォ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:tsa",
+      "kana:ka:tsi",
+      "kana:ka:tse",
+      "kana:ka:tso"
+    ],
+    "prerequisites": [
+      "kana-ka-small-vowels",
+      "kana-ka-row-t"
+    ],
+    "note": "ツ plus a small vowel, mostly for German and Italian names and terms.",
+    "order": 64
+  },
+  {
+    "id": "kana-ka-ext-kw",
+    "title": "Katakana extended: クァ クヮ グァ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:kwa",
+      "kana:ka:kwa-wa",
+      "kana:ka:gwa"
+    ],
+    "prerequisites": [
+      "kana-ka-small-vowels",
+      "kana-ka-row-k"
+    ],
+    "note": "kwa and gwa, which Japanese lost long ago. Most words now avoid them (カルテット, グアム), so treat these as reading knowledge.",
+    "order": 65
+  },
+  {
+    "id": "kana-ka-ext-ye",
+    "title": "Katakana extended: キェ ニェ ヒェ ミェ リェ",
+    "script": "katakana",
+    "introduces": [
+      "kana:ka:kye",
+      "kana:ka:nye",
+      "kana:ka:hye",
+      "kana:ka:mye",
+      "kana:ka:rye"
+    ],
+    "prerequisites": [
+      "kana-ka-small-vowels",
+      "kana-ka-row-k",
+      "kana-ka-row-n",
+      "kana-ka-row-h",
+      "kana-ka-row-m",
+      "kana-ka-row-r"
+    ],
+    "note": "The far edge of the katakana system: consonant + small ェ forms that occur only in transcription of foreign names. Included for completeness, not for production.",
+    "order": 66
+  },
+  {
+    "id": "kana-historical",
+    "title": "Historical kana: ゐ ゑ ヰ ヱ",
+    "script": "mixed",
+    "introduces": [
+      "kana:hi:wi-historical",
+      "kana:hi:we-historical",
+      "kana:ka:wi-historical",
+      "kana:ka:we-historical"
+    ],
+    "prerequisites": [
+      "kana-hi-row-w",
+      "kana-ka-row-w"
+    ],
+    "note": "Off the beginner path. These four were retired from ordinary use by the 1946 spelling reform; their sounds merged with い and え. Learn to recognise them for old signage, pre-war text and brand names such as ヱビス — you will never need to write them.",
+    "order": 67
+  }
+]

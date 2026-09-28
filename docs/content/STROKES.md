@@ -65,21 +65,36 @@ redistributed:
 Everything under `public/content/strokes/` is generated. Do not hand-edit it.
 
 ```sh
+npm run content:fetch      # downloads KanjiVG + KANJIDIC2 into data/sources/
+npm run content:strokes    # = node scripts/content/build-strokes.mjs
+```
+
+`content:fetch` records each archive in `data/sources/SOURCES.lock.json` with its
+SHA-256; the KanjiVG hash the build was made from is
+`69a2944e…f50689a3`, matching that lock. Or fetch by hand:
+
+```sh
 mkdir -p data/sources && cd data/sources
 curl -sSL -O https://github.com/KanjiVG/kanjivg/releases/download/r20250816/kanjivg-20250816-main.zip
-unzip -q -o kanjivg-20250816-main.zip -d kanjivg
-# optional; only used to cross-check stroke counts
-curl -sSL -o kanjidic2.xml.gz http://www.edrdg.org/kanjidic/kanjidic2.xml.gz && gunzip -kf kanjidic2.xml.gz
+curl -sSL -o kanjidic2.xml.gz http://www.edrdg.org/kanjidic/kanjidic2.xml.gz
 cd ../.. && node scripts/content/build-strokes.mjs
 ```
 
-The script is `scripts/content/build-strokes.mjs` — Node builtins only, no npm
-dependencies, including a purpose-written SVG path parser. It prints a JSON report
-and exits non-zero if any verification fails. `data/sources/` is gitignored: upstream
-archives are fetched, never committed.
+The script is `scripts/content/build-strokes.mjs` — **Node builtins only, no npm
+dependencies**, including a purpose-written SVG path parser and a minimal ZIP reader.
+It prints a JSON report and exits non-zero if any verification fails.
+`data/sources/` is gitignored: upstream archives are fetched, never committed.
 
-Note: the release archive lays files out as `kanji/XXXXX.svg`, not `svg/XXXXX.svg`.
-The script locates the directory itself and accepts either.
+No unzip or gunzip step is needed. The script reads the `.zip` directly (stored and
+deflate entries; it throws on ZIP64 or encryption rather than guessing) and accepts
+KANJIDIC2 as either `kanjidic2.xml` or `kanjidic2.xml.gz`. If an already-extracted
+directory exists it is preferred; building from the zip and from an extracted
+directory was verified to produce byte-identical output. The archive lays files out
+as `kanji/XXXXX.svg`, not `svg/XXXXX.svg` — the script locates the directory itself
+and accepts either.
+
+Output is deterministic: rebuilding produces byte-identical files (verified by
+comparing SHA-256 of the whole output tree across runs).
 
 ## Output
 
@@ -202,6 +217,8 @@ current output: **0 failures.**
   **hand-asserted** from standard kana stroke-order charts, because KANJIDIC2 has no
   kana entries and we have no machine-readable authority for kana counts. That
   weaker basis is labelled as such in the script (`SPOT_CHECK[].via`).
+  If KANJIDIC2 is not present the report says `stroke counts NOT cross-checked`
+  rather than quietly passing.
 - **Stroke counts, everything.** Not just the 8: all 1,000 kanji are compared against
   KANJIDIC2 (**1,000 checked, 0 disagreements**) *and* against the `strokeCount` that
   `data/kanji-top1000.json` declares (**1,000 checked, 0 disagreements**). A mismatch
