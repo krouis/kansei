@@ -31,6 +31,7 @@ export const asVocabId = (s: string): VocabId => s as VocabId;
 export const asComponentId = (s: string): ComponentId => s as ComponentId;
 export const asReadingId = (s: string): ReadingId => s as ReadingId;
 export const asSessionId = (s: string): SessionId => s as SessionId;
+export const asQuestionId = (s: string): QuestionId => s as QuestionId;
 
 export const ID_PATTERN = /^(kana:(hi|ka):[a-z0-9_-]+|kanji:.+|comp:.+|vocab:.+|reading:.+:.+)$/u;
 
