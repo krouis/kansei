@@ -42,9 +42,16 @@ export interface ToleranceProfile {
   directionDegrees: number;
   /** How far a stroke's start may sit from the reference start and still match. */
   endpointDistance: number;
-  /** Below this confidence the verdict is 'uncertain' rather than incorrect. */
+  /**
+   * The three confidence bands, in order:
+   *   < uncertainBelow                        → 'incorrect' (confidently wrong)
+   *   >= uncertainBelow and < correctAtOrAbove → 'uncertain' (genuinely ambiguous)
+   *   >= correctAtOrAbove                     → 'correct'
+   * The middle band exists because a confidence near the boundary is not weak
+   * evidence of failure, it is an assessment the geometry cannot decide — and
+   * the product rule is that such cases say so rather than guessing wrong.
+   */
   uncertainBelow: number;
-  /** At or above this confidence the character counts as produced. */
   correctAtOrAbove: number;
 }
 
