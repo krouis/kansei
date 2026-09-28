@@ -19,10 +19,13 @@
     "content:fetch": "node scripts/assets/fetch-sources.mjs",
     "content:build": "node scripts/content/build-content.mjs",
     "content:validate": "node scripts/content/validate-content.mjs",
+    "content:verify-references": "node scripts/content/verify-references.mjs",
+    "content:strokes": "node scripts/content/build-strokes.mjs",
     "fonts:build": "node scripts/assets/build-fonts.mjs",
     "icons:build": "node scripts/assets/build-icons.mjs",
     "audio:fetch": "node scripts/assets/fetch-audio.mjs",
-    "check:contrast": "node scripts/check-contrast.mjs"
+    "check:contrast": "node scripts/check-contrast.mjs",
+    "check:viz": "node scripts/check-viz-palette.mjs"
   },
   "dependencies": {
     "idb": "^8.0.3",

@@ -1,0 +1,74 @@
+/*
+ * Chart palette and mark styles.
+ *
+ * Encoding decisions, made per the data's job rather than per what looked nice:
+ *
+ *  - Learning stage and daily practice volume are ORDINAL. They use one
+ *    sequential indigo ramp, light to dark, whose darkest step is the app's
+ *    accent — so the charts read as part of the same object as the rest of the
+ *    UI. A single-hue ramp also needs no colour-vision discrimination, which
+ *    four muted hues could not have provided.
+ *  - "Not started" is the absence of progress, not a category, so it is drawn
+ *    as the unfilled track rather than as a series colour.
+ *  - Accuracy per skill is categorical, but it is drawn as small multiples with
+ *    one bar per row, so the row label carries identity and no hue set is needed.
+ *  - Every chart has a table view behind a disclosure, so no value is available
+ *    only as a colour.
+ */
+
+.viz {
+  --viz-surface: #ffffff;
+  /* Sequential ramp, light → dark. Step 5 is --accent. */
+  --viz-seq-1: #e4ecf6;
+  --viz-seq-2: #b7cde6;
+  --viz-seq-3: #7ba2ce;
+  --viz-seq-4: #416f9f;
+  --viz-seq-5: #1f3a5f;
+  /* The empty part of a track: practice not yet done. */
+  --viz-track: #efece4;
+  --viz-track-border: #e0dacd;
+  /* The daily goal that applied on each day, drawn as a reference line. */
+  --viz-goal: #a8763a;
+  /* Days on which the goal was met get a mark, not only a taller bar. */
+  --viz-met: #3f6b46;
+  --viz-axis: #8d887c;
+  --viz-grid: #ece8de;
+  --viz-ink: #4b525c;
+  --viz-ink-strong: #191c22;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .viz {
+    --viz-surface: #1c1f25;
+    --viz-seq-1: #232c3a;
+    --viz-seq-2: #32485f;
+    --viz-seq-3: #486c92;
+    --viz-seq-4: #6f97c3;
+    --viz-seq-5: #a8c6e8;
+    --viz-track: #23262c;
+    --viz-track-border: #2f333a;
+    --viz-goal: #d0a055;
+    --viz-met: #7cae85;
+    --viz-axis: #8b8983;
+    --viz-grid: #282c33;
+    --viz-ink: #b3b0aa;
+    --viz-ink-strong: #e9e6e0;
+  }
+}
+
+:root[data-theme='dark'] .viz {
+  --viz-surface: #1c1f25;
+  --viz-seq-1: #232c3a;
+  --viz-seq-2: #32485f;
+  --viz-seq-3: #486c92;
+  --viz-seq-4: #6f97c3;
+  --viz-seq-5: #a8c6e8;
+  --viz-track: #23262c;
+  --viz-track-border: #2f333a;
+  --viz-goal: #d0a055;
+  --viz-met: #7cae85;
+  --viz-axis: #8b8983;
+  --viz-grid: #282c33;
+  --viz-ink: #b3b0aa;
+  --viz-ink-strong: #e9e6e0;
+}
