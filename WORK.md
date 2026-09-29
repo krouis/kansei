@@ -53,7 +53,7 @@ Updated as implementation proceeds; unchecked items are not release claims.
 - [ ] Test update activation with existing progress and interrupted sessions.
 - [ ] Test every exercise, audio, animation and About after offline cold start.
 - [ ] Test representative phone/tablet/desktop layouts and actual input devices.
-- [ ] Publish setup/build/deployment, architecture/data model and learning/XP documentation.
+- [x] Publish setup/build/deployment, architecture/data model and learning/XP documentation.
 - [ ] Publish exact content inventory, provenance/licenses, test results and remaining limitations.
 
 ## Known baseline limitations
@@ -116,3 +116,11 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 
 - Re-audited two items marked unchecked but already fully implemented and verified: the handwriting canvas (Writing.tsx: undo, clear, blank-canvas recall mode by default with guides only on retry or explicit hint, live trace coaching, reference replay respecting reduced motion, graded through the real worker-based stroke assessor) and Settings (theme/motion/goal/series-length/active-scripts/silent/keyboard-only/extended/historical toggles, storage usage and persistent-storage request, pack install/verify, and versioned merge-or-replace backup transfer with a pre-apply effects preview). Checked off.
 - Remaining known gap, not attempted this pass: component teachingOrder/lessonId in data/components.json is still entirely placeholder ('comp-provisional-01' for all 263 records) — the documented interleave with the now-finalized kanji teaching order was never run. The selector already handles this reasonably (newMaterial.ts mixes a couple of components alongside real kanji rather than isolating them), so nothing is broken, but the ordering is not the considered one the content pipeline's own contract calls for.
+
+## Claude Sonnet 5 documentation consolidation pass
+- README.md rewritten for a human reader: leads with what the app does, a two-command quick start, known limits, and a table linking out to the full doc set — GitHub Pages/CI internals moved to docs/DEPLOYMENT.md rather than opening the file.
+- Added docs/ARCHITECTURE.md (system map), docs/DATA-MODEL.md (schema, transaction/migration guarantees, backup format), docs/LEARNING-AND-XP.md (session structure, question formats, grading, learning stages, the full XP rule table), and docs/DEPLOYMENT.md (build/hosting/CI detail extracted from README).
+- Wrote the three missing engine-module READMEs (scheduler, selection, persistence) that inline comments covered but no navigable file did.
+- Found and fixed a real license inconsistency while writing this: package.json/package-lock.json and four content docs declared AGPL-3.0-or-later; the actual committed LICENSE file is GPL-2.0(-or-later). Corrected the metadata to match the license file, not the reverse.
+- Found and fixed a stale number in the previous README (vocabulary-with-audio: stated as 67, actually 61 after the word-specific-reading content regeneration) by checking data/vocab-report.json directly rather than carrying the old figure forward.
+- Surfaced while writing the scheduler README, not previously tracked: the scheduler has no dedicated test file, only indirect coverage through session-engine.test.ts. Recorded as a real gap.
