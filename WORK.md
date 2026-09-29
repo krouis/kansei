@@ -40,7 +40,7 @@ Updated as implementation proceeds; unchecked items are not release claims.
 ## Product workflows
 - [x] Character explorer: gojuon, groups, search, filters, separate skill states/due status.
 - [x] Revision view: readings, components, words, audio, animation, trace, recall, history, focused practice.
-- [ ] Placement assessing only the skills actually tested.
+- [x] Placement assessing only the skills actually tested.
 - [x] Progress: historical goals, XP ranges/calendar, sessions/time, skill accuracy, retention and confusions.
 - [ ] Settings: modes, theme, text/motion, storage, content management, versioned backup transfer.
 - [x] Reminders: in-app schedule, quiet hours/snooze/pause, honest recurring calendar export.
@@ -111,3 +111,5 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 - Found and fixed a real integration defect: `CharactersPage.tsx` and `explorer.ts` were fully built and independently unit-tested but never imported — the shipped app used a much cruder duplicate defined inline in `App.tsx` (no kanji/vocabulary view, substring-only search, single-reading progress lookups that could hide an unpracticed reading behind a retained one). Wired in the real component, deleted the duplicate, verified with the full unit suite, a production build, and the real Chromium offline E2E spec.
 - Added `tests/integration/xp-ledger.test.ts` (9 tests): the XP ledger's day-boundary logic had no direct test before this. Covers real 2026 America/New_York DST transitions (23-hour spring-forward, 25-hour fall-back), a UTC/local-date disagreement, a session split across local midnight, a timezone change verified against a single instant that is genuinely a different calendar date in Tokyo vs. Los Angeles, and the frozen-daily-goal rule. No bugs found — the existing `stamp()`/`localDateIn()` implementation held up — but this closes a real gap in regression coverage.
 - 121 unit/integration tests and both Chromium E2E specs pass at the end of this pass.
+
+- Placement: added the missing onboarding choice (beginner start vs. an optional ten-question placement check), implemented as a real SessionKind sampled evenly across taught kana and scored through the exact same generator/grader/scheduler path as ordinary practice — recognition only, with the scope limit stated in the UI both before and after the check. 6 unit tests, 1 integration test, 1 new Chromium E2E spec; 127 unit/integration tests and all 3 E2E specs pass.
