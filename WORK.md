@@ -86,5 +86,7 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 - [x] Respect the deployment base path for content, audio, service-worker registration and navigation.
 - [x] Generate section entrypoints and a scoped PWA manifest for static hosting.
 - [x] Verify installation, ten-screen XP and offline cold start under `/kansei/`; both Chromium acceptance tests pass.
-- [ ] Add the build/test/publish workflow and document repository setup.
+- [x] Add the build/test/publish workflow and document repository setup.
 - [ ] Observe a successful GitHub-hosted deployment after pushing the workflow.
+
+- Workflow checks use Node 22 and locked npm dependencies. Runtime-only content validation checks all distributed assets without downloading mutable upstream dictionaries; the default validator still checks local source hashes. GitHub-hosted execution has not yet occurred.

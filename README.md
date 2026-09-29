@@ -30,6 +30,31 @@ Deploy the `dist` directory on HTTPS with navigation fallback to `index.html`.
 Serve `sw.js` without a long immutable cache lifetime. Curriculum files are
 verified against their manifests; retain the generated paths and bytes.
 
+## GitHub Pages
+
+The [Pages workflow](.github/workflows/pages.yml) installs locked dependencies,
+checks TypeScript, runs unit/integration tests, validates shipped content and
+kana, builds the production PWA, and runs Chromium offline acceptance tests.
+Pull requests to `main` run these checks without publishing. Successful pushes
+to `main`, or manual runs on `main`, publish the exact tested `dist` artifact.
+
+In the GitHub repository, select **Settings → Pages → Build and deployment →
+Source → GitHub Actions**. Push the workflow to `main` and inspect its run under
+**Actions → Build, test and publish PWA**. The deployment URL appears in that
+run and in the `github-pages` environment; for this repository it is
+https://krouis.github.io/kansei/. No personal access token or deployment secret
+is required. See GitHub's [custom Pages workflow documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
+
+The workflow builds and tests with `VITE_BASE_PATH=/kansei/`. If the repository
+is renamed or moved to a custom domain, update this and `PLAYWRIGHT_BASE_PATH`
+in the workflow together. Local builds default to `/`.
+
+CI validates the committed curriculum, every packaged file's size and SHA-256,
+and cross-dataset references with `content:validate -- --runtime-only`. It does
+not download or regenerate upstream dictionaries: those ignored archives have
+pinned provenance hashes, while some upstream download URLs change daily.
+Full source-archive validation remains a separate local reproduction check.
+
 ## What works
 
 - Ten-screen kana sessions, feedback, guided retries, keyboard matching, reading
@@ -59,19 +84,25 @@ See [WORK.md](WORK.md) for the itemized remaining work and
 ```sh
 npm run typecheck
 npm test
-npm run content:validate
+npm run content:validate -- --runtime-only
 npm run check:kana
 npm run build
 ```
 
-With the production preview already running on port 4173:
+To run the browser test, build first as above. Playwright starts its own
+production preview on port 4174:
 
 ```sh
 npx playwright install chromium
-npx playwright test
+npm run test:e2e
 ```
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can point to an existing Chromium executable.
 The browser test installs content, completes ten questions for 20 XP, opens a
 new page offline, checks audio and reference availability, and checks phone-width
 layout. It does not yet cover every exercise offline or service-worker upgrades.
+
+To additionally validate locally available source archives against their
+committed provenance hashes, run `npm run content:validate` without the
+`--runtime-only` flag. See the content documentation before downloading fresh
+upstream snapshots; they may differ from the original pinned inputs.
