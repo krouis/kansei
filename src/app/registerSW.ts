@@ -50,7 +50,7 @@ export function registerServiceWorker(): SwHandle {
   set({ controlled: Boolean(navigator.serviceWorker.controller) });
 
   navigator.serviceWorker
-    .register('/sw.js', { type: 'module' })
+    .register(`${import.meta.env.BASE_URL}sw.js`, { type: 'module', scope: import.meta.env.BASE_URL })
     .then((registration) => {
       const handleWaiting = () => {
         if (registration.waiting) {

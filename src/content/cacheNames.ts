@@ -38,7 +38,7 @@ export const CONTENT_CACHE = `${CACHE_PREFIX}content-v1`;
 export const PARTIAL_CACHE = `${CACHE_PREFIX}content-partial-v1`;
 
 /** Default URL prefix the content pack tree is served from. */
-export const DEFAULT_CONTENT_BASE_URL = '/content/';
+export const DEFAULT_CONTENT_BASE_URL = `${import.meta.env.BASE_URL}content/`;
 
 /** Caches that a shell activation is allowed to delete. */
 export function isDisposableCacheName(name: string, keepShellCache: string): boolean {

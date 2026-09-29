@@ -1,5 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 
+const base = process.env.PLAYWRIGHT_BASE_PATH || '/';
+const appPath = (path: string) => base + path.replace(/^\//, '');
+
 async function snapshot(page: Page) {
   return page.evaluate(async () => {
     const names = await indexedDB.databases();
@@ -12,7 +15,7 @@ async function snapshot(page: Page) {
 
 test('installs real kana, completes ten questions, and cold starts offline', async ({page,context}) => {
   const errors: string[]=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('/');
+  await page.goto(appPath('/'));
   await page.getByLabel('Keyboard-only practice (no handwriting)').check();
   await page.getByLabel('Silent practice', {exact:true}).check();
   await page.getByRole('button',{name:'Install and begin'}).click();
@@ -37,20 +40,36 @@ test('installs real kana, completes ten questions, and cold starts offline', asy
   await context.setOffline(true);
   await page.close();
   const cold=await context.newPage();cold.on('pageerror',e=>errors.push(e.message));
-  await cold.goto('/characters');
+  await cold.goto(appPath('/characters'));
   await expect(cold.getByRole('heading',{name:'Look a little closer.'})).toBeVisible();
   await cold.getByRole('button',{name:/^あ, a,/}).click();
   await expect(cold.getByRole('button',{name:'Play recording'})).toBeVisible();
   await cold.getByRole('button',{name:'Play recording'}).click();
   await expect(cold.locator('.writing-canvas')).toBeVisible();
   await cold.getByRole('button',{name:'Replay reference'}).click();
-  const audioStatus=await cold.evaluate(async()=>{const r=await fetch('/content/audio/kana/a.oga');return {ok:r.ok,bytes:(await r.arrayBuffer()).byteLength};});
+  const audioStatus=await cold.evaluate(async(audioPath)=>{const r=await fetch(audioPath);return {ok:r.ok,bytes:(await r.arrayBuffer()).byteLength};}, appPath('/content/audio/kana/a.oga'));
   expect(audioStatus.ok).toBe(true);expect(audioStatus.bytes).toBeGreaterThan(1000);
-  await cold.goto('/about');await expect(cold.getByRole('heading',{name:'How learning works here'})).toBeVisible();
-  await cold.goto('/progress');await expect(cold.getByRole('heading',{name:'20 XP all time',exact:true})).toBeVisible();
-  await cold.setViewportSize({width:390,height:844});await cold.goto('/characters');
+  await cold.goto(appPath('/about'));await expect(cold.getByRole('heading',{name:'How learning works here'})).toBeVisible();
+  await cold.goto(appPath('/progress'));await expect(cold.getByRole('heading',{name:'20 XP all time',exact:true})).toBeVisible();
+  await cold.setViewportSize({width:390,height:844});await cold.goto(appPath('/characters'));
   await expect(cold.getByRole('heading',{name:'Look a little closer.'})).toBeVisible();
   expect(await cold.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await cold.screenshot({path:'test-results/characters-phone.png',fullPage:true});
   expect(errors).toEqual([]);
+});
+
+// No service worker or prior visit may be needed to load a shared section URL.
+test('serves a direct section entry and scopes the manifest to its deployment', async ({page}) => {
+  const response = await page.goto(appPath('/characters/'));
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole('heading', {name:'Your Japanese notebook.'})).toBeVisible();
+  const manifest = await page.evaluate(async () => {
+    const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]')!;
+    const response = await fetch(link.href);
+    return { url: new URL(link.href).pathname, data: await response.json() };
+  });
+  expect(manifest.url).toBe(appPath('/manifest.webmanifest'));
+  expect(manifest.data.scope).toBe(base);
+  expect(manifest.data.start_url).toBe(`${base}?source=pwa`);
+  expect(manifest.data.icons.every((icon: {src:string}) => icon.src.startsWith(`${base}icons/`))).toBe(true);
 });

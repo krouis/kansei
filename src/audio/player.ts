@@ -1,6 +1,7 @@
 import type { AudioRef } from '@/domain';
+import { DEFAULT_CONTENT_BASE_URL } from '@/content/cacheNames';
 import { resolvePackUrl } from '@/content/packSource';
-const audioUrl = (ref: AudioRef) => resolvePackUrl('/content/', ref.path);
+const audioUrl = (ref: AudioRef) => resolvePackUrl(DEFAULT_CONTENT_BASE_URL, ref.path);
 import type { AudioPlayer } from './ports';
 
 /**

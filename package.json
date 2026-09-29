@@ -26,7 +26,8 @@
     "audio:fetch": "node scripts/assets/fetch-audio.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
     "check:viz": "node scripts/check-viz-palette.mjs",
-    "check:kana": "node scripts/checks/verify-kana.mjs && node scripts/checks/verify-kana-schema.mjs"
+    "check:kana": "node scripts/checks/verify-kana.mjs && node scripts/checks/verify-kana-schema.mjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "idb": "^8.0.3",

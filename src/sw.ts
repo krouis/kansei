@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { CONTENT_CACHE } from './content/cacheNames';
+import { CONTENT_CACHE, DEFAULT_CONTENT_BASE_URL } from './content/cacheNames';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -9,8 +9,8 @@ declare const self: ServiceWorkerGlobalScope;
 // never removed when Workbox activates a new shell version.
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
-registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html')));
-registerRoute(({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/content/'), async ({ request }) => {
+registerRoute(new NavigationRoute(createHandlerBoundToURL(`${import.meta.env.BASE_URL}index.html`)));
+registerRoute(({ url }) => url.origin === self.location.origin && url.pathname.startsWith(DEFAULT_CONTENT_BASE_URL), async ({ request }) => {
   const cache = await caches.open(CONTENT_CACHE);
   const cached = await cache.match(request.url);
   if (!cached) return fetch(request); // Never populate verified storage here.

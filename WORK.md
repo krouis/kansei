@@ -81,3 +81,10 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 
 - Integrated milestone: production build and Chromium offline acceptance pass; 82 unit/integration tests pass across eight files. Kana practice is usable locally. Kanji/vocabulary data is installed but explorer/course integration remains unfinished.
 - Separate commits preserve reminders, practice controls, progress reporting, kanji ordering, vocabulary, pack assembly and offline runtime. Subagents completed independent modules before reaching usage limits; root integrated and checked their work.
+
+## GitHub Pages delivery
+- [x] Respect the deployment base path for content, audio, service-worker registration and navigation.
+- [x] Generate section entrypoints and a scoped PWA manifest for static hosting.
+- [x] Verify installation, ten-screen XP and offline cold start under `/kansei/`; both Chromium acceptance tests pass.
+- [ ] Add the build/test/publish workflow and document repository setup.
+- [ ] Observe a successful GitHub-hosted deployment after pushing the workflow.
