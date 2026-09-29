@@ -90,3 +90,12 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 - [ ] Observe a successful GitHub-hosted deployment after pushing the workflow.
 
 - Workflow checks use Node 22 and locked npm dependencies. Runtime-only content validation checks all distributed assets without downloading mutable upstream dictionaries; the default validator still checks local source hashes. GitHub-hosted execution has not yet occurred.
+
+## Updates without losing user data
+- [x] Close superseded database connections without deleting or resetting records.
+- [x] Test reopening/upgrading with settings, XP, skills, history and sessions.
+- [ ] Check for upstream app updates on launch, reconnect and hourly while visible.
+- [ ] Notify with Update now / Later; defer while practising or saving and protect other tabs.
+- [ ] Stage and verify changed curriculum separately before switching active content.
+- [ ] Test a real service-worker replacement and compare user-data stores before/after.
+- [ ] Commit, push and inspect GitHub Actions results.

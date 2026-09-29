@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import 'fake-indexeddb/auto';
 import { asItemId, asSessionId, screenDedupeKey } from '@/domain';
 import type { AttemptRecord, SkillState, XpAward } from '@/domain';
-import { openDatabase } from '@/persistence/db';
+import { openDatabase, openRawConnection } from '@/persistence/db';
+import { openDB } from 'idb';
+import { defaultSettings } from '@/persistence/settingsStore';
+import { CURRENT_SCHEMA_VERSION } from '@/persistence/migrations';
+import { toSkillRow } from '@/persistence/schema';
 import type { Database } from '@/persistence/ports';
 import { StorageError } from '@/persistence/ports';
 
@@ -283,5 +287,74 @@ describe('persistence: migration preserves existing data', () => {
     expect(migrated?.resolvedAt).toBeNull();
 
     upgraded.close();
+  });
+});
+
+
+describe('persistence: application update lifecycle', () => {
+  it('preserves settings, history, XP, skills and an interrupted session across a same-schema update', async () => {
+    const name = `${dbName}-update`;
+    const oldApp = await openRawConnection({ name });
+    const settings = { ...defaultSettings(), dailyGoalXp: 37, theme: 'dark' as const };
+    const session: import('@/domain').SessionState = {
+      id: asSessionId('interrupted'), kind: 'standard', status: 'active',
+      series: [], activeSeriesIndex: 0, startedAt: '2026-01-01T00:00:00.000Z',
+      endedAt: null, localDate: '2026-01-01', timeZone: 'Europe/Paris',
+      utcOffsetMinutes: 60, focusItemId: null, enabledQuestionTypes: [],
+      silentMode: true, keyboardOnlyMode: true, activeMs: 1234, version: 1,
+    };
+    const stores = ['settings', 'attempts', 'skillStates', 'sessions', 'xpAwards', 'daily'] as const;
+    const tx = oldApp.transaction(stores, 'readwrite');
+    await tx.objectStore('settings').put({ id: 'settings', value: settings });
+    await tx.objectStore('attempts').add(fakeAttempt({ id: 'kept-attempt' }));
+    await tx.objectStore('skillStates').put(toSkillRow(fakeSkillState({ stage: 'learning', streak: 3 })));
+    await tx.objectStore('sessions').put(session);
+    await tx.objectStore('xpAwards').put({
+      id: 'kept-xp', sessionId: session.id, seriesIndex: 0, screenIndex: 0,
+      reason: 'screen', amount: 1, dedupeKey: screenDedupeKey(session.id, 0, 0),
+      at: session.startedAt, localDate: session.localDate, timeZone: session.timeZone,
+      utcOffsetMinutes: session.utcOffsetMinutes,
+    });
+    await tx.objectStore('daily').put({
+      localDate: session.localDate, xp: 1, goalXp: 20, goalMetAt: null,
+      screensCompleted: 1, seriesCompleted: 0, activeMs: 1234, timeZone: session.timeZone,
+    });
+    await tx.done;
+    const before = await Promise.all(stores.map(store => oldApp.getAll(store)));
+    oldApp.close();
+
+    const newApp = await openRawConnection({ name });
+    try {
+      expect(await Promise.all(stores.map(store => newApp.getAll(store)))).toEqual(before);
+    } finally { newApp.close(); }
+  });
+
+  it('closes an older connection so another tab can upgrade without deleting saved data', async () => {
+    const name = `${dbName}-multi-tab`;
+    let notified = 0;
+    const oldApp = await openRawConnection({ name, onVersionChange: () => { notified++; } });
+    await oldApp.put('settings', { id: 'settings', value: defaultSettings() });
+    const nextApp = await openDB(name, CURRENT_SCHEMA_VERSION + 1);
+    try {
+      expect(notified).toBe(1);
+      expect(await nextApp.get('settings', 'settings')).toEqual({ id: 'settings', value: defaultSettings() });
+      expect(() => oldApp.transaction('settings')).toThrow();
+    } finally { oldApp.close(); nextApp.close(); }
+  });
+
+  it('refuses a newer schema instead of resetting user data when an older build is reopened', async () => {
+    const name = `${dbName}-rollback`;
+    const current = await openRawConnection({ name });
+    const saved = { id: 'settings' as const, value: defaultSettings() };
+    await current.put('settings', saved);
+    current.close();
+    const future = await openDB(name, CURRENT_SCHEMA_VERSION + 1);
+    future.close();
+    await expect(openRawConnection({ name })).rejects.toBeInstanceOf(StorageError);
+    const check = await openDB(name);
+    try {
+      expect(check.version).toBe(CURRENT_SCHEMA_VERSION + 1);
+      expect(await check.get('settings', 'settings')).toEqual(saved);
+    } finally { check.close(); }
   });
 });

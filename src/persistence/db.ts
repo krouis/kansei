@@ -27,7 +27,7 @@ export interface OpenDatabaseOptions {
   name?: string;
   /** Fired when an older connection (another tab) is blocking this upgrade. */
   onBlocked?: (currentVersion: number, blockedVersion: number) => void;
-  /** Fired on THIS connection when a newer open elsewhere is waiting on it. */
+  /** Fired after closing THIS connection when a newer schema is requested elsewhere. */
   onVersionChange?: () => void;
 }
 
@@ -64,6 +64,10 @@ export async function openRawConnection(options: OpenDatabaseOptions = {}): Prom
         options.onBlocked?.(currentVersion, blockedVersion ?? currentVersion);
       },
       blocking() {
+        // Release the old schema before notifying the UI. Closing lets any
+        // already-running transaction finish; it neither clears data nor
+        // permits this older app to write through an incompatible schema.
+        idb.close();
         options.onVersionChange?.();
       },
     });
