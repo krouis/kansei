@@ -77,3 +77,4 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 - Production build passes. Chromium installed real kana packs, completed ten questions for 20 XP, then cold-started a new page offline and loaded audio, stroke references, About and progress. Browser viewport checks are not physical-device validation.
 - Reminder module: nine tests pass for local schedules, quiet hours, elapsed-day reminders, DST keys and calendar export. UI integration remains pending.
 - Exercise components: nine tests pass for IME, keyboard matching, retries, first-attempt feedback, draft recovery and stroke-direction coaching. Drafts are tab-local; physical input validation remains pending.
+- Progress page now includes historical XP charts/calendar, session history, separate skill accuracy, confusion records and delayed-recall trends. Three summary regression tests pass; integration into the shell follows with the application commit.
