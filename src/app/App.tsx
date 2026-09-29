@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { CapturedStroke, DailyRecord, ItemId, KanaCharacter, SessionState, Settings, Skill, SkillState, StrokeReference } from '@/domain';
-import { localDateIn, resolveTimeZone, LEARNING_STAGE_LABELS, LEARNING_STAGE_MARK } from '@/domain';
+import type { DailyRecord, ItemId, KanaCharacter, SessionState, Settings, SkillState } from '@/domain';
+import { localDateIn, resolveTimeZone } from '@/domain';
 import type { BackupFile, ImportPlan } from '@/persistence/ports';
 import { createServices, type Services } from './services';
 import { RouterProvider, useRouter, Link } from './router';
@@ -8,7 +8,6 @@ import { ThemeProvider } from './theme';
 import { Shell } from './Shell';
 import { Button, Card } from '@/ui/primitives';
 import { Exercise } from '@/features/practice/Exercise';
-import { Writing } from '@/features/practice/Writing';
 import { SCIENCE_REFERENCES, formatCitation } from '@/features/about/references.data';
 import { CONTENT_SOURCES } from '@/features/about/sources.data';
 import { serviceWorker } from './swState';
@@ -16,6 +15,7 @@ import { ContentUpdates } from './ContentUpdates';
 import { UpdateNotice } from './UpdateNotice';
 import { ProgressPage } from '@/features/progress/ProgressPage';
 import { RemindersSettings, ReminderNotice } from '@/features/reminders/Reminders';
+import { CharactersPage } from '@/features/characters/CharactersPage';
 
 const message = (e: unknown) => e instanceof Error ? e.message : String(e);
 const title = { practice: 'Practice', characters: 'Characters', progress: 'Progress', settings: 'Settings', about: 'About & Science' };
@@ -69,7 +69,7 @@ function Workspace({services:s}:{services:Services}) {
           <Exercise key={screen.question.id} question={screen.question} result={screen.result?.grade??null} retryResult={screen.retries.at(-1)?.grade??null} services={s} busy={busy} onSubmit={a=>act(async()=>{await s.engine.submit(a,new Date());setSession(structuredClone((await s.engine.resume())!));},true)} onRetry={a=>act(async()=>{await s.engine.submitRetry(a,new Date());setSession(structuredClone((await s.engine.resume())!));},true)} onAdvance={()=>act(async()=>{const x=await s.engine.advance(new Date());setSession(structuredClone(x.state));})}/>}</>:
           <><Card padding="lg" className="hero"><p className="eyebrow">Small steps, lasting familiarity</p><h1>{session?.status==='completed'?'Series complete. Nicely practised.':'A page of practice.'}</h1><p>{stats.due?`${stats.due} skill reviews are ready.`:'Build a connection between a sound and a character.'} One series is ten questions and 20 XP.</p><div className="hero-glyph jp" lang="ja">あ</div><Button size="lg" variant="primary" disabled={busy} onClick={()=>run(()=>start())}>{session?.status==='completed'?'Practise another series':'Begin practice'}</Button></Card><div className="two-col"><Card><h2>{stats.xp} / {goal} XP today</h2><progress aria-label="Daily XP" value={stats.xp} max={Math.max(goal,stats.xp)}/><p>{stats.xp>=goal?'Daily goal reached. Continue if you feel like it.':'XP records practice, not mastery.'}</p></Card><Card><h2>Your notebook is local</h2><p>{ready?'Ready offline for installed content. Audio coverage is incomplete.':'Offline readiness is not confirmed. Verify content installation in Settings.'}</p><Link to="/characters">Explore your characters →</Link></Card></div></>}
       </>}
-      {route.section==='characters'&&<Characters services={s} skills={stats.skills} busy={busy} focus={id=>run(()=>start(id))}/>}
+      {route.section==='characters'&&<CharactersPage services={s} skills={stats.skills} busy={busy} focus={id=>run(()=>start(id))}/>}
       {route.section==='progress'&&<ProgressPage services={s}/>}
       {route.section==='settings'&&<SettingsPage services={s} settings={settings} save={next=>run(()=>save(next))} busy={busy} run={run} ready={ready} install={install} installPacks={installPacks}/>}
       {route.section==='about'&&<About services={s}/>}
@@ -77,18 +77,6 @@ function Workspace({services:s}:{services:Services}) {
       <footer className="footnote">Kansei · local by default · Kana practice preview. Draft kanji/vocabulary packs included; course integration pending.</footer>
     </Shell>
   </ThemeProvider>;
-}
-function Characters({services:s,skills,busy,focus}:{services:Services;skills:SkillState[];busy:boolean;focus:(id:ItemId)=>void}) {
-  const [script,setScript]=useState<'hiragana'|'katakana'|'kanji'>('hiragana');const [query,setQuery]=useState('');const [skill,setSkill]=useState<Skill>('recognition');const [selected,setSelected]=useState<KanaCharacter>();
-  const [ref,setRef]=useState<StrokeReference|null>(null);const [strokes,setStrokes]=useState<CapturedStroke[]>([]);const [trace,setTrace]=useState(true);const [error,setError]=useState('');
-  useEffect(()=>{setStrokes([]);setRef(null);if(selected)void s.content.strokes(selected.glyph).then(x=>setRef(x??null)).catch(e=>setError(message(e)));},[selected,s]);
-  const chars=script==='kanji'?[]:s.content.kana(script).filter(c=>`${c.glyph} ${c.romaji} ${c.note??''}`.toLowerCase().includes(query.toLowerCase()));
-  return <><header><p className="eyebrow">Your character collection</p><h1>Look a little closer.</h1></header><div className="actions" role="group" aria-label="Writing system">{(['hiragana','katakana','kanji'] as const).map(x=><Button key={x} aria-pressed={script===x} onClick={()=>{setScript(x);setSelected(undefined);}}>{x}</Button>)}</div><div className="two-col"><label className="field">Search<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Character or reading"/></label><label className="field">Progress by skill<select value={skill} onChange={e=>setSkill(e.target.value as Skill)}>{['recognition','readingRecall','listening','handwriting'].map(x=><option key={x}>{x}</option>)}</select></label></div>
-    {script==='kanji'&&<Card><h2>Kanji curriculum is being assembled</h2><p>The source list contains 1,000 kanji, but teaching order, word-specific readings and vocabulary are not yet shipped as a usable course.</p></Card>}
-    {selected&&<Card className="stack"><Button onClick={()=>setSelected(undefined)}>Close revision</Button><div className="prompt jp" lang="ja">{selected.glyph}</div><h2>{selected.romaji}</h2><p>{selected.note}</p>{selected.printVsHandwritten&&<p>{selected.printVsHandwritten}</p>}<p>{selected.tier} · {selected.strokeCount} strokes · Input: {selected.inputVariants.join(', ')}</p>{s.content.audio(selected.id)?<Button onClick={()=>void s.audio.play(s.content.audio(selected.id)!).catch(e=>setError(message(e)))}>Play recording</Button>:<p>No recording available for this entry.</p>}{ref?<><label><input type="checkbox" checked={trace} onChange={e=>setTrace(e.target.checked)}/> Show trace guide</label><Writing reference={ref} strokes={strokes} guides={trace} onChange={setStrokes}/><p>Revision drawing is ungraded. Use focused practice for local assessment.</p></>:<p>No single-glyph writing reference for this entry.</p>}<p>Common confusions: {selected.confusableWith.map(id=>s.content.character(id)?.glyph).filter(Boolean).join(' · ')||'None listed'}</p><Button variant="primary" disabled={busy} onClick={()=>focus(selected.id as unknown as ItemId)}>Practice this character</Button><p>Focused recognition provides weaker evidence because the target is already known.</p></Card>}
-    {error&&<p role="alert">{error}</p>}
-    {[...new Set(chars.map(c=>`${c.tier} / ${c.group}`))].map(group=><section key={group}><h2 className="group-title">{group.replaceAll('-',' ')}</h2><div className="character-grid">{chars.filter(c=>`${c.tier} / ${c.group}`===group).map(c=>{const state=skills.find(x=>String(x.itemId)===c.id&&x.skill===skill);const stage=state?.stage??'unseen';return <button key={c.id} className={`character stage-${stage}`} onClick={()=>setSelected(c)} aria-label={`${c.glyph}, ${c.romaji}, ${LEARNING_STAGE_LABELS[stage]}${state?.dueAt&&state.dueAt<=new Date().toISOString()?', due for review':''}`}><span className="jp" lang="ja">{c.glyph}</span><small>{c.romaji}</small><small>{LEARNING_STAGE_MARK[stage]} {LEARNING_STAGE_LABELS[stage]}</small>{state?.dueAt&&state.dueAt<=new Date().toISOString()&&<small>↻ Due</small>}</button>;})}</div></section>)}
-  </>;
 }
 function SettingsPage({services:s,settings,save,busy,run,ready,install,installPacks}:{services:Services;settings:Settings;save:(s:Settings)=>void;busy:boolean;run:(f:()=>Promise<void>)=>void;ready:boolean;install:string;installPacks:()=>Promise<void>}) {
   const [storage,setStorage]=useState('');const [file,setFile]=useState<BackupFile>();const [plan,setPlan]=useState<ImportPlan>();const [mode,setMode]=useState<'merge'|'replace'>('merge');
