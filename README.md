@@ -1,138 +1,108 @@
-# Kansei
+# Kansei (感性)
 
-An offline-first Japanese learning PWA. **Current status: usable kana practice
-preview, not the complete production application described in the project brief.**
+An offline-first Progressive Web App for learning to read and write Japanese —
+hiragana and katakana first, with a beginner kanji and vocabulary curriculum
+underneath it. Once installed, it works with no internet connection at all:
+every question, every recording, every stroke check, and every scheduling
+decision runs locally, on-device.
 
-## Run locally
+**Current status: a genuinely usable kana practice app, not the complete
+curriculum the project aims at.** The rest of this file, and
+[`WORK.md`](WORK.md), say exactly where that line falls today.
 
-Requires Node 20 or newer and npm.
+## What it actually does
+
+- **Ten-question practice series** across the real question formats a
+  language app needs: audio recognition, typed reading with correct IME
+  handling, keyboard-operable matching (no dragging), and real stroke-aware
+  **handwriting assessment** — a blank canvas in recall mode, capture via
+  finger/stylus/mouse, graded off-main-thread by comparing the strokes you
+  actually drew against reference stroke order, direction, and shape
+  separately. Nothing here is simulated: a missing recording means no
+  listening question is generated for it, not a synthesised voice standing
+  in.
+- **A local spaced-repetition scheduler** (FSRS-5) that tracks recognition,
+  reading recall, listening, and handwriting **separately** per character —
+  and per *reading*, for kanji, since one character can have several. Strong
+  multiple-choice performance never counts as strong evidence for unaided
+  recall.
+- **An optional placement check** for a returning learner: ten
+  multiple-choice questions sampled across the kana curriculum, scored
+  through the exact same pipeline as ordinary practice — and honest about
+  its own limits (it checks recognition only; reading, listening, and
+  handwriting always start fresh).
+- **XP that measures practice, not mastery**: 1 XP per completed question
+  screen plus a 10 XP bonus for finishing a series — never inflated by speed
+  or a lucky guess, never reduced for a missed day.
+- **Local progress history** — daily XP against the goal that applied on
+  that specific day, a practice calendar, accuracy by skill, and recurring
+  confusions — plus versioned backup export/import for moving progress
+  between devices by hand (there is no account and no automatic sync).
+- **A genuinely offline architecture**: an installable PWA with a real
+  update flow that never interrupts an in-progress session, content packs
+  verified by checksum before they are trusted, and a from-scratch,
+  no-dependency stroke recognizer rather than a call to a cloud OCR service.
+- **An About & Science section**, readable offline, that distinguishes
+  research findings from Kansei's own product choices — including which of
+  its own numbers (ten questions per series, the XP formula, the scheduler's
+  defaults) are engineering decisions rather than validated constants.
+
+## Try it
+
+Requires Node 20+ and npm.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open the localhost URL printed by Vite. Choose your preferences and install the
-learning material inside the app. Development mode does not cache the app shell.
-To test offline behavior, use the production build:
+Open the printed localhost URL, choose your preferences, and install the
+learning material from inside the app. (The dev server doesn't cache the app
+shell — for a real test of offline behaviour, use a production build; see
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).)
 
-```sh
-npm run build
-npm run preview -- --host 127.0.0.1
-```
+## Known limits, plainly
 
-Open http://127.0.0.1:4173, install the content, and wait for offline readiness.
-Then disable networking and reopen the app at the same address. Progress belongs
-to that browser origin; different ports do not share it. Export a backup before
-clearing browser storage. There is no account or automatic cross-device sync.
+- The kanji (1,000 characters) and vocabulary (1,600 words) datasets are
+  real, sourced, and pass their own validation — but they are generated
+  draft material that has not had an editorial pass, and their explorer/
+  course integration is not yet a finished experience the way kana practice
+  is.
+- Kana audio covers 71 of the 104 modern sounds; yōon (contracted)
+  combinations have no recordings yet. Only 61 of the 1,600 vocabulary
+  entries have a matching recording — most of the 358 recorded words
+  available upstream simply aren't in the beginner-selected set.
+- Handwriting assessment is real and runs locally, but it has only been
+  validated against synthetic stroke samples — not representative human
+  finger/stylus/mouse input.
+- An in-progress answer is kept per browser tab; a submitted answer is
+  stored in IndexedDB like everything else.
+- Automated browser testing covers one desktop viewport and one phone
+  viewport in one browser engine — that is not a claim of compatibility
+  across physical devices.
 
-Deploy the `dist` directory on HTTPS with navigation fallback to `index.html`.
-Serve `sw.js` without a long immutable cache lifetime. Curriculum files are
-verified against their manifests; retain the generated paths and bytes.
+The itemized list this is drawn from — what's done, what's in progress, what
+was deliberately deferred and why — is [`WORK.md`](WORK.md).
 
-## GitHub Pages
+## Reading further
 
-The [Pages workflow](.github/workflows/pages.yml) installs locked dependencies,
-checks TypeScript, runs unit/integration tests, validates shipped content and
-kana, builds the production PWA, and runs Chromium offline acceptance tests.
-Pull requests to `main` run these checks without publishing. Successful pushes
-to `main`, or manual runs on `main`, publish the exact tested `dist` artifact.
+| Doc | Covers |
+|---|---|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How the pieces fit: the four engines behind a session, the content pipeline, the offline/update model. |
+| [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) | The IndexedDB schema, the transaction and migration guarantees, the backup format. |
+| [`docs/LEARNING-AND-XP.md`](docs/LEARNING-AND-XP.md) | Session structure, question formats, grading rules, learning stages, and the complete XP formula. |
+| [`docs/CONTENT.md`](docs/CONTENT.md) | Content inventory: every dataset, its source, licence, and how to reproduce it. |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Building, verifying, hosting requirements, and the GitHub Pages CI/CD workflow. |
+| [`WORK.md`](WORK.md) | The itemized, actively-maintained implementation checklist. |
 
-In the GitHub repository, select **Settings → Pages → Build and deployment →
-Source → GitHub Actions**. Push the workflow to `main` and inspect its run under
-**Actions → Build, test and publish PWA**. The deployment URL appears in that
-run and in the `github-pages` environment; for this repository it is
-https://krouis.github.io/kansei/. No personal access token or deployment secret
-is required. See GitHub's [custom Pages workflow documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
+Each engine module (`src/learning/scheduler`, `src/learning/selection`,
+`src/learning/generation`, `src/learning/session`, `src/persistence`,
+`src/handwriting`) also carries its own `README.md` with the reasoning and
+trade-offs specific to that piece — the docs above link out to them rather
+than repeating their contents.
 
-The workflow builds and tests with `VITE_BASE_PATH=/kansei/`. If the repository
-is renamed or moved to a custom domain, update this and `PLAYWRIGHT_BASE_PATH`
-in the workflow together. Local builds default to `/`.
+## License
 
-CI validates the committed curriculum, every packaged file's size and SHA-256,
-and cross-dataset references with `content:validate -- --runtime-only`. It does
-not download or regenerate upstream dictionaries: those ignored archives have
-pinned provenance hashes, while some upstream download URLs change daily.
-Full source-archive validation remains a separate local reproduction check.
-
-## What works
-
-- Ten-screen kana sessions, feedback, guided retries, keyboard matching, reading
-  entry with IME handling, and local stroke-aware handwriting assessment.
-- Skill-specific scheduling, transactional answers and feedback-gated XP:
-  1 XP per acknowledged screen plus a single 10 XP series bonus.
-- Local progress, charts, backup import/export, reminders and calendar export.
-- Offline content installation, real available recordings, reference animation,
-  bundled fonts, themes, and About & Science explanations.
-
-## Known limits
-
-Kanji and vocabulary packs contain generated draft data (1,000 kanji and 1,600
-words); their explorer and complete course integration remain unfinished.
-Placement is not implemented. Kana has recordings for 71 of 104 modern sounds;
-yōon recordings are absent. Only 67 selected vocabulary entries have recordings.
-Editorial and listening review remain outstanding. Handwriting has synthetic
-validation, not representative human finger/stylus/mouse validation. Drawing
-and answer drafts are tab-local, whereas submitted answers persist in IndexedDB.
-Browser viewport tests do not establish physical-device compatibility.
-
-See [WORK.md](WORK.md) for the itemized remaining work and
-[content inventory](docs/CONTENT.md) for provenance, licenses and reproduction.
-
-## Verification
-
-```sh
-npm run typecheck
-npm test
-npm run content:validate -- --runtime-only
-npm run check:kana
-npm run build
-```
-
-To run the browser test, build first as above. Playwright starts its own
-production preview on port 4174:
-
-```sh
-npx playwright install chromium
-npm run test:e2e
-```
-
-`PLAYWRIGHT_CHROMIUM_EXECUTABLE` can point to an existing Chromium executable.
-The browser test installs content, completes ten questions for 20 XP, opens a
-new page offline, checks audio and reference availability, and checks phone-width
-layout. It does not yet cover every exercise offline or physical devices.
-
-To additionally validate locally available source archives against their
-committed provenance hashes, run `npm run content:validate` without the
-`--runtime-only` flag. See the content documentation before downloading fresh
-upstream snapshots; they may differ from the original pinned inputs.
-
-## Updating without losing progress
-
-Kansei checks for application updates on launch, when connectivity returns, and
-hourly while visible. Available updates offer **Update now** and **Later**;
-Settings also has a manual check. Activation waits until the current practice
-session has finished or been ended, and while saves are pending. Close other
-Kansei tabs/windows before activating an update.
-
-App updates replace code and shell assets. They do not clear IndexedDB: settings,
-XP, daily goals/history, attempts, skill schedules and sessions remain stored.
-Schema upgrades use additive, transactional migrations; an older build refuses
-an incompatible newer schema rather than resetting it.
-
-Content updates are checked separately. A new curriculum is downloaded into a
-separate cache, reusing unchanged files. Every asset is verified and the library
-is checked before a single pointer change activates it. Failed or interrupted
-downloads leave installed material and progress intact. Reload reconstructs pack
-metadata from the activated generation. Old generation caches are retained for
-now, so updates need extra storage; generation cleanup remains future work.
-
-These guarantees apply within the same browser profile and site origin. Browser
-data clearing, private browsing, eviction, or moving to another domain can still
-make local data unavailable. Export backups regularly; updates are not a backup
-or cross-device synchronization service.
-
-Validation includes a real Chromium worker replacement and a staged content
-revision, comparing all learning/settings stores before and after, checking
-other-tab/session deferral, then cold-starting offline. It does not establish
-compatibility with every future migration or every browser/device.
+[GPL-2.0-or-later](LICENSE). See [`docs/CONTENT.md`](docs/CONTENT.md) for the
+separate licences and attribution required by the bundled fonts, audio,
+dictionaries, and stroke data — none of which share the app's own licence.
