@@ -94,9 +94,11 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 ## Updates without losing user data
 - [x] Close superseded database connections without deleting or resetting records.
 - [x] Test reopening/upgrading with settings, XP, skills, history and sessions.
-- [ ] Check for upstream app updates on launch, reconnect and hourly while visible.
-- [ ] Notify with Update now / Later; defer while practising or saving and protect other tabs.
-- [ ] Stage and verify changed curriculum separately before switching active content.
-- [ ] Test a real service-worker replacement and compare user-data stores before/after.
+- [x] Check for upstream app updates on launch, reconnect and hourly while visible.
+- [x] Notify with Update now / Later; defer while practising or saving and protect other tabs.
+- [x] Stage and verify changed curriculum separately before switching active content.
+- [x] Test a real service-worker replacement and compare user-data stores before/after.
 - [ ] Commit, push and inspect GitHub Actions results.
 - Staged-content module: four tests pass for network discovery, digest failure, interruption/resume and schema rejection. Failed staging preserves the installed generation and never writes learner data.
+
+- Final local update validation: 93 unit/integration tests and both Chromium acceptance tests pass. The browser installs a replacement worker, blocks activation with another tab or active session, switches a verified content generation, compares all learner/settings stores unchanged, and cold-starts offline.

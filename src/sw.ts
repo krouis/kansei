@@ -1,7 +1,8 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { CONTENT_CACHE, DEFAULT_CONTENT_BASE_URL } from './content/cacheNames';
+import { getActiveContentCacheName } from './content/updates';
+import { DEFAULT_CONTENT_BASE_URL } from './content/cacheNames';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -11,7 +12,8 @@ precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 registerRoute(new NavigationRoute(createHandlerBoundToURL(`${import.meta.env.BASE_URL}index.html`)));
 registerRoute(({ url }) => url.origin === self.location.origin && url.pathname.startsWith(DEFAULT_CONTENT_BASE_URL), async ({ request }) => {
-  const cache = await caches.open(CONTENT_CACHE);
+  if (new URL(request.url).searchParams.has('kansei-update')) return fetch(request);
+  const cache = await caches.open(await getActiveContentCacheName());
   const cached = await cache.match(request.url);
   if (!cached) return fetch(request); // Never populate verified storage here.
   const range = request.headers.get('range');
@@ -33,5 +35,20 @@ self.addEventListener('activate', event => event.waitUntil(self.clients.claim())
 // Only an explicit page request applies an update. A first install can claim
 // its client without reloading and interrupting onboarding.
 self.addEventListener('message', event => {
-  if (event.data?.type === 'SKIP_WAITING') event.waitUntil(self.skipWaiting());
+  if (event.data?.type === 'CHECK_UPDATE_CLIENTS') event.waitUntil((async () => {
+    const windows = (await self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      .filter(client => client.url.startsWith(self.registration.scope));
+    event.ports[0]?.postMessage({ single: windows.length <= 1 });
+  })());
+  if (event.data?.type === 'SKIP_WAITING') event.waitUntil((async () => {
+    // A waiting worker sees all windows in this registration's scope, even
+    // though the older worker currently controls them. Do not disrupt another tab.
+    const windows = (await self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      .filter(client => client.url.startsWith(self.registration.scope));
+    if (windows.length > 1) {
+      event.source?.postMessage({ type: 'UPDATE_BLOCKED' });
+      return;
+    }
+    await self.skipWaiting();
+  })());
 });

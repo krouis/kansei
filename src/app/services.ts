@@ -12,15 +12,20 @@ import { createFsrsScheduler } from '@/learning/scheduler';
 import { DefaultSelector } from '@/learning/selection/selector';
 import { CompositeGenerator } from '@/learning/generation';
 import { KanseiSessionEngine } from '@/learning/session/engine';
-import type { Settings } from '@/domain';
+import { CONTENT_CACHE } from '@/content/cacheNames';
+import { getActiveContentCacheName, checkContentUpdate, prepareContentUpdate, activateContentUpdate } from '@/content/updates';
+import { ensureSingleAppWindow } from './registerSW';
+import type { InstallProgress } from '@/content/ports';
+import type { PackIndex, Settings } from '@/domain';
 
 export async function createServices() {
   const raw = await openRawConnection();
   const db = wrapDatabase(raw);
   const settingsStore = createSettingsStore(raw);
   let settings = await settingsStore.load();
-  const source = createPackFileSource({ allowNetwork: false });
-  const installer = createInstaller({ state: createPackStateStore(raw), capabilities: {
+  const cacheName = await getActiveContentCacheName();
+  const source = createPackFileSource({ allowNetwork: false, cacheName });
+  const installer = createInstaller({ cacheName, state: createPackStateStore(raw), capabilities: {
     async probe(paths) {
       const { library: content } = await loadContentLibrary({ index: await installer.index(), source, verifiedPaths: paths });
       return { hiragana: content.kana('hiragana').length > 0, katakana: content.kana('katakana').length > 0,
@@ -30,7 +35,11 @@ export async function createServices() {
   } });
   const index = await installer.index();
   // Recheck bytes after eviction or a previous incomplete download before exposing content.
-  for (const state of await installer.status()) if (state.status === 'installed') await installer.verify(state.packId);
+  if (cacheName !== CONTENT_CACHE) {
+    // The generation pointer commits independently of pack metadata. Rebuild
+    // metadata after a crash or reload without touching any learning stores.
+    for (const pack of index.packs) await installer.verify(pack.id);
+  } else for (const state of await installer.status()) if (state.status === 'installed') await installer.verify(state.packId);
   let { library: content } = await loadContentLibrary({ index, source, verifiedPaths: await installer.verifiedPaths() });
   const audio = createAudioPlayer();
   const assessor = createAssessorClient();
@@ -55,6 +64,22 @@ export async function createServices() {
   return {
     db, installer, index, audio, backup: createBackupService(raw),
     get content() { return content; }, get settings() { return settings; }, get engine() { return engine; },
+    checkContentUpdate: () => checkContentUpdate(index),
+    async updateContent(candidate: PackIndex, onProgress: (progress: InstallProgress) => void) {
+      if ((await engine.resume())?.status === 'active') throw new Error('Finish or end practice before updating content.');
+      await ensureSingleAppWindow();
+      const prepared = await prepareContentUpdate(candidate, cacheName, onProgress);
+      const staged = await loadContentLibrary({ index: candidate,
+        source: createPackFileSource({cacheName: prepared.cacheName, allowNetwork:false}),
+        verifiedPaths: new Set(candidate.packs.flatMap(pack => pack.files.map(file => file.path))),
+      });
+      const invalid = staged.issues.filter(issue => issue.severity === 'error');
+      if (invalid.length) throw new Error(`The downloaded content could not be loaded: ${invalid[0]!.message}`);
+      // Recheck after the download: another window may have opened meanwhile.
+      if ((await engine.resume())?.status === 'active') throw new Error('Practice started in another window. Content was downloaded but not activated.');
+      await ensureSingleAppWindow();
+      await activateContentUpdate(prepared);
+    },
     async saveSettings(next: Settings) { await settingsStore.save(next); settings = next; },
     async reloadContent() {
       content = (await loadContentLibrary({ index, source, verifiedPaths: await installer.verifiedPaths() })).library;

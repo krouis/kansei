@@ -100,9 +100,39 @@ npm run test:e2e
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can point to an existing Chromium executable.
 The browser test installs content, completes ten questions for 20 XP, opens a
 new page offline, checks audio and reference availability, and checks phone-width
-layout. It does not yet cover every exercise offline or service-worker upgrades.
+layout. It does not yet cover every exercise offline or physical devices.
 
 To additionally validate locally available source archives against their
 committed provenance hashes, run `npm run content:validate` without the
 `--runtime-only` flag. See the content documentation before downloading fresh
 upstream snapshots; they may differ from the original pinned inputs.
+
+## Updating without losing progress
+
+Kansei checks for application updates on launch, when connectivity returns, and
+hourly while visible. Available updates offer **Update now** and **Later**;
+Settings also has a manual check. Activation waits until the current practice
+session has finished or been ended, and while saves are pending. Close other
+Kansei tabs/windows before activating an update.
+
+App updates replace code and shell assets. They do not clear IndexedDB: settings,
+XP, daily goals/history, attempts, skill schedules and sessions remain stored.
+Schema upgrades use additive, transactional migrations; an older build refuses
+an incompatible newer schema rather than resetting it.
+
+Content updates are checked separately. A new curriculum is downloaded into a
+separate cache, reusing unchanged files. Every asset is verified and the library
+is checked before a single pointer change activates it. Failed or interrupted
+downloads leave installed material and progress intact. Reload reconstructs pack
+metadata from the activated generation. Old generation caches are retained for
+now, so updates need extra storage; generation cleanup remains future work.
+
+These guarantees apply within the same browser profile and site origin. Browser
+data clearing, private browsing, eviction, or moving to another domain can still
+make local data unavailable. Export backups regularly; updates are not a backup
+or cross-device synchronization service.
+
+Validation includes a real Chromium worker replacement and a staged content
+revision, comparing all learning/settings stores before and after, checking
+other-tab/session deferral, then cold-starting offline. It does not establish
+compatibility with every future migration or every browser/device.

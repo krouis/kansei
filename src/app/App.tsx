@@ -12,6 +12,8 @@ import { Writing } from '@/features/practice/Writing';
 import { SCIENCE_REFERENCES, formatCitation } from '@/features/about/references.data';
 import { CONTENT_SOURCES } from '@/features/about/sources.data';
 import { serviceWorker } from './swState';
+import { ContentUpdates } from './ContentUpdates';
+import { UpdateNotice } from './UpdateNotice';
 import { ProgressPage } from '@/features/progress/ProgressPage';
 import { RemindersSettings, ReminderNotice } from '@/features/reminders/Reminders';
 
@@ -27,6 +29,7 @@ export function App() {
 }
 function Workspace({services:s}:{services:Services}) {
   const {route,navigate}=useRouter();
+  const [resumed,setResumed]=useState(false);
   const [settings,setSettings]=useState(s.settings); const [session,setSession]=useState<SessionState>();
   const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [install,setInstall]=useState('');
   const [installed,setInstalled]=useState(s.content.kana('hiragana').length>0);
@@ -39,10 +42,10 @@ function Workspace({services:s}:{services:Services}) {
     const data=await s.db.transact('readonly',async tx=>({xp:await tx.xp.totalForDate(today),total:await tx.xp.total(),due:(await tx.skills.due(new Date().toISOString())).length,skills:await tx.skills.all(),daily:await tx.daily.all(),sessions:await tx.sessions.recent(100)}));
     setStats(data);setReady((await s.installer.readiness()).ready);
   }
-  useEffect(()=>{void s.engine.resume().then(x=>setSession(x)).catch(e=>setError(message(e)));void refresh().catch(e=>setError(message(e)));return serviceWorker.subscribe(setSw);},[s]);
+  useEffect(()=>{void s.engine.resume().then(x=>{setSession(x);setResumed(true);}).catch(e=>setError(message(e)));void refresh().catch(e=>setError(message(e)));return serviceWorker.subscribe(setSw);},[s]);
   useEffect(()=>{const update=()=>setOffline(!navigator.onLine);window.addEventListener('online',update);window.addEventListener('offline',update);return()=>{window.removeEventListener('online',update);window.removeEventListener('offline',update);};},[]);
   useEffect(()=>{if(sw.controlled)void refresh().catch(e=>setError(message(e)));},[sw.controlled]);
-  async function act(fn:()=>Promise<void>, propagate = false) {if(busy)return;setBusy(true);setError('');try{await fn();await refresh();}catch(e){setError(message(e));if(propagate)throw e;}finally{setBusy(false);}}
+  async function act(fn:()=>Promise<void>, propagate = false) {if(busy||serviceWorker.getState().applying)return;setBusy(true);setError('');try{await fn();await refresh();}catch(e){setError(message(e));if(propagate)throw e;}finally{setBusy(false);}}
   async function save(next:Settings){await s.saveSettings(next);setSettings({...next});}
   const run=(fn:()=>Promise<void>)=>{void act(fn);};
   async function installPacks() {
@@ -53,7 +56,9 @@ function Workspace({services:s}:{services:Services}) {
   const series=session?.series[session.activeSeriesIndex];const screen=series?.screens[series.cursor];
   const today=localDateIn(new Date(),resolveTimeZone());const goal=stats.daily.find(d=>d.localDate===today)?.goalXp??settings.dailyGoalXp;
   return <ThemeProvider theme={settings.theme} motion={settings.reducedMotion} jpScale={settings.japaneseTextScale} onChange={p=>run(()=>save({...settings,theme:p.theme??settings.theme,reducedMotion:p.motion??settings.reducedMotion,japaneseTextScale:p.jpScale??settings.japaneseTextScale}))}>
-    <Shell title={title[route.section]} xp={{today:stats.xp,goal}} dueCount={stats.due} offline={offline} update={sw.updateAvailable&&session?.status!=='active'?{available:true,apply:serviceWorker.applyUpdate}:undefined}>
+    <Shell title={title[route.section]} xp={{today:stats.xp,goal}} dueCount={stats.due} offline={offline}>
+      <UpdateNotice updater={serviceWorker} state={sw} active={!resumed||session?.status==='active'} busy={busy} settings={route.section==='settings'}/>
+      {installed&&settings.onboardingCompletedAt&&<ContentUpdates services={s} active={!resumed||session?.status==='active'} busy={busy||sw.applying} settings={route.section==='settings'} run={run}/>}
       {error&&<div className="notice error" role="alert"><p>{error}</p><Button onClick={()=>setError('')}>Dismiss</Button></div>}
       {!installed||!settings.onboardingCompletedAt?<div className="stack welcome"><p className="eyebrow">A little practice, every day</p><div className="seal-large">感</div><h1>Your Japanese notebook.</h1><p>Learn to recognise, read and write kana. Ten focused questions. Your progress stays on this device.</p><Card><h2>Make it yours</h2><label className="field">Daily goal (XP)<input type="number" min="1" max="10000" value={settings.dailyGoalXp} onChange={e=>setSettings({...settings,dailyGoalXp:Math.max(1,Number(e.target.value)||20)})}/></label><label className="field">Start with<select value={settings.activeScripts[0]} onChange={e=>setSettings({...settings,activeScripts:[e.target.value as 'hiragana'|'katakana']})}><option value="hiragana">Hiragana</option><option value="katakana">Katakana</option></select></label><label><input type="checkbox" checked={settings.keyboardOnlyMode} onChange={e=>setSettings({...settings,keyboardOnlyMode:e.target.checked})}/> Keyboard-only practice (no handwriting)</label><label><input type="checkbox" checked={settings.silentPractice} onChange={e=>setSettings({...settings,silentPractice:e.target.checked})}/> Silent practice</label></Card><Card><h2>Download your learning material</h2><p>{(s.index.packs.reduce((n,p)=>n+p.totalBytes,0)/1e6).toFixed(1)} MB · 268 kana entries · 1,000 kanji · 1,600 draft vocabulary entries.</p><p>Works offline after verified installation and app-shell caching. Yōon audio and most vocabulary recordings are unavailable. The generated kanji/vocabulary data needs editorial review; its practice UI and placement are unfinished.</p><Button variant="primary" disabled={busy} onClick={()=>run(installPacks)}>{busy?'Installing…':'Install and begin'}</Button><p role="status">{install}</p></Card></div>:
       <div className="stack">

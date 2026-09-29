@@ -1,3 +1,4 @@
+import { readFile, writeFile } from 'node:fs/promises';
 import { test, expect, type Page } from '@playwright/test';
 
 const base = process.env.PLAYWRIGHT_BASE_PATH || '/';
@@ -25,6 +26,17 @@ test('installs real kana, completes ten questions, and cold starts offline', asy
   await page.screenshot({path:'test-results/practice-desktop.png',fullPage:true});
   await page.getByRole('button',{name:'Begin practice'}).click();
   await page.getByRole('button',{name:'Start questions'}).click();
+  const workerPath = 'dist/sw.js';
+  const oldWorker = await readFile(workerPath, 'utf8');
+  const contentIndexPath = 'dist/content/index.json';
+  const oldIndex = await readFile(contentIndexPath, 'utf8');
+  try {
+  // A second deployed worker, served by the real HTTP preview, not a mocked
+  // service-worker API. No user-data store is changed by this test fixture.
+  await writeFile(workerPath, oldWorker + '\n// Update preservation acceptance build\nself.addEventListener("message", e => { if(e.data === "TEST_BUILD") e.ports[0].postMessage("updated"); });\n');
+  await page.evaluate(async () => { const reg = await navigator.serviceWorker.ready; await reg.update(); });
+  await expect(page.getByText('Finish or end your current session before updating.')).toBeVisible();
+  await expect(page.getByRole('button', {name:'Update now', exact:true})).toBeDisabled();
   for(let i=0;i<10;i++) {
     await expect(page.getByText(`Question ${i+1} / 10`,{exact:true})).toBeVisible();
     const q=await snapshot(page);
@@ -37,6 +49,39 @@ test('installs real kana, completes ten questions, and cold starts offline', asy
   }
   await expect(page.getByRole('heading',{name:'Series complete. Nicely practised.'})).toBeVisible();
   await expect(page.getByRole('heading',{name:'20 / 20 XP today'})).toBeVisible();
+  const userData = async () => page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve,reject) => {const r=indexedDB.open('kansei');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+    const stores=['settings','attempts','skillStates','xpAwards','daily','sessions','confusions','auxiliary'];
+    const rows = await Promise.all(stores.map(store => new Promise<unknown[]>((resolve,reject) => {const r=db.transaction(store).objectStore(store).getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);})));db.close();return rows;
+  });
+  const beforeUpdate = await userData();
+  const otherTab = await context.newPage();
+  await otherTab.goto(appPath('/about'));
+  await expect(otherTab.getByRole('heading', {name:'How learning works here'})).toBeVisible();
+  await page.getByRole('button', {name:'Update now', exact:true}).click();
+  await expect(page.getByText('Close other Kansei tabs or windows, then update here. Their practice will not be interrupted.')).toBeVisible();
+  await otherTab.close();
+  await page.getByRole('button', {name:'Update now', exact:true}).click();
+  await page.waitForEvent('load');
+  await expect(page.getByRole('button', {name:'Begin practice'})).toBeVisible({timeout:60000});
+  expect(await userData()).toEqual(beforeUpdate);
+  expect(await page.evaluate(() => new Promise(resolve => {
+    const channel = new MessageChannel();channel.port1.onmessage=e=>resolve(e.data);
+    navigator.serviceWorker.controller!.postMessage('TEST_BUILD',[channel.port2]);
+  }))).toBe('updated');
+  // Publish an index revision with identical assets to exercise staged reuse,
+  // semantic validation, atomic activation and boot-time metadata recovery.
+  const newIndex = JSON.parse(oldIndex);newIndex.generatedAt='2099-01-01T00:00:00.000Z';
+  await writeFile(contentIndexPath, JSON.stringify(newIndex));
+  await page.goto(appPath('/settings'));
+  await page.getByRole('button', {name:'Check content updates',exact:true}).click();
+  await expect(page.getByRole('button', {name:'Download content update'})).toBeVisible();
+  await page.getByRole('button', {name:'Download content update'}).click();
+  await page.waitForEvent('load');
+  await expect(page.getByRole('heading', {name:'Make space for practice.'})).toBeVisible({timeout:60000});
+  expect(await userData()).toEqual(beforeUpdate);
+  expect(await page.evaluate(async () => (await caches.keys()).some(name => name.includes('content-v1-generation-')))).toBe(true);
+  } finally { await writeFile(workerPath, oldWorker); await writeFile(contentIndexPath, oldIndex); }
   await context.setOffline(true);
   await page.close();
   const cold=await context.newPage();cold.on('pageerror',e=>errors.push(e.message));
