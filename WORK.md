@@ -18,22 +18,22 @@ Updated as implementation proceeds; unchecked items are not release claims.
 - [x] Schedule uncertain handwriting rechecks without a memory penalty.
 
 ## First usable offline learning flow
-- [ ] Assemble reproducible kana packs with byte counts, hashes, and attribution.
-- [ ] Wire database, settings, content, audio, grader, scheduler, and session engine.
-- [ ] Add application entry point and error/loading states.
-- [ ] Add brief onboarding: goal, scripts/modes, install size/progress, honest offline status.
-- [ ] Implement choice, typed/IME, and keyboard matching exercises.
+- [x] Assemble reproducible kana packs with byte counts, hashes, and attribution.
+- [x] Wire database, settings, content, audio, grader, scheduler, and session engine.
+- [x] Add application entry point and error/loading states.
+- [x] Add brief onboarding: goal, scripts/modes, install size/progress, honest offline status.
+- [x] Implement choice, typed/IME, and keyboard matching exercises.
 - [ ] Implement handwriting canvas, undo/clear, trace/recall, coaching and reference replay.
-- [ ] Add hints, reveal, decline, audio replay, corrective feedback and guided retry.
-- [ ] Complete ten screens, retain first attempt, award 20 XP, resume after closure.
-- [ ] Verify production build and network-disabled cold start with real content.
+- [x] Add hints, reveal, decline, audio replay, corrective feedback and guided retry.
+- [x] Complete ten screens, retain first attempt, award 20 XP, resume after closure.
+- [x] Verify production build and network-disabled cold start with real content.
 
 ## Complete curriculum
-- [ ] Derive all 1,000 kanji teaching positions and lessons; resolve prerequisite cycles explicitly.
+- [x] Derive all 1,000 kanji teaching positions and lessons; resolve prerequisite cycles explicitly.
 - [ ] Finalize component introductions and implement component exercises.
 - [ ] Select useful JMdict vocabulary, gated on introduced characters.
 - [ ] Derive word-specific readings conservatively; reject ambiguous alignment.
-- [ ] Assemble complete curriculum packs and validate IDs, prerequisites, assets, hashes and licenses.
+- [x] Assemble complete curriculum packs and validate IDs, prerequisites, assets, hashes and licenses.
 - [ ] Expand real native-speaker audio coverage; review recording quality and matching.
 - [ ] Source legitimate handwriting variants; validate using real human input.
 
@@ -41,10 +41,10 @@ Updated as implementation proceeds; unchecked items are not release claims.
 - [ ] Character explorer: gojuon, groups, search, filters, separate skill states/due status.
 - [ ] Revision view: readings, components, words, audio, animation, trace, recall, history, focused practice.
 - [ ] Placement assessing only the skills actually tested.
-- [ ] Progress: historical goals, XP ranges/calendar, sessions/time, skill accuracy, retention and confusions.
+- [x] Progress: historical goals, XP ranges/calendar, sessions/time, skill accuracy, retention and confusions.
 - [ ] Settings: modes, theme, text/motion, storage, content management, versioned backup transfer.
-- [ ] Reminders: in-app schedule, quiet hours/snooze/pause, honest recurring calendar export.
-- [ ] Offline About & Science and teaching/content sources, with research limitations.
+- [x] Reminders: in-app schedule, quiet hours/snooze/pause, honest recurring calendar export.
+- [x] Offline About & Science and teaching/content sources, with research limitations.
 
 ## Release qualification and documentation
 - [ ] Test ambiguity, Unicode/IME, keyboard shortcuts/matching and accessibility.
@@ -78,3 +78,6 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 - Reminder module: nine tests pass for local schedules, quiet hours, elapsed-day reminders, DST keys and calendar export. UI integration remains pending.
 - Exercise components: nine tests pass for IME, keyboard matching, retries, first-attempt feedback, draft recovery and stroke-direction coaching. Drafts are tab-local; physical input validation remains pending.
 - Progress page now includes historical XP charts/calendar, session history, separate skill accuracy, confusion records and delayed-recall trends. Three summary regression tests pass; integration into the shell follows with the application commit.
+
+- Integrated milestone: production build and Chromium offline acceptance pass; 82 unit/integration tests pass across eight files. Kana practice is usable locally. Kanji/vocabulary data is installed but explorer/course integration remains unfinished.
+- Separate commits preserve reminders, practice controls, progress reporting, kanji ordering, vocabulary, pack assembly and offline runtime. Subagents completed independent modules before reaching usage limits; root integrated and checked their work.

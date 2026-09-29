@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- Two theme-color tags rather than one: the address bar should match the
+         system theme even before the app's own ThemeProvider has run, and after
+         it runs the untargeted tag (updated by theme.tsx) takes over for an
+         explicit in-app choice. -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fbf9f4" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14161a" />
+    <meta name="theme-color" content="#fbf9f4" />
+    <meta
+      name="description"
+      content="Learn hiragana, katakana, kanji and beginner Japanese vocabulary offline — real stroke-aware handwriting practice, native-speaker audio, and a local spaced-repetition scheduler. No account, no tracking."
+    />
+    <title>Kansei — Japanese writing and vocabulary</title>
+
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Kansei" />
+
+    <!-- The two faces every first paint needs: the UI face for chrome, and the
+         Japanese sans for the hero glyph on the practice/onboarding screens.
+         The serif and textbook faces are loaded on demand where they are
+         actually used, since most first paints do not need them. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/noto-sans-jp-base.woff2" crossorigin />
+    <link rel="stylesheet" href="/src/styles/fonts.css" />
+  </head>
+  <body>
+    <noscript>
+      Kansei needs JavaScript to run — it is an offline-first application, not a
+      static page. Please enable JavaScript and reload.
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
