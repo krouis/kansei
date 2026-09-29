@@ -6,7 +6,8 @@ import {
 import type { Database } from '@/persistence/ports';
 import type { ContentLibrary } from '@/content/ports';
 import type { GradeDetail } from '@/learning/grading/grader';
-import type { ContextualGrader } from '@/learning/grading/ports';
+import { toleranceForSubmission } from '@/handwriting/tolerance';
+import type { GradingContext, ContextualGrader } from '@/learning/grading/ports';
 import type {
   Generator, GenerationContext, Scheduler, SelectedTarget, SessionEngine, Selector,
 } from '@/learning/ports';
@@ -20,7 +21,7 @@ import { buildGenerationPool, audioLookup } from './pool';
  * gradeDetailed() KanseiGrader provides, which the shared ContextualGrader
  * port does not declare (it is additive, KanseiGrader-specific API). */
 export interface DetailedGrader extends ContextualGrader {
-  gradeDetailed(question: Question, submission: AnswerSubmission, context?: { attemptOrdinal?: number }): Promise<GradeDetail>;
+  gradeDetailed(question: Question, submission: AnswerSubmission, context?: GradingContext): Promise<GradeDetail>;
 }
 
 /**
@@ -165,7 +166,7 @@ export class KanseiSessionEngine implements SessionEngine {
       const { series, screen } = this.screenOf(session);
       if (submission.questionId !== screen.question.id) throw new Error('Answer belongs to a different question.');
       if (screen.result) throw new Error('This screen already has a first-attempt result; use submitRetry.');
-      const detail = await this.deps.grader.gradeDetailed(screen.question, submission, { attemptOrdinal: 0 });
+      const detail = await this.deps.grader.gradeDetailed(screen.question, submission, { attemptOrdinal: 0, tolerance: submission.canvasPx ? toleranceForSubmission(submission.canvasPx, (submission.strokes ?? []).map(s => s.pointerType)) : undefined });
       const s = stamp(now);
       const record = this.buildAttemptRecord(session, screen.question, submission, detail.grade, 0, s);
       screen.result = { submission, grade: detail.grade, at: s.at };
@@ -205,7 +206,7 @@ export class KanseiSessionEngine implements SessionEngine {
       if (submission.questionId !== screen.question.id) throw new Error('Answer belongs to a different question.');
       if (!screen.result) throw new Error('Cannot retry a screen with no first-attempt result.');
       const ordinal = screen.retries.length + 1;
-      const detail = await this.deps.grader.gradeDetailed(screen.question, submission, { attemptOrdinal: ordinal });
+      const detail = await this.deps.grader.gradeDetailed(screen.question, submission, { attemptOrdinal: ordinal, tolerance: submission.canvasPx ? toleranceForSubmission(submission.canvasPx, (submission.strokes ?? []).map(s => s.pointerType)) : undefined });
       const s = stamp(now);
       const record = this.buildAttemptRecord(session, screen.question, submission, detail.grade, ordinal, s);
       screen.retries.push({ submission, grade: detail.grade, at: s.at });

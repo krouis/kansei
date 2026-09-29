@@ -1,0 +1,146 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Exercise } from '@/features/practice/Exercise';
+import type { Services } from '@/app/services';
+import { asItemId, asQuestionId, type Grade, type Question } from '@/domain';
+
+const incorrect: Grade = { outcome: 'incorrect', unaidedFirstAttempt: false, message: 'Try again.', distinction: null, handwriting: null, confusedWith: null };
+function question(overrides: Partial<Question> = {}): Question {
+  return { id: asQuestionId('exercise-test'), type: 'character-to-reading-typed', targetItemId: asItemId('kana:hi:ga'), targetReadingId: null,
+    skill: 'readingRecall', direction: 'glyph-to-reading', response: 'typed', inputScript: 'kana', evidence: 'strong',
+    prompt: { text: 'が', textIsJapanese: true, audio: null, instruction: 'Type the reading', context: null, scaffold: null },
+    options: null, pairs: null, acceptedAnswers: ['が'], canonicalAnswer: 'が', alsoAcceptableNote: null,
+    allowedHints: ['reveal-answer'], distinction: null, selectionReason: 'due-review', focusedPractice: false, requiredAudio: [], requiredStrokeData: [], ...overrides };
+}
+function mount(q = question(), extra: Partial<React.ComponentProps<typeof Exercise>> = {}) {
+  const props = { question: q, result: null, busy: false, services: { content: { audio: () => undefined, strokes: async () => undefined }, audio: { unlock: vi.fn(async () => true), play: vi.fn(async () => {}) } } as unknown as Services,
+    onSubmit: vi.fn(async () => {}), onRetry: vi.fn(async () => {}), onAdvance: vi.fn(async () => {}), ...extra };
+  return { ...render(<Exercise {...props} />), props };
+}
+beforeEach(() => sessionStorage.clear());
+afterEach(cleanup);
+
+describe('exercise input evidence', () => {
+  it('does not submit during IME composition, then submits NFC-normalized text with IME evidence', async () => {
+    const { props } = mount();
+    const input = screen.getByRole('textbox');
+    fireEvent.compositionStart(input);
+    fireEvent.change(input, { target: { value: 'か\u3099' } });
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true, keyCode: 229 });
+    fireEvent.submit(input.closest('form')!);
+    expect(props.onSubmit).not.toHaveBeenCalled();
+    fireEvent.compositionEnd(input);
+    await userEvent.click(screen.getByRole('button', { name: 'Check answer' }));
+    expect(props.onSubmit).toHaveBeenCalledWith(expect.objectContaining({ rawInput: 'か\u3099', normalisedInput: 'が', imeUsed: true }));
+  });
+
+  it('connects pairs using only keyboard and records chosen items and elimination evidence', async () => {
+    const pairs = [['あ','a'],['い','i'],['う','u']].map(([glyph, reading], i) => ({ pairId: String(i), left: { display: glyph!, itemId: asItemId(`kana:hi:${reading}`) }, right: { display: reading!, itemId: asItemId(`kana:hi:${reading}`) } }));
+    const { props } = mount(question({ type: 'match-pairs', response: 'matching', pairs }));
+    const user = userEvent.setup();
+    for (const [left, right] of [['あ','i'],['い','a'],['う','u']]) {
+      for (const name of [left, right]) {
+        const target = screen.getByRole('button', { name });
+        for (let n = 0; document.activeElement !== target && n < 30; n++) await user.tab();
+        expect(target).toHaveFocus();
+        await user.keyboard('{Enter}');
+      }
+    }
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Check answer' })).toHaveFocus();
+    await user.keyboard('{Enter}');
+    const answer = vi.mocked(props.onSubmit).mock.calls[0]?.[0];
+    expect(answer?.pairResults).toEqual([
+      expect.objectContaining({ pairId: '0', chosenRightItemId: 'kana:hi:i', correct: false, remainingChoices: 3, forcedByElimination: false }),
+      expect.objectContaining({ pairId: '1', chosenRightItemId: 'kana:hi:a', correct: false, remainingChoices: 2, forcedByElimination: false }),
+      expect.objectContaining({ pairId: '2', correct: true, remainingChoices: 1, forcedByElimination: true }),
+    ]);
+  });
+
+  it('counts replays separately from the first audio play without treating them as hints', async () => {
+    const base = question();
+    const { props } = mount({ ...base, prompt: { ...base.prompt, audio: { path: '/test.ogg' } as import('@/domain').AudioRef } });
+    await userEvent.click(screen.getByRole('button', { name: '▶ Play audio' }));
+    await userEvent.click(screen.getByRole('button', { name: '▶ Replay audio' }));
+    await userEvent.click(screen.getByRole('button', { name: 'I don’t know' }));
+    expect(props.onSubmit).toHaveBeenCalledWith(expect.objectContaining({ audioReplays: 1, hintsUsed: [] }));
+  });
+
+  it('records a reveal and a decline without substituting a correct answer', async () => {
+    const { props } = mount();
+    await userEvent.click(screen.getByRole('button', { name: 'Reveal answer' }));
+    await userEvent.click(screen.getByRole('button', { name: 'I don’t know' }));
+    expect(props.onSubmit).toHaveBeenCalledWith(expect.objectContaining({ declined: true, hintsUsed: ['reveal-answer'], rawInput: '' }));
+  });
+
+  it('keeps a correction editable if saving it fails', async () => {
+    mount(question(), { result: incorrect, onRetry: vi.fn(async () => { throw new Error('Storage is full'); }) });
+    await userEvent.click(screen.getByRole('button', { name: 'Guided correction' }));
+    await userEvent.type(screen.getByRole('textbox'), 'ga');
+    await userEvent.click(screen.getByRole('button', { name: 'Check answer' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Storage is full');
+    expect(screen.getByRole('textbox')).toHaveValue('ga');
+  });
+
+  it('retains a draft and hints when navigating away and back in the same tab', async () => {
+    const first = mount();
+    await userEvent.type(screen.getByRole('textbox'), 'ga');
+    await userEvent.click(screen.getByRole('button', { name: 'Reveal answer' }));
+    first.unmount();
+    const next = mount();
+    expect(screen.getByRole('textbox')).toHaveValue('ga');
+    await userEvent.click(screen.getByRole('button', { name: 'Check answer' }));
+    expect(next.props.onSubmit).toHaveBeenCalledWith(expect.objectContaining({ hintsUsed: ['reveal-answer'] }));
+  });
+
+  it('keeps original feedback distinct from a successful guided correction', () => {
+    mount(question(), { result: incorrect, retryResult: { ...incorrect, outcome: 'correct', message: 'Correct.' } });
+    expect(screen.getByText('First attempt: Try again.')).toBeInTheDocument();
+    expect(screen.getByText('Guided correction: Correct.')).toBeInTheDocument();
+  });
+
+  it('does not start a second submission while the first is pending', async () => {
+    let finish: () => void = () => {};
+    const onSubmit = vi.fn(() => new Promise<void>(resolve => { finish = resolve; }));
+    mount(question(), { onSubmit });
+    await userEvent.click(screen.getByRole('button', { name: 'I don’t know' }));
+    await userEvent.click(screen.getByRole('button', { name: 'I don’t know' }));
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    finish();
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+  });
+});
+
+it('captures real pointer strokes and coaches reversed trace direction, with undo and clear', async () => {
+  const { Writing } = await import('@/features/practice/Writing');
+  const { buildSamplesFor } = await import('../fixtures/handwriting-samples');
+  const { useState } = await import('react');
+  const sample = buildSamplesFor('一', '二');
+  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+  function Surface() {
+    const [strokes, setStrokes] = useState<import('@/domain').CapturedStroke[]>([]);
+    return <Writing reference={sample.reference} strokes={strokes} onChange={setStrokes} guides />;
+  }
+  render(<Surface />);
+  const canvas = screen.getByRole('img', { name: /Handwriting canvas/ });
+  Object.assign(canvas, { setPointerCapture() {}, releasePointerCapture() {}, getBoundingClientRect: () => ({ width: 300, height: 300, left: 0, top: 0 }) });
+  const pointer = (type: string, x: number, y: number) => {
+    const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y });
+    Object.defineProperties(event, { pointerId: { value: 1 }, pointerType: { value: 'pen' }, isPrimary: { value: true }, pressure: { value: 0.7 } });
+    fireEvent(canvas, event);
+  };
+  const points = [...sample.reference.strokes[0]!.points].reverse();
+  pointer('pointerdown', points[0]![0] / 109 * 300, points[0]![1] / 109 * 300);
+  for (const [x, y] of points.slice(1)) pointer('pointermove', x / 109 * 300, y / 109 * 300);
+  pointer('pointerup', points.at(-1)![0] / 109 * 300, points.at(-1)![1] / 109 * 300);
+  expect(screen.getByRole('status')).toHaveTextContent('other direction');
+  expect(canvas.querySelectorAll('polyline')).toHaveLength(1);
+  await userEvent.click(screen.getByRole('button', { name: 'Undo stroke' }));
+  expect(canvas.querySelectorAll('polyline')).toHaveLength(0);
+  pointer('pointerdown', 40, 150); pointer('pointermove', 260, 150); pointer('pointerup', 260, 150);
+  expect(canvas.querySelectorAll('polyline')).toHaveLength(1);
+  await userEvent.click(screen.getByRole('button', { name: 'Clear' }));
+  expect(canvas.querySelectorAll('polyline')).toHaveLength(0);
+  vi.unstubAllGlobals();
+});

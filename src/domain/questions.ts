@@ -197,6 +197,8 @@ export interface AnswerSubmission {
   /** Matching results, one entry per pair, in the order the learner resolved them. */
   pairResults: PairResult[] | null;
   strokes: CapturedStroke[] | null;
+  /** Actual drawing surface size, used for device-specific assessment. */
+  canvasPx?: number;
   /** True when the learner pressed "I don't know". */
   declined: boolean;
   hintsUsed: HintKind[];
