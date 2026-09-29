@@ -3,7 +3,7 @@ import type { ItemId, QuestionId } from './ids';
 import type { AuxiliarySkill, EvidenceStrength, Skill } from './skills';
 
 /**
- * The ten implemented question formats.
+ * The implemented question formats.
  *
  * Each format is described by a QuestionSpec (see `specs.ts`) that states what
  * skill it assesses, which direction the prompt runs, what counts as a valid
@@ -21,6 +21,8 @@ export const QUESTION_TYPES = [
   'confusable-discrimination', // 8. tell visually similar characters apart
   'word-reading', // 9. read a short word
   'kanji-in-word-context', // 10. kanji reading or writing inside a word
+  'component-in-kanji-choice', // recurring visual component inside a kanji
+  'meaning-to-kanji-choice', // meaning recognition without inventing a reading
 ] as const;
 
 export type QuestionType = (typeof QUESTION_TYPES)[number];

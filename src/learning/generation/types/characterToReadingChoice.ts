@@ -59,13 +59,12 @@ export function generateCharacterToReadingChoice(
 
   const entry = index.characterById(String(target.itemId)) as KanjiCharacter | undefined;
   if (!entry) return reject('Target kanji not found in the generation pool.');
-  const readingId = target.readingId ?? entry.readings[0] ?? null;
+  const readingId = target.readingId ?? entry.readings.find((id) => index.wordForReading(String(id), entry.glyph)) ?? null;
   if (!readingId) return reject('This kanji has no taught reading to ask about.');
   const correctKana = index.readingKana(readingId);
   if (!correctKana) return reject('Could not resolve the reading’s kana.');
 
-  const words = index.wordsDemonstrating(readingId);
-  const word = words[0];
+  const word = index.wordForReading(readingId, entry.glyph);
   if (!word) return reject('No taught word demonstrates this reading; a bare kanji reading is never asked.');
 
   // Distractor readings: every OTHER taught reading (of any kanji) that has at
@@ -99,6 +98,7 @@ export function generateCharacterToReadingChoice(
   const base = baseEnvelope('character-to-reading-choice', target, ctx.random);
   const question: Question = {
     ...base,
+    targetReadingId: String(readingId),
     prompt: {
       ...emptyPrompt(`Choose how ${entry.glyph} is read here:`),
       text: word.spelling,

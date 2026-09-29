@@ -19,9 +19,8 @@ const SCRIPT_LABEL = { hiragana: 'hiragana', katakana: 'katakana' } as const;
  * meaning and the specific reading it takes in a named word, which is enough
  * context that only one character can be meant.
  *
- * Component targets are not handled here: `GenerationContext.pool` does not
- * currently carry the component table, so component handwriting practice is a
- * known, disclosed gap rather than a silent one (see generation/README.md).
+ * Component targets use visual recognition rather than inventing an unambiguous
+ * pronunciation or meaning from which to recall a shape.
  */
 export function generatePromptToHandwriting(
   target: SelectedTarget,
@@ -63,20 +62,24 @@ export function generatePromptToHandwriting(
   if (!entry) return reject('Target kanji not found in the generation pool.');
   if (!ctx.hasStrokes(entry.glyph)) return reject('No verified stroke reference for this character.');
 
-  const readingId = target.readingId ?? entry.readings[0] ?? null;
+  const readingId = target.readingId ?? entry.readings.find((id) => index.wordForReading(String(id), entry.glyph)) ?? null;
   if (!readingId) return reject('This kanji has no taught reading to identify it by.');
   const readingKana = index.readingKana(readingId);
-  const word = index.wordsDemonstrating(readingId)[0];
+  const word = index.wordForReading(readingId, entry.glyph);
   if (!readingKana || !word) return reject('No taught word demonstrates a reading of this kanji unambiguously.');
+  if (!word.spelling.includes(entry.glyph)) return reject('The example word does not contain the target kanji.');
+  const maskedWord = word.spelling.split(entry.glyph).join('□');
   const meaning = entry.meanings[0];
   if (!meaning) return reject('This kanji has no recorded meaning to identify it by.');
 
   const question: Question = {
     ...base,
+    targetReadingId: String(readingId),
+    direction: 'meaning-to-glyph',
     prompt: {
-      ...emptyPrompt(`Write the kanji meaning "${meaning}", read ${readingKana} in ${word.spelling}.`),
+      ...emptyPrompt(`Write the missing kanji meaning "${meaning}", read ${readingKana} in this word.`),
       text: null,
-      context: `${word.spelling} — ${word.meaning}`,
+      context: `${maskedWord} (${word.reading}) — ${word.meaning}`,
     },
     options: null,
     pairs: null,

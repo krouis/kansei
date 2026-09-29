@@ -19,6 +19,22 @@ import { QUESTION_TYPES, type QuestionSpec, type QuestionType } from '@/domain';
  *     that is only aspirational does not belong in this table.
  */
 const SPECS: Record<QuestionType, QuestionSpec> = {
+  'component-in-kanji-choice': {
+    type: 'component-in-kanji-choice', title: 'Find the recurring component',
+    assesses: 'recognition', alsoExercises: [], direction: 'glyph-to-glyph',
+    response: 'choice', inputScript: 'none', evidence: 'weak', allowedHints: ['reveal-answer'],
+    scoring: 'Choosing the kanji that contains a shown component is weak visual recognition evidence. It does not assess a component pronunciation, reading recall or handwriting.',
+    ambiguityChecks: ['The correct kanji contains the component in the source decomposition.', 'Every distractor excludes the component and its documented variants.', 'Four distinct kanji are shown; a standalone component is not used as its own example.'],
+    silentSafe: true, requiresPointer: false, typicalMs: 8000,
+  },
+  'meaning-to-kanji-choice': {
+    type: 'meaning-to-kanji-choice', title: 'Recognize a kanji meaning',
+    assesses: 'recognition', alsoExercises: [], direction: 'meaning-to-glyph',
+    response: 'choice', inputScript: 'none', evidence: 'weak', allowedHints: ['reveal-answer'],
+    scoring: 'Selecting a kanji from a documented meaning is weak recognition evidence. It does not establish a universal meaning or pronunciation, or count as reading recall.',
+    ambiguityChecks: ['The prompt uses a recorded dictionary gloss.', 'Distractors sharing any normalized gloss with the target are excluded.', 'Exactly four distinct kanji are offered.'],
+    silentSafe: true, requiresPointer: false, typicalMs: 8000,
+  },
   'audio-to-character-choice': {
     type: 'audio-to-character-choice',
     title: 'Hear it, pick the character',

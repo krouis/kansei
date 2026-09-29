@@ -38,6 +38,7 @@ export interface ItemIndex {
   get(id: ItemId | string): ContentItem | undefined;
   /** Lessons in teaching order. */
   lessons(): Lesson[];
+  vocabulary(): VocabEntry[];
   /** Skills this item can be tested on, given the assets that actually verified. */
   applicable(item: ContentItem): SkillApplicability;
   /** Taught readings of a kanji — only those demonstrated by at least one word. */
@@ -95,6 +96,7 @@ export function buildItemIndex(library: SelectionLibrary): ItemIndex {
   const index: ItemIndex = {
     get: (id) => byId.get(String(id)),
     lessons: () => lessons,
+    vocabulary: () => library.vocab(),
     teachableReadings(item) {
       if (item.kind !== 'kanji') return [];
       const cached = readingCache.get(String(item.id));
@@ -122,16 +124,17 @@ export function buildItemIndex(library: SelectionLibrary): ItemIndex {
             recognition: true,
             readingRecall: index.teachableReadings(item).length > 0,
             listening: audio,
-            handwriting: strokes,
+            handwriting: strokes && index.teachableReadings(item).length > 0,
           };
           break;
         case 'component':
           // Components carry glosses, not readings, and several carry no
           // reliable meaning at all — so there is nothing to recall or hear.
-          result = { recognition: true, readingRecall: false, listening: false, handwriting: strokes };
+          result = { recognition: library.kanji().some(k => k.components.includes(item.id) && item.appearsIn.includes(k.id)), readingRecall: false, listening: false, handwriting: false };
           break;
         case 'vocab':
-          result = { recognition: true, readingRecall: true, listening: audio, handwriting: strokes };
+          // The drawing assessor accepts one character, not a whole word.
+          result = { recognition: true, readingRecall: true, listening: audio, handwriting: false };
           break;
       }
       applicabilityCache.set(String(item.id), result);

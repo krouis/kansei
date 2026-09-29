@@ -12,11 +12,14 @@ import { generateAudioToTyped } from './types/audioToTyped';
 import { generatePromptToHandwriting } from './types/promptToHandwriting';
 import { generateConfusableDiscrimination } from './types/confusableDiscrimination';
 import { generateWordReading } from './types/wordReading';
+import { generateComponentInKanjiChoice, generateMeaningToKanjiChoice } from './types/visualKanjiChoice';
 import { generateKanjiInWordContext } from './types/kanjiInWordContext';
 
 type GenFn = (target: SelectedTarget, ctx: GenerationContext) => { question: Question | null; rejected: string | null };
 
 const GENERATORS: Record<QuestionType, GenFn> = {
+  'component-in-kanji-choice': generateComponentInKanjiChoice,
+  'meaning-to-kanji-choice': generateMeaningToKanjiChoice,
   'audio-to-character-choice': generateAudioToCharacterChoice,
   'romaji-to-kana-choice': generateRomajiToKanaChoice,
   'character-to-reading-choice': generateCharacterToReadingChoice,
@@ -81,8 +84,10 @@ export class CompositeGenerator implements Generator {
   ): Promise<{ question: Question | null; rejected: string | null }> {
     const ladder = ladderFor(target.state, ctx.settings);
     let candidates = candidatesFor(target.skill, ladder.relatedDistractors);
-    if (this.options.enabledTypes) {
-      const enabled = new Set(this.options.enabledTypes);
+    if (target.skill === 'recognition') candidates.push('component-in-kanji-choice', 'meaning-to-kanji-choice');
+    const enabledTypes = this.options.enabledTypes ?? ctx.settings.enabledQuestionTypes;
+    if (enabledTypes.length) {
+      const enabled = new Set(enabledTypes);
       candidates = candidates.filter((t) => enabled.has(t));
     }
     if (candidates.length === 0) {

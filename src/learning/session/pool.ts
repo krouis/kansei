@@ -19,7 +19,7 @@ export function buildGenerationPool(library: ContentLibrary): GenerationContext[
   ];
   const vocab: VocabEntry[] = library.vocab();
   const readings: KanjiReading[] = library.kanji().flatMap((k) => library.readingsFor(k.glyph));
-  return { characters, vocab, readings };
+  return { characters, vocab, readings, components: library.components() };
 }
 
 /** `GenerationContext.audio`, backed by the library's own audio lookup. */

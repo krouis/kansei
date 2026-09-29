@@ -223,7 +223,7 @@ export class DefaultSelector implements Selector {
       await this.deps.skills.due(request.now.toISOString(), undefined, this.tuning.dueFetchLimit)
     ).filter((s) => {
       const item = index.get(s.itemId);
-      return item !== undefined && passesGlobalGate(item, index, request.settings);
+      return item !== undefined && passesGlobalGate(item, index, request.settings) && currentReading(item, s.readingId, index);
     });
     const backlogSize = dueStates.length;
     const dueKeys = new Set(dueStates.map((s) => pairKey(s.itemId, s.skill, s.readingId)));
@@ -328,7 +328,7 @@ export class DefaultSelector implements Selector {
       if (dueKeys.has(pairKey(s.itemId, s.skill, s.readingId))) return false;
       const item = index.get(s.itemId);
       if (item === undefined || excluded.has(String(item.id))) return false;
-      if (!passesGlobalGate(item, index, request.settings)) return false;
+      if (!passesGlobalGate(item, index, request.settings) || !currentReading(item, s.readingId, index)) return false;
       if (s.skill === 'listening' && !allowed.has('listening')) return false;
       return allowed.has(s.skill) ? index.applicable(item)[s.skill] : s.skill === 'handwriting';
     });
@@ -481,6 +481,19 @@ export class DefaultSelector implements Selector {
         break;
       }
       fillAll();
+    }
+
+    // A last small group may have fewer than ten distinct item/skill pairs.
+    // Repeat eligible targets instead of failing or bypassing prerequisites.
+    // These remain ordinary spaced-evidence records, never invented mastery.
+    if (picker.size > 0 && picker.size < request.screens) {
+      const available = [...picker.chosen];
+      let cursor = 0;
+      while (picker.size < request.screens) {
+        const candidate = available[cursor++ % available.length]!;
+        picker.chosen.push({...candidate, trace: `${candidate.trace}/small-group-repeat`});
+      }
+      notes.push('This small group repeats across ten screens; repeated exposure within a series is not spaced mastery.');
     }
 
     // ---- Notes -----------------------------------------------------------
@@ -748,7 +761,12 @@ export function chooseReading(
   const readings = index.teachableReadings(item);
   if (readings.length === 0) return null;
   const started = readings.filter((r) => stateByKey.has(pairKey(item.id, skill, String(r.id))));
-  const chosen = started[0] ?? readings[0];
+  const unstarted = readings.find(r => !stateByKey.has(pairKey(item.id, skill, String(r.id))));
+  const chosen = unstarted ?? started.slice().sort((a,b) => {
+    const left = stateByKey.get(pairKey(item.id,skill,String(a.id)))!;
+    const right = stateByKey.get(pairKey(item.id,skill,String(b.id)))!;
+    return (left.dueAt ?? '').localeCompare(right.dueAt ?? '');
+  })[0] ?? readings[0];
   return chosen === undefined ? null : String(chosen.id);
 }
 
@@ -778,3 +796,7 @@ export function policyFromSettings(settings: Settings): SelectionPolicy {
 }
 
 export type { ItemId };
+
+function currentReading(item: ContentItem, readingId: string | null, index: ItemIndex): boolean {
+  return item.kind !== 'kanji' || readingId === null || index.teachableReadings(item).some(r => String(r.id) === readingId);
+}

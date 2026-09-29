@@ -99,15 +99,20 @@ through the generator refusing a rung it considers too low.
 
 ## Known, disclosed gaps
 
-- **Components have no question format.** `GenerationContext.pool` does not
-  carry the component table (it is `{ characters, vocab, readings? }`), so
-  even though the selector can choose a component as a handwriting or
-  recognition target, no generator here can act on one. The composite
-  generator's `candidatesFor` still returns handwriting/recognition
-  candidates for a component target, every one of which rejects the target
-  as an unrecognised kind, and the caller sees an honest "every candidate was
-  rejected" rather than a silent skip. Fixing this requires widening the pool
-  type, which is a port change beyond this module's scope.
+- **Components use visual recognition only.** `component-in-kanji-choice`
+  asks which of four kanji contains the shown recurring shape. Positive
+  membership must agree with the source decomposition and `appearsIn`; all
+  distractors exclude the shape and documented variants. It is weak
+  recognition evidence, never pronunciation or handwriting mastery.
+- **Meaning recognition is available without aligned readings.**
+  `meaning-to-kanji-choice` uses documented meanings, excluding distractors
+  whose glosses overlap. This supports all 1,000 kanji while uncertain
+  word-reading alignments remain unavailable for reading or handwriting.
+  Dictionary gloss overlap checks are conservative; pedagogical review is
+  still needed to catch semantic synonyms not explicitly shared by the data.
+- **Kanji writing masks the target.** Prompts show the word with `□` replacing
+  the kanji, plus its reading and meaning. A source-aligned word must contain
+  exactly one occurrence of the target and no conflicting target reading.
 - **`word-reading`'s `inputScript` override.** The spec table says `'kana'`
   for this format, which is correct for a kanji word; a kana-only word (ねこ)
   overrides it to `'romaji'` at generation time, because the reading of an

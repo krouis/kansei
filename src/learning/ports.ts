@@ -1,6 +1,6 @@
 import type {
   AnswerSubmission, AttemptRecord, AudioRef, CharacterEntry, ConfusionRecord, Grade, ItemId,
-  KanjiReading, Question, SelectionReason, SessionState, Settings, Skill, SkillState, VocabEntry,
+  KanjiComponent, KanjiReading, Question, SelectionReason, SessionState, Settings, Skill, SkillState, VocabEntry,
 } from '@/domain';
 
 /**
@@ -101,7 +101,7 @@ export interface GenerationContext {
    * falls back to the documented ReadingId grammar (`reading:<kanji>:<kana>`),
    * which still yields the kana it needs. See generation/pool.ts.
    */
-  pool: { characters: CharacterEntry[]; vocab: VocabEntry[]; readings?: KanjiReading[] };
+  pool: { characters: CharacterEntry[]; vocab: VocabEntry[]; readings?: KanjiReading[]; components?: KanjiComponent[] };
   /** Whether a clip actually exists — no audio means no listening question. */
   hasAudio: (key: string) => boolean;
   /**

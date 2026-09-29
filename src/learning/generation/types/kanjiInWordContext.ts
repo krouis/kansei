@@ -22,10 +22,10 @@ export function generateKanjiInWordContext(
   const entry = index.characterById(String(target.itemId)) as KanjiCharacter | undefined;
   if (!entry) return reject('Target kanji not found in the generation pool.');
 
-  const readingId = target.readingId ?? entry.readings[0] ?? null;
+  const readingId = target.readingId ?? entry.readings.find((id) => index.wordForReading(String(id), entry.glyph)) ?? null;
   if (!readingId) return reject('This kanji has no taught reading to ask about.');
   const readingKana = index.readingKana(readingId);
-  const word = index.wordsDemonstrating(readingId)[0];
+  const word = index.wordForReading(readingId, entry.glyph);
   if (!readingKana || !word) return reject('No taught word demonstrates this reading; it cannot be asked without context.');
 
   const accepted = [...new Set([readingKana, hiraganaToKatakana(readingKana)])];

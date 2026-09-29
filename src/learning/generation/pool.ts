@@ -34,7 +34,7 @@ export interface ParsedReadingId {
 }
 
 /**
- * Split `reading:日:にち` into its parts.
+ * Split legacy `reading:日:にち` or word-specific `reading:日:にち:日曜日` into its parts.
  *
  * The grammar is documented and validated at content-load time (domain/ids.ts),
  * so parsing it is not a guess. This exists because `GenerationContext.pool`
@@ -43,7 +43,7 @@ export interface ParsedReadingId {
  */
 export function parseReadingId(id: string): ParsedReadingId | null {
   const parts = String(id).split(':');
-  if (parts.length !== 3 || parts[0] !== 'reading') return null;
+  if ((parts.length !== 3 && parts.length !== 4) || parts[0] !== 'reading') return null;
   const kanji = parts[1];
   const reading = parts[2];
   if (!kanji || !reading) return null;
@@ -63,6 +63,8 @@ export interface PoolIndex {
   readingKana(id: string): string | null;
   /** Taught words that demonstrate a reading, ordered so the shortest comes first. */
   wordsDemonstrating(readingId: string): VocabEntry[];
+  /** A source-aligned word with one occurrence of the target and no competing reading. */
+  wordForReading(readingId: string, glyph: string): VocabEntry | undefined;
   /** Reading ids of a kanji glyph, in the order content declares them. */
   readingIdsOf(glyph: string): string[];
   /** Words a character appears in. */
@@ -122,6 +124,15 @@ export function indexPool(pool: GenerationContext['pool']): PoolIndex {
       return parseReadingId(id)?.reading ?? null;
     },
     wordsDemonstrating: (readingId) => demonstrating.get(String(readingId)) ?? [],
+    wordForReading: (readingId, glyph) => {
+      const reading = readingById.get(String(readingId));
+      const parsed = parseReadingId(readingId);
+      if ((reading?.kanji ?? parsed?.kanji) !== glyph) return undefined;
+      return (demonstrating.get(String(readingId)) ?? []).find((word) =>
+        [...word.spelling].filter((char) => char === glyph).length === 1 &&
+        !word.demonstratesReadings.some((id) => String(id) !== String(readingId) &&
+          (readingById.get(String(id))?.kanji ?? parseReadingId(String(id))?.kanji) === glyph));
+    },
     readingIdsOf: (glyph) => {
       const k = byGlyph.get(glyph);
       if (k && isKanji(k)) return k.readings.map(String);

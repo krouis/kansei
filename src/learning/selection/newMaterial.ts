@@ -69,7 +69,7 @@ function lessonUnderway(
 ): boolean {
   const selectable = lesson.introduces.filter((id) => {
     const item = index.get(id);
-    return item !== undefined && passesNewMaterialGate(item, index, settings);
+    return item !== undefined && passesNewMaterialGate(item, index, settings) && candidateSkills(item, index, new Set(['recognition','readingRecall','handwriting','listening'] as Skill[])).length > 0;
   });
   if (selectable.length === 0) return true;
   return selectable.every((id) => started.has(String(id)));
@@ -115,9 +115,29 @@ export function pickNewMaterial(args: {
       blockedByPrerequisites.push(lesson.id);
       continue;
     }
-    group = fresh.slice(0, tuning.newGroupMax);
+    // Introduce a couple of useful shapes alongside actual kanji, rather than
+    // letting a radical-heavy lesson become an isolated component-only series.
+    const components = fresh.filter(item => item.kind === 'component');
+    const characters = fresh.filter(item => item.kind !== 'component');
+    const shapes = components.slice(0, characters.length ? 2 : tuning.newGroupMax);
+    group = [...shapes, ...characters.slice(0, tuning.newGroupMax - shapes.length)];
     lessonId = lesson.id;
     break;
+  }
+
+  // Vocabulary is not listed in character lessons' introduces arrays. Gate it
+  // explicitly on actual introductions, not a maximum teaching-order estimate.
+  const words = index.vocabulary()
+    .filter(word => passesNewMaterialGate(word, index, settings))
+    .filter(word => !startedItems.has(String(word.id)) && !excludedItems.has(String(word.id)))
+    .filter(word => word.requiresCharacters.every(id => startedItems.has(String(id))))
+    .filter(word => candidateSkills(word, index, allowedSkills).length > 0)
+    .sort((a,b) => a.teachingOrder-b.teachingOrder || String(a.id).localeCompare(String(b.id)));
+  if (words.length) {
+    anyUnstartedAnywhere = true;
+    const ready = words.slice(0, group.length ? 2 : tuning.newGroupMax);
+    group = [...ready, ...group.slice(0, tuning.newGroupMax-ready.length)];
+    lessonId ??= ready[0]?.lessonId ?? null;
   }
 
   // Extensions: a skill on a known item that has never been attempted.
@@ -135,7 +155,9 @@ export function pickNewMaterial(args: {
       if (!index.applicable(item)[skill]) continue;
       // Reading skills are keyed by reading, so an untouched reading is also an
       // extension; the selector expands those when it builds the targets.
-      if (attemptedPairs.has(pairKey(item.id, skill, null))) continue;
+      if (item.kind === 'kanji' && skill === 'readingRecall') {
+        if (index.teachableReadings(item).every(r => attemptedPairs.has(pairKey(item.id, skill, String(r.id))))) continue;
+      } else if (attemptedPairs.has(pairKey(item.id, skill, null))) continue;
       extensions.push({ item, skill });
     }
   }
