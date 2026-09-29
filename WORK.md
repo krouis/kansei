@@ -99,3 +99,4 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 - [ ] Stage and verify changed curriculum separately before switching active content.
 - [ ] Test a real service-worker replacement and compare user-data stores before/after.
 - [ ] Commit, push and inspect GitHub Actions results.
+- Staged-content module: four tests pass for network discovery, digest failure, interruption/resume and schema rejection. Failed staging preserves the installed generation and never writes learner data.
