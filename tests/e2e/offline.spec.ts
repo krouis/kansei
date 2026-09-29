@@ -20,6 +20,8 @@ test('installs real kana, completes ten questions, and cold starts offline', asy
   await page.getByLabel('Keyboard-only practice (no handwriting)').check();
   await page.getByLabel('Silent practice', {exact:true}).check();
   await page.getByRole('button',{name:'Install and begin'}).click();
+  await expect(page.getByRole('button',{name:'Start as a beginner'})).toBeVisible({timeout:60000});
+  await page.getByRole('button',{name:'Start as a beginner'}).click();
   await expect(page.getByRole('button',{name:'Begin practice'})).toBeVisible({timeout:60000});
   await page.evaluate(()=>navigator.serviceWorker.ready);
   await expect.poll(()=>page.evaluate(()=>Boolean(navigator.serviceWorker.controller))).toBe(true);
@@ -117,4 +119,39 @@ test('serves a direct section entry and scopes the manifest to its deployment', 
   expect(manifest.data.scope).toBe(base);
   expect(manifest.data.start_url).toBe(`${base}?source=pwa`);
   expect(manifest.data.icons.every((icon: {src:string}) => icon.src.startsWith(`${base}icons/`))).toBe(true);
+});
+
+test('offers an optional placement check that recognises known kana and never claims reading or handwriting', async ({page}) => {
+  const errors: string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto(appPath('/'));
+  await page.getByLabel('Keyboard-only practice (no handwriting)').check();
+  await page.getByLabel('Silent practice', {exact:true}).check();
+  await page.getByRole('button',{name:'Install and begin'}).click();
+  await expect(page.getByRole('button',{name:'Quick placement check'})).toBeVisible({timeout:60000});
+  await page.getByRole('button',{name:'Quick placement check'}).click();
+  // The real practice UI, not a bespoke placement screen: same choice buttons,
+  // same "Check answer" flow, same keyboard shortcuts as ordinary practice.
+  await expect(page.getByText('Question 1 / 10',{exact:true})).toBeVisible();
+  for (let i=0;i<10;i++) {
+    await expect(page.getByText(`Question ${i+1} / 10`,{exact:true})).toBeVisible();
+    // Answer everything correctly so the summary's count is checkable exactly.
+    const snapshot = await page.evaluate(async () => {
+      const names = await indexedDB.databases();
+      const db = await new Promise<IDBDatabase>((resolve,reject) => { const req = indexedDB.open(names.find(n => n.name?.includes('kansei'))!.name!); req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error); });
+      const rows = await new Promise<any[]>((resolve,reject)=>{const req=db.transaction('sessions').objectStore('sessions').getAll();req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});db.close();
+      const state = rows.find(r=>r.status==='active');
+      return state?.series[0].screens[state.series[0].cursor].question;
+    });
+    expect(snapshot.skill).toBe('recognition');
+    await page.locator('.choices button').nth(snapshot.options.findIndex((o: {correct:boolean}) => o.correct)).click();
+    await page.getByRole('button',{name:'Check answer',exact:true}).click();
+    await expect(page.getByRole('button',{name:'Continue · +1 XP'})).toBeVisible();
+    await page.getByRole('button',{name:'Continue · +1 XP'}).click();
+  }
+  await expect(page.getByRole('heading',{name:'Placement check complete.'})).toBeVisible();
+  await expect(page.getByText('You recognised 10 of 10 characters')).toBeVisible();
+  await expect(page.getByText(/Reading recall, listening and handwriting are not assessed/)).toBeVisible();
+  await page.getByRole('button',{name:'Continue',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Begin practice'})).toBeVisible();
+  expect(errors).toEqual([]);
 });

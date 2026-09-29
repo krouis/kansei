@@ -411,4 +411,26 @@ describe('session durability and operation boundaries', () => {
     expect(state.series).toHaveLength(3);
     expect(await db.transact('readonly', (tx) => tx.xp.total())).toBe(60);
   });
+
+  it('runs a placement check as a real ten-screen recognition-only series, never linked', async () => {
+    const state = await engine.start({ kind: 'placement', seriesCount: 3, now });
+    // A placement check always forces exactly one series, even if asked for more.
+    expect(state.seriesCount).toBe(1);
+    expect(state.series[0]!.screens).toHaveLength(SERIES_LENGTH);
+    expect(state.series[0]!.screens.every((s) => s.question.skill === 'recognition')).toBe(true);
+
+    let current = state;
+    for (let i = 0; i < SERIES_LENGTH; i += 1) {
+      const q = questionOf(current);
+      await engine.submit(answerFor(q, true), now);
+      const { state: next } = await engine.advance(now);
+      current = next;
+    }
+    expect(current.status).toBe('completed');
+    // A placement check updates recognition the same way any real question
+    // screen would — there is no separate, bespoke scoring path.
+    const skillStates = await db.transact('readonly', (tx) => tx.skills.all());
+    expect(skillStates.length).toBeGreaterThan(0);
+    expect(skillStates.every((s) => s.skill === 'recognition')).toBe(true);
+  });
 });

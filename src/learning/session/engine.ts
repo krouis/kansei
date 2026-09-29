@@ -16,6 +16,7 @@ import { XpLedger } from '@/learning/xp';
 import { policyFromSettings } from '@/learning/selection/selector';
 import { planRevisit } from '@/learning/selection/revisit';
 import { buildGenerationPool, audioLookup } from './pool';
+import { placementTargetsFor } from './placement';
 
 /** The grader dependency this engine actually needs: grade() plus the richer
  * gradeDetailed() KanseiGrader provides, which the shared ContextualGrader
@@ -96,10 +97,15 @@ export class KanseiSessionEngine implements SessionEngine {
 
     const s = stamp(opts.now);
     const settings = this.deps.getSettings();
+    // A placement check is a one-off sample, never a linked round: forcing
+    // seriesCount to 1 here means a caller can never accidentally ask for a
+    // multi-series placement, which buildSeries()'s placement branch does not
+    // model (it always resamples the same even spread across the curriculum).
+    const seriesCount = opts.kind === 'placement' ? 1 : opts.seriesCount;
     const session: SessionState = {
       id: asSessionId(`sess_${opts.now.getTime().toString(36)}_${Math.floor(this.random() * 1e9).toString(36)}`),
       kind: opts.kind,
-      seriesCount: opts.seriesCount,
+      seriesCount,
       status: 'active',
       series: [],
       activeSeriesIndex: 0,
@@ -285,23 +291,33 @@ export class KanseiSessionEngine implements SessionEngine {
     focusItemId: ItemId | null,
   ): Promise<SeriesState> {
     const settings = this.deps.getSettings();
-    const policy = policyFromSettings(settings);
-    const allowedSkills = this.allowedSkillsFor(session);
-
-    const selection = await this.deps.db.transact('readonly', (tx) =>
-      this.deps.createSelector(tx).select({
-        policy,
-        screens: SERIES_LENGTH,
-        now,
-        settings,
-        focusItemId,
-        allowedSkills,
-        exclude: [],
-      }),
-    );
-
-    const targets = selection.targets as SelectedTarget[];
     const ctx = this.generationContext(settings, now);
+
+    let targets: SelectedTarget[];
+    if (session.kind === 'placement') {
+      // The optional placement check samples recognition only, evenly across
+      // taught hiragana/katakana, and skips the due/weak/new-material mix
+      // entirely — see placement.ts for why, and its scope limits.
+      targets = placementTargetsFor([...this.deps.content.kana('hiragana'), ...this.deps.content.kana('katakana')]);
+      if (targets.length === 0) {
+        throw new Error('No installed kana to build a placement check from.');
+      }
+    } else {
+      const policy = policyFromSettings(settings);
+      const allowedSkills = this.allowedSkillsFor(session);
+      const selection = await this.deps.db.transact('readonly', (tx) =>
+        this.deps.createSelector(tx).select({
+          policy,
+          screens: SERIES_LENGTH,
+          now,
+          settings,
+          focusItemId,
+          allowedSkills,
+          exclude: [],
+        }),
+      );
+      targets = selection.targets as SelectedTarget[];
+    }
 
     const screens: SeriesScreen[] = [];
     for (let i = 0; i < SERIES_LENGTH; i += 1) {
