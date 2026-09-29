@@ -149,7 +149,7 @@ from a dictionary and are not claimed to come from one.
 - Source of truth: the tables at the top of `scripts/content/build-kana.mjs`,
   committed and labelled as such. `data/kana.json` and `data/kana-lessons.json`
   are generated from them and should never be edited by hand.
-- Author: Kansei curriculum author. Licence: AGPL-3.0-or-later, as the repository.
+- Author: Kansei curriculum author. Licence: GPL-2.0-or-later, as the repository.
 - Reference works consulted for the standard inventory, the 1946 spelling reform,
   and the extended-katakana conventions: the Japanese Cabinet notifications on
   modern kana usage (現代仮名遣い) and on loanword spelling (外来語の表記), which

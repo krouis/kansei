@@ -235,7 +235,7 @@ edited, corrected or added. The exact attribution string to ship is stored in
 Share-alike means any content pack containing this derived data is itself under
 CC BY-SA 4.0. Curriculum material that does not embed KANJIDIC2 content (hand-authored
 teaching order, mnemonics, notes) is a separate work and is not made share-alike by
-this. The app's own code is AGPL-3.0-or-later; keep the data licence notice distinct
+this. The app's own code is GPL-2.0-or-later; keep the data licence notice distinct
 from the code licence notice in the UI.
 
 **Fields deliberately not extracted:** SKIP codes are under CC BY-NC-SA 4.0 —

@@ -16,7 +16,7 @@
     "what": "Every field except strokeCount: coverage, romaji, inputVariants, gojuon position, derivesFrom, confusableWith, printVsHandwritten, notes, teachingOrder, lessonId, lessons.",
     "where": "The tables at the top of scripts/content/build-kana.mjs (hand-authored curriculum source of truth, committed).",
     "by": "Kansei curriculum author",
-    "license": "AGPL-3.0-or-later, as the rest of this repository"
+    "license": "GPL-2.0-or-later, as the rest of this repository"
   },
   "sources": [
     {

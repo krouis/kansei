@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Kansei — an offline-first PWA for learning Japanese writing and beginner vocabulary.",
-  "license": "AGPL-3.0-or-later",
+  "license": "GPL-2.0-or-later",
   "engines": {
     "node": ">=20"
   },
