@@ -87,9 +87,9 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 - [x] Generate section entrypoints and a scoped PWA manifest for static hosting.
 - [x] Verify installation, ten-screen XP and offline cold start under `/kansei/`; both Chromium acceptance tests pass.
 - [x] Add the build/test/publish workflow and document repository setup.
-- [ ] Observe a successful GitHub-hosted deployment after pushing the workflow.
+- [x] Observe a successful GitHub-hosted deployment after pushing the workflow.
 
-- Workflow checks use Node 22 and locked npm dependencies. Runtime-only content validation checks all distributed assets without downloading mutable upstream dictionaries; the default validator still checks local source hashes. GitHub-hosted execution has not yet occurred.
+- Workflow checks use Node 22 and locked npm dependencies. Runtime-only content validation checks all distributed assets without downloading mutable upstream dictionaries; the default validator still checks local source hashes. GitHub-hosted execution passed in run 36618038902.
 
 ## Updates without losing user data
 - [x] Close superseded database connections without deleting or resetting records.
@@ -98,7 +98,9 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 - [x] Notify with Update now / Later; defer while practising or saving and protect other tabs.
 - [x] Stage and verify changed curriculum separately before switching active content.
 - [x] Test a real service-worker replacement and compare user-data stores before/after.
-- [ ] Commit, push and inspect GitHub Actions results.
+- [x] Commit, push and inspect GitHub Actions results.
 - Staged-content module: four tests pass for network discovery, digest failure, interruption/resume and schema rejection. Failed staging preserves the installed generation and never writes learner data.
 
 - Final local update validation: 93 unit/integration tests and both Chromium acceptance tests pass. The browser installs a replacement worker, blocks activation with another tab or active session, switches a verified content generation, compares all learner/settings stores unchanged, and cold-starts offline.
+
+- GitHub Actions run [36618038902](https://github.com/krouis/kansei/actions/runs/36618038902) successfully built, tested and deployed commit `5a4e3bf` to https://krouis.github.io/kansei/.
