@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Services } from '@/app/services';
-import { LEARNING_STAGE_LABELS, LEARNING_STAGE_MARK, SKILLS, SKILL_LABELS } from '@/domain';
+import { LEARNING_STAGE_LABELS, LEARNING_STAGE_MARK, SKILLS, SKILL_LABELS, asItemId } from '@/domain';
 import type { AttemptRecord, CapturedStroke, ItemId, Skill, SkillState, StrokeReference } from '@/domain';
 import { Button, Card } from '@/ui/primitives';
 import { Writing } from '@/features/practice/Writing';
@@ -23,7 +23,7 @@ export function CharactersPage({services:s, skills, busy, focus}: {services:Serv
     let current = true; setReference(null); setStrokes([]); setHistory([]); setError('');
     if (selected) {
       if (selected.kind !== 'vocab') void s.content.strokes(selected.glyph).then(r => { if(current)setReference(r??null); }).catch(e => {if(current)setError(String(e));});
-      void s.db.transact('readonly',tx => tx.attempts.forItem(selected.id as unknown as ItemId, 12)).then(rows => {if(current)setHistory(rows);}).catch(e => {if(current)setError(String(e));});
+      void s.db.transact('readonly',tx => tx.attempts.forItem(asItemId(selected.id), 12)).then(rows => {if(current)setHistory(rows);}).catch(e => {if(current)setError(String(e));});
     }
     return () => {current=false;};
   },[selected,s]);
@@ -56,7 +56,7 @@ export function CharactersPage({services:s, skills, busy, focus}: {services:Serv
       {selected.kind!=='vocab'&&words.length>0&&<><h3>Example vocabulary</h3>{words.slice(0,12).map(w=><Button key={w.id} onClick={()=>setSelected(w)}><span lang="ja">{w.spelling} ({w.reading})</span> · {w.meaning}</Button>)}</>}
       <h3>Progress by skill</h3>{SKILLS.map(sk=>{const p=entryProgress(selected,sk,skills);return <p key={sk}>{SKILL_LABELS[sk]}: {LEARNING_STAGE_MARK[p.stage]} {LEARNING_STAGE_LABELS[p.stage]}{p.due?' · Due for review':''}</p>;})}
       {selected.kind==='kanji'&&<><p>Reading recall summarizes the weakest taught reading, including readings not yet practiced.</p>{s.content.readingsFor(selected.glyph).map(r=>{const state=skills.find(x=>String(x.itemId)===selected.id&&x.skill==='readingRecall'&&x.readingId===r.id);return <p key={r.id}><span lang="ja">{r.exampleVocab.map(id=>s.content.vocab().find(v=>v.id===id)?.spelling).filter(Boolean).join(', ')} ({r.reading})</span>: {LEARNING_STAGE_LABELS[state?.stage??'unseen']}</p>;})}</>}
-      <Button variant="primary" disabled={busy} onClick={()=>focus(selected.id as unknown as ItemId)}>Practice this {selected.kind==='vocab'?'word':'character'}</Button><p>Focused recognition provides weaker evidence because the target is already known.</p>
+      <Button variant="primary" disabled={busy} onClick={()=>focus(asItemId(selected.id))}>Practice this {selected.kind==='vocab'?'word':'character'}</Button><p>Focused recognition provides weaker evidence because the target is already known.</p>
       <details><summary>Recent review history ({history.length})</summary>{history.length?history.map(a=><p key={a.id}>{new Date(a.at).toLocaleString()} · {SKILL_LABELS[a.skill]} · {a.outcome} · {a.attemptOrdinal===0?'First attempt':'Correction'}{a.focusedPractice?' · Focused':''}{a.hintsUsed.length?' · Assisted':''}{a.readingId?` · ${s.content.reading(a.readingId)?.reading??a.readingId}`:''}</p>):<p>No recorded attempts.</p>}</details>
     </Card>}
     <p role="status">{filtered.length} matching entries{paginated&&filtered.length?` · Showing ${page*pageSize+1}–${Math.min((page+1)*pageSize,filtered.length)}`:''}</p>
