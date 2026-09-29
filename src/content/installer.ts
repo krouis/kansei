@@ -1,7 +1,7 @@
 import type { OfflineReadiness, PackFile, PackId, PackIndex, PackInstallState, PackManifest } from '@/domain';
 import type { PackStateStore } from '@/persistence/ports';
 import type { InstallProgress, Installer } from './ports';
-import { CONTENT_CACHE, DEFAULT_CONTENT_BASE_URL, PARTIAL_CACHE, SHELL_CACHE_PREFIX } from './cacheNames';
+import { CONTENT_CACHE, DEFAULT_CONTENT_BASE_URL, PARTIAL_CACHE } from './cacheNames';
 import { digestMatches } from './digest';
 import { resolvePackUrl } from './packSource';
 import type { ContentIssue } from './validate';
@@ -725,23 +725,10 @@ export function createInstaller(options: InstallerOptions): PackInstaller {
     return total;
   };
 
-  /** Default shell probe: is anything in a Kansei shell cache able to answer a navigation? */
-  const defaultNavigationReady = async (): Promise<boolean> => {
-    if (!cacheStorage) return false;
-    try {
-      const names = await cacheStorage.keys();
-      for (const name of names) {
-        if (!name.startsWith(SHELL_CACHE_PREFIX)) continue;
-        const cache = await cacheStorage.open(name);
-        for (const candidate of ['/index.html', '/', 'index.html']) {
-          if (await cache.match(candidate)) return true;
-        }
-      }
-      return false;
-    } catch {
-      return false;
-    }
-  };
+  // Workbox owns revisioned shell cache names. The page may report readiness
+  // only once an installed worker controls it; the app also verifies packs.
+  const defaultNavigationReady = async (): Promise<boolean> =>
+    typeof navigator !== 'undefined' && Boolean(navigator.serviceWorker?.controller);
   const navigationReady = options.navigationReady ?? defaultNavigationReady;
 
   const readiness = async (): Promise<OfflineReadiness> => {

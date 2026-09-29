@@ -1,4 +1,6 @@
 import type { AudioRef } from '@/domain';
+import { resolvePackUrl } from '@/content/packSource';
+const audioUrl = (ref: AudioRef) => resolvePackUrl('/content/', ref.path);
 import type { AudioPlayer } from './ports';
 
 /**
@@ -44,7 +46,7 @@ export function createAudioPlayer(fetchImpl: typeof fetch = fetch): AudioPlayer 
   }
 
   async function fetchBytes(ref: AudioRef): Promise<ArrayBuffer> {
-    const res = await fetchImpl(ref.path);
+    const res = await fetchImpl(audioUrl(ref));
     if (!res.ok) throw new Error(`Could not load audio for ${ref.path}: HTTP ${String(res.status)}.`);
     return res.arrayBuffer();
   }
@@ -136,7 +138,7 @@ export function createAudioPlayer(fetchImpl: typeof fetch = fetch): AudioPlayer 
 
       // Fallback: a plain <audio> element.
       await new Promise<void>((resolve, reject) => {
-        const el = new Audio(ref.path);
+        const el = new Audio(audioUrl(ref));
         currentElement = el;
         el.onended = () => {
           playing = false;
