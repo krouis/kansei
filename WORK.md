@@ -9,7 +9,7 @@ Updated as implementation proceeds; unchecked items are not release claims.
 - [x] Verify all five downloaded source archives/files against the source lock.
 - [x] Establish baseline: 53 automated tests; 32 independent kana checks and schema check pass.
 - [x] Preserve useful independent content verifiers in the repository.
-- [ ] Commit inherited unfinished work in focused, reviewed changes.
+- [x] Commit inherited unfinished work in focused, reviewed changes.
 - [x] Fix TypeScript configuration and establish reproducible build/check commands.
 - [x] Save first attempts, scheduling, and session state atomically.
 - [x] Award question XP after feedback acknowledgement; atomically save cursor and bonus.
@@ -38,8 +38,8 @@ Updated as implementation proceeds; unchecked items are not release claims.
 - [ ] Source legitimate handwriting variants; validate using real human input.
 
 ## Product workflows
-- [ ] Character explorer: gojuon, groups, search, filters, separate skill states/due status.
-- [ ] Revision view: readings, components, words, audio, animation, trace, recall, history, focused practice.
+- [x] Character explorer: gojuon, groups, search, filters, separate skill states/due status.
+- [x] Revision view: readings, components, words, audio, animation, trace, recall, history, focused practice.
 - [ ] Placement assessing only the skills actually tested.
 - [x] Progress: historical goals, XP ranges/calendar, sessions/time, skill accuracy, retention and confusions.
 - [ ] Settings: modes, theme, text/motion, storage, content management, versioned backup transfer.
@@ -48,7 +48,7 @@ Updated as implementation proceeds; unchecked items are not release claims.
 
 ## Release qualification and documentation
 - [ ] Test ambiguity, Unicode/IME, keyboard shortcuts/matching and accessibility.
-- [ ] Test XP/history across time zones and daylight-saving boundaries.
+- [x] Test XP/history across time zones and daylight-saving boundaries.
 - [ ] Test failed writes, quota/missing assets, interrupted downloads and migrations.
 - [ ] Test update activation with existing progress and interrupted sessions.
 - [ ] Test every exercise, audio, animation and About after offline cold start.
@@ -104,3 +104,10 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 - Final local update validation: 93 unit/integration tests and both Chromium acceptance tests pass. The browser installs a replacement worker, blocks activation with another tab or active session, switches a verified content generation, compares all learner/settings stores unchanged, and cold-starts offline.
 
 - GitHub Actions run [36618038902](https://github.com/krouis/kansei/actions/runs/36618038902) successfully built, tested and deployed commit `5a4e3bf` to https://krouis.github.io/kansei/.
+
+## Claude Sonnet 5 review and integration pass
+- Reviewed the full Codex-continued history: confirmed HEAD built and tested clean before touching anything, then found the working tree held genuinely good but unfinished and currently-broken work (a real fix for components having no practice format).
+- Fixed the broken working tree (a strict-null test issue) and verified it: full build, 112 tests, `content:validate --runtime-only`, `check:kana`, all pass. Committed as two focused changes: word-specific reading ids (1050 -> 1242 records, each tied to one demonstrating word) and the component/meaning recognition formats plus the reading-selection and applicability bugs their tests caught along the way.
+- Found and fixed a real integration defect: `CharactersPage.tsx` and `explorer.ts` were fully built and independently unit-tested but never imported — the shipped app used a much cruder duplicate defined inline in `App.tsx` (no kanji/vocabulary view, substring-only search, single-reading progress lookups that could hide an unpracticed reading behind a retained one). Wired in the real component, deleted the duplicate, verified with the full unit suite, a production build, and the real Chromium offline E2E spec.
+- Added `tests/integration/xp-ledger.test.ts` (9 tests): the XP ledger's day-boundary logic had no direct test before this. Covers real 2026 America/New_York DST transitions (23-hour spring-forward, 25-hour fall-back), a UTC/local-date disagreement, a session split across local midnight, a timezone change verified against a single instant that is genuinely a different calendar date in Tokyo vs. Los Angeles, and the frozen-daily-goal rule. No bugs found — the existing `stamp()`/`localDateIn()` implementation held up — but this closes a real gap in regression coverage.
+- 121 unit/integration tests and both Chromium E2E specs pass at the end of this pass.
