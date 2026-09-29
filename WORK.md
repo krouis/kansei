@@ -23,7 +23,7 @@ Updated as implementation proceeds; unchecked items are not release claims.
 - [x] Add application entry point and error/loading states.
 - [x] Add brief onboarding: goal, scripts/modes, install size/progress, honest offline status.
 - [x] Implement choice, typed/IME, and keyboard matching exercises.
-- [ ] Implement handwriting canvas, undo/clear, trace/recall, coaching and reference replay.
+- [x] Implement handwriting canvas, undo/clear, trace/recall, coaching and reference replay.
 - [x] Add hints, reveal, decline, audio replay, corrective feedback and guided retry.
 - [x] Complete ten screens, retain first attempt, award 20 XP, resume after closure.
 - [x] Verify production build and network-disabled cold start with real content.
@@ -42,7 +42,7 @@ Updated as implementation proceeds; unchecked items are not release claims.
 - [x] Revision view: readings, components, words, audio, animation, trace, recall, history, focused practice.
 - [x] Placement assessing only the skills actually tested.
 - [x] Progress: historical goals, XP ranges/calendar, sessions/time, skill accuracy, retention and confusions.
-- [ ] Settings: modes, theme, text/motion, storage, content management, versioned backup transfer.
+- [x] Settings: modes, theme, text/motion, storage, content management, versioned backup transfer.
 - [x] Reminders: in-app schedule, quiet hours/snooze/pause, honest recurring calendar export.
 - [x] Offline About & Science and teaching/content sources, with research limitations.
 
@@ -113,3 +113,6 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 - 121 unit/integration tests and both Chromium E2E specs pass at the end of this pass.
 
 - Placement: added the missing onboarding choice (beginner start vs. an optional ten-question placement check), implemented as a real SessionKind sampled evenly across taught kana and scored through the exact same generator/grader/scheduler path as ordinary practice — recognition only, with the scope limit stated in the UI both before and after the check. 6 unit tests, 1 integration test, 1 new Chromium E2E spec; 127 unit/integration tests and all 3 E2E specs pass.
+
+- Re-audited two items marked unchecked but already fully implemented and verified: the handwriting canvas (Writing.tsx: undo, clear, blank-canvas recall mode by default with guides only on retry or explicit hint, live trace coaching, reference replay respecting reduced motion, graded through the real worker-based stroke assessor) and Settings (theme/motion/goal/series-length/active-scripts/silent/keyboard-only/extended/historical toggles, storage usage and persistent-storage request, pack install/verify, and versioned merge-or-replace backup transfer with a pre-apply effects preview). Checked off.
+- Remaining known gap, not attempted this pass: component teachingOrder/lessonId in data/components.json is still entirely placeholder ('comp-provisional-01' for all 263 records) — the documented interleave with the now-finalized kanji teaching order was never run. The selector already handles this reasonably (newMaterial.ts mixes a couple of components alongside real kanji rather than isolating them), so nothing is broken, but the ordering is not the considered one the content pipeline's own contract calls for.
