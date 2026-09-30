@@ -17,7 +17,7 @@ import { ID_PATTERN, itemKind } from '@/domain/ids';
 /** Vite rewrites import.meta.url under /@fs, so resolve from the project root instead. */
 const DATA = join(process.cwd(), 'data');
 const components = JSON.parse(readFileSync(join(DATA, 'components.json'), 'utf8')) as KanjiComponent[];
-const kanjiList = JSON.parse(readFileSync(join(DATA, 'kanji-top1000.json'), 'utf8')) as {
+const kanjiList = JSON.parse(readFileSync(join(DATA, 'kanji-top1500.json'), 'utf8')) as {
   entries: Array<{ id: string; glyph: string }>;
 };
 
@@ -77,7 +77,7 @@ describe('data/components.json', () => {
     expect(orders).toEqual(Array.from({ length: components.length }, (_, i) => i + 1));
   });
 
-  it('references only kanji that exist in data/kanji-top1000.json', () => {
+  it('references only kanji that exist in data/kanji-top1500.json', () => {
     const taught = new Set(kanjiList.entries.map((e) => e.glyph));
     for (const c of components) {
       expect(new Set(c.appearsIn).size).toBe(c.appearsIn.length);

@@ -5,12 +5,23 @@ data comes from, and — most importantly — what this dataset does **not** cla
 
 | | |
 |---|---|
-| Derived data | `data/components.json` — `KanjiComponent[]` (`src/domain/content.ts`), 263 records, 114 KB compact |
+| Derived data | `data/components.json` — `KanjiComponent[]` (`src/domain/content.ts`), 357 records |
 | Machine-readable provenance | `data/components.provenance.json` |
 | Hand-authored judgement | `data/component-notes.json` |
 | Build script | `scripts/content/build-components.mjs` |
 | Contract test | `tests/unit/components-dataset.test.ts` |
 | Reproduce | see *Reproducing* below |
+
+> **2026-09-30:** the taught kanji set widened from 1000 to 1500 (see
+> `KANJI-FREQUENCY.md` §9), and the counts on this page were updated where they
+> could be recomputed directly from committed data. Four specific narrative
+> figures below — the phonetic-component count (529), 丿's recurrence count
+> (226), the distinct-shape count before thresholding (583/254), and the
+> containment-cycle count (eight) — require re-running the build's internal
+> pre-threshold diagnostics, which are not otherwise exposed, and have **not**
+> been re-verified against the 1500-kanji set. Treat those four numbers as
+> measured for the old 1000-kanji set until someone re-runs the derivation
+> with diagnostics and updates this note.
 
 ---
 
@@ -18,7 +29,7 @@ data comes from, and — most importantly — what this dataset does **not** cla
 
 ```sh
 npm run content:fetch                          # KanjiVG, KANJIDIC2, the two UCD files
-node scripts/content/build-kanji-list.mjs      # data/kanji-top1000.json
+node scripts/content/build-kanji-list.mjs      # data/kanji-top1500.json
 npm run content:components                     # pass 1 — writes data/components.json
 npm run fonts:build                            # widens the webfont subset to cover it
 npm run content:components                     # pass 2 — exits 0
@@ -74,7 +85,7 @@ thing" model is wrong often enough to actively mislead:
 
 Nothing in the decomposition is transcribed by hand. KanjiVG already encodes it
 as nested `<g>` elements, one per component, and the build script reads **4,596
-component groups** across the 1000 taught kanji.
+component groups** across the 1500 taught kanji (was 4,596 across 1000; re-measured 2026-09-30, see KANJI-FREQUENCY.md §9).
 
 ### KanjiVG's `kvg:*` attributes, and what each is used for
 
@@ -97,7 +108,7 @@ component groups** across the 1000 taught kanji.
 | [KANJIDIC2](http://www.edrdg.org/wiki/index.php/KANJIDIC_Project) | db 2026-271, created 2026-09-28 | CC BY-SA 4.0 | glosses, stroke counts, classical radical numbers, radical self-declaration |
 | [UCD `CJKRadicals.txt`](https://www.unicode.org/Public/18.0.0/ucd/CJKRadicals.txt) | Unicode 18.0.0 (2026-02-03) | Unicode-3.0 | authoritative Kangxi radical number → radical character → unified ideograph |
 | [UCD `EquivalentUnifiedIdeograph.txt`](https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt) | Unicode 18.0.0 (2026-02-03) | Unicode-3.0 | CJK Radicals Supplement shapes (⻌ ⻏ ⻖ ⺕ ⺌ ⺍ ⺤ ⺨) → equivalent unified ideograph, plus the official radical *names* |
-| `data/kanji-top1000.json` | — | derived (CC BY-SA 4.0) | the taught kanji set and each one's classical radical number |
+| `data/kanji-top1500.json` | — | derived (CC BY-SA 4.0) | the taught kanji set and each one's classical radical number |
 | `data/component-notes.json` | — | hand-authored | curriculum judgement: gloss and stroke-count overrides, forced unreliability flags |
 
 Every upstream file's URL, SHA-256, byte size and fetch timestamp is recorded in
@@ -123,7 +134,7 @@ one-off shapes that teaches nothing, so a shape earns a record only when it is
 |---|---|---|
 | `RECUR_MIN` | 4 | recurs in at least 4 taught kanji |
 | `RADICAL_MIN` | 1 | is KanjiVG's `kvg:radical="general"` for at least 1 taught kanji |
-| `STANDALONE_MIN` | 2 | is itself one of the 1000 taught kanji **and** a part of at least 2 others |
+| `STANDALONE_MIN` | 2 | is itself one of the taught kanji **and** a part of at least 2 others |
 | `KEEP_VARIANT_PARENTS` | on | is the `kvg:original` parent of a kept variant shape (variant closure) |
 
 `RADICAL_MIN` is deliberately **1**, not a recurrence threshold: the app offers
@@ -147,7 +158,7 @@ broken: you meet 艸 *as* 艹, and `variants` says so.
 | **Kept** | **263** |
 | Rejected below every threshold | 277 |
 | Dropped because no shipped typeface can draw them (incl. 2 KanjiVG placeholder labels) | 54 |
-| Taught kanji with at least one kept component | 951 / 1000 |
+| Taught kanji with at least one kept component | 1443 / 1500 |
 | Median kept components per kanji | 4 |
 
 Rejected shapes are listed **in full** in
@@ -172,7 +183,7 @@ Collapsing the three would lose exactly the distinction a learner needs.
 | Role | Definition (all sourced, none guessed) | Count |
 |---|---|---|
 | `radical` | `kangxiNumber` is not null: a Kangxi/classical dictionary radical, or a recognised variant shape of one | 176 |
-| `standalone` | the glyph is a kanji in its own right: one of the 1000 taught kanji, or KANJIDIC2 gives it a `<grade>` (jōyō/jinmeiyō) or a `<freq>` rank | 188 |
+| `standalone` | the glyph is a kanji in its own right: one of the taught kanji, or KANJIDIC2 gives it a `<grade>` (jōyō/jinmeiyō) or a `<freq>` rank | 270 |
 | `recurring` | it demonstrably recurs — appears in ≥ 2 taught kanji | 238 |
 
 246 of 263 records hold more than one role. The combinations:
@@ -187,7 +198,7 @@ Collapsing the three would lose exactly the distinction a learner needs.
 | recurring | 5 | マ — a shape KanjiVG names after a katakana; neither radical nor kanji |
 | standalone | 2 | |
 
-Deliberately, `standalone` is **not** "is in the taught 1000". 氵 亻 艹 扌 are
+Deliberately, `standalone` is **not** "is in the taught set". 氵 亻 艹 扌 are
 KANJIDIC2 literals but have neither a grade nor a frequency rank, so they are not
 claimed to be kanji in their own right.
 
@@ -337,7 +348,7 @@ plan.provisional       // false once kanjiOrder is supplied
 
 `assignTeachingOrder` guarantees every component appears in `sequence` before
 every kanji in its `appearsIn`. Verified: with a stroke-complexity kanji order all
-263 components place with **0 order violations** and 0 left unscheduled.
+357 components place with **0 order violations** and 0 left unscheduled.
 
 A component kept only by variant closure has no first-needed position, so it
 inherits its variant's and sorts immediately after it — 艹 then 艸, ⻖ then 阜.
@@ -365,7 +376,7 @@ current run: **0 problems, 0 advisories.**
    so the claim is about the **shipped subset**, not merely the source typeface:
    **0 glyphs and 0 components missing.**
 2. **Referential integrity.** All `appearsIn` ids resolve to entries in
-   `data/kanji-top1000.json`; none duplicated; empty only for the 13
+   `data/kanji-top1500.json`; none duplicated; empty only for the 57
    variant-closure-only records, which is asserted rather than tolerated.
 3. **No component is its own ancestor.** Enforced where it means something —
    inside a single character's decomposition. **0 violations.**

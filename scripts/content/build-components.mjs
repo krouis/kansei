@@ -8,7 +8,7 @@
  *
  * Reproduce
  *   node scripts/assets/fetch-sources.mjs          # kanjivg, kanjidic2, ucd-*
- *   node scripts/content/build-kanji-list.mjs      # data/kanji-top1000.json
+ *   node scripts/content/build-kanji-list.mjs      # data/kanji-top1500.json
  *   node scripts/content/build-components.mjs      # this script
  *
  * ---------------------------------------------------------------------------
@@ -130,7 +130,7 @@ const KEEP_VARIANT_PARENTS = true;
  * shipped, SUBSETTED webfonts actually claim. A glyph can exist in the full
  * source Noto Sans JP typeface (data/sources/fonts/*.ttf) and still be absent
  * from the shipped subset, because scripts/assets/build-fonts.mjs only subsets
- * data/kanji-top1000.json plus kana plus the frequency-crosscheck list — none of
+ * data/kanji-top1500.json plus kana plus the frequency-crosscheck list — none of
  * which include bare KanjiVG shapes like 氵 忄 扌 灬 刂 亻. The source-typeface
  * cmap reader further down is kept only as a diagnostic (readCmap /
  * sourceTypefaceHasGlyph), to tell "does not exist in the type design at all"
@@ -162,7 +162,7 @@ const P = {
   equivIdeograph: join(REPO, 'data', 'sources', 'EquivalentUnifiedIdeograph.txt'),
   sourcesLock: join(REPO, 'data', 'sources', 'SOURCES.lock.json'),
   fontsDir: join(REPO, 'data', 'sources', 'fonts'),
-  kanjiList: join(REPO, 'data', 'kanji-top1000.json'),
+  kanjiList: join(REPO, 'data', 'kanji-top1500.json'),
   fontIndex: join(REPO, 'public', 'fonts', 'index.json'),
   notes: join(REPO, 'data', 'component-notes.json'),
   outData: join(REPO, 'data', 'components.json'),
@@ -274,7 +274,7 @@ function loadFontCoverage() {
  * loadFontCoverage() above. A glyph can exist in every source TTF — Noto Sans JP
  * covers essentially all of CJK — and still render as tofu in the app, because
  * scripts/assets/build-fonts.mjs only subsets the codepoints named by
- * data/kanji-top1000.json, the kana files and the frequency-crosscheck list. None
+ * data/kanji-top1500.json, the kana files and the frequency-crosscheck list. None
  * of those name bare KanjiVG component shapes, so every one of them (氵 忄 扌 灬
  * 刂 亻 …) is absent from the shipped subset today. This is the check task step 8
  * asks for — "against public/fonts font glyph coverage claims" — and it is what
@@ -971,13 +971,13 @@ export function buildComponentModel() {
      *  radical    : kangxiNumber is not null, i.e. a dictionary radical (or a
      *               recognised variant shape of one).
      *  standalone : the glyph is a kanji in its own right. Sourced, not guessed:
-     *               it is one of the taught 1000, or KANJIDIC2 gives it a <grade>
+     *               it is one of the taught kanji, or KANJIDIC2 gives it a <grade>
      *               (jōyō / jinmeiyō) or a <freq> rank. Radical-only codepoints
      *               such as 氵 亻 艹 have neither and so are NOT standalone.
      *  recurring  : it demonstrably recurs, i.e. appears in >= 2 taught kanji.
      */
     const standaloneEvidence = isTaughtKanji
-      ? 'one of the 1000 taught kanji'
+      ? 'one of the taught kanji'
       : kdEntry?.grade != null
         ? `KANJIDIC2 <grade> ${kdEntry.grade}`
         : kdEntry?.freq != null
@@ -1398,7 +1398,7 @@ function verify(model, records) {
     );
   }
 
-  // 2. every appearsIn id exists in kanji-top1000.json.
+  // 2. every appearsIn id exists in kanji-top1500.json.
   const badRefs = [];
   for (const r of records) {
     for (const id of r.appearsIn) {
@@ -1551,13 +1551,13 @@ function main() {
       'Two passes over this script by design, and not circular: the FIRST pass decides inclusion from the source typefaces (a permanent property of the type design), writes data/components.json, and reports which component glyphs are not yet in the shipped webfont subset. build-fonts.mjs then reads data/components.json and widens the subset. The SECOND pass finds no gap and exits 0. The committed data/components.json is identical after both passes — only the verification verdict changes.',
     contract: COMPONENT_CONTRACT,
     description:
-      'Teachable kanji components for the 1000 kanji in data/kanji-top1000.json. The decomposition, the variant relations and the phonetic marking are derived from KanjiVG\'s kvg:* attributes; Kangxi numbers from Unicode CJKRadicals.txt / EquivalentUnifiedIdeograph.txt and KANJIDIC2; glosses from KANJIDIC2 with hand-authored overrides in data/component-notes.json. teachingOrder in this file is PROVISIONAL — see teachingOrder below.',
+      'Teachable kanji components for the kanji in data/kanji-top1500.json. The decomposition, the variant relations and the phonetic marking are derived from KanjiVG\'s kvg:* attributes; Kangxi numbers from Unicode CJKRadicals.txt / EquivalentUnifiedIdeograph.txt and KANJIDIC2; glosses from KANJIDIC2 with hand-authored overrides in data/component-notes.json. teachingOrder in this file is PROVISIONAL — see teachingOrder below.',
     derivedLicense: {
       spdx: 'CC-BY-SA-4.0',
       reason:
         'The component inventory and decomposition adapt KanjiVG (CC BY-SA 3.0) and the glosses/stroke counts adapt KANJIDIC2 (CC BY-SA 4.0). Both are share-alike; the stricter/later of the two is stated here. The Unicode data files are permissively licensed and impose no share-alike.',
       requiredAttribution: [
-        'Component decomposition, variant relations and phonetic marking from KanjiVG (http://kanjivg.tagaini.net), Copyright (C) 2009-2025 Ulrich Apel, CC BY-SA 3.0. Changes: the nested <g> structure of 1000 characters was aggregated into a per-component inventory; no stroke data is reproduced here.',
+        'Component decomposition, variant relations and phonetic marking from KanjiVG (http://kanjivg.tagaini.net), Copyright (C) 2009-2025 Ulrich Apel, CC BY-SA 3.0. Changes: the nested <g> structure of the taught characters was aggregated into a per-component inventory; no stroke data is reproduced here.',
         'Glosses, stroke counts and classical radical numbers from KANJIDIC2, (C) James William Breen and the Electronic Dictionary Research and Development Group, CC BY-SA 4.0. Changes: English meanings were truncated to at most three and radical bookkeeping such as "(no. 85)" was stripped; a subset of fields was re-serialised as JSON.',
         'Kangxi radical numbering from the Unicode Character Database 18.0.0 (CJKRadicals.txt, EquivalentUnifiedIdeograph.txt), (C) 2026 Unicode, Inc., Unicode License v3.',
       ],
@@ -1567,7 +1567,7 @@ function main() {
       kanjidic2: { ...src('kanjidic2'), role: 'glosses, stroke counts, classical radical numbers, radical self-declaration', databaseVersion: model.sources.kd.dbVersion, dateOfCreation: model.sources.kd.created, charactersIndexed: model.sources.kd.byGlyph.size },
       ucdCjkRadicals: { ...src('ucd-cjk-radicals'), role: 'authoritative Kangxi radical number -> radical character / unified ideograph', version: model.sources.ucdRad.version, radicalsRead: model.sources.ucdRad.lines },
       ucdEquivalentUnifiedIdeograph: { ...src('ucd-equivalent-unified-ideograph'), role: 'CJK Radicals Supplement variant shapes -> equivalent unified ideograph, so ⻌ ⻏ ⻖ ⺕ ⺌ ⺍ ⺤ ⺨ get a sourced Kangxi number', version: model.sources.ucdEq.version },
-      kanjiTop1000: { file: 'data/kanji-top1000.json', role: 'the taught kanji set and each one\'s classical radical number', entries: model.taught.size },
+      kanjiTop1500: { file: 'data/kanji-top1500.json', role: 'the taught kanji set and each one\'s classical radical number', entries: model.taught.size },
       componentNotes: { file: 'data/component-notes.json', role: 'HAND-AUTHORED curriculum judgement: glosses, meaningIsUnreliable forcing, variant add/remove, exclusions. Never adds a component KanjiVG does not show.', present: model.sources.notes.present, ...(model.sources.notes.meta ?? {}), glyphsAnnotated: model.sources.notes.byGlyph.size, glyphsExcluded: model.sources.notes.exclude.size, glyphsForceIncluded: model.sources.notes.include.size },
       fonts: {
         role: "renderability gate — a component absent from Kansei's shipped subset cannot be taught, even if the full typeface has it",
@@ -1592,7 +1592,7 @@ function main() {
       thresholds: {
         RECUR_MIN: `${RECUR_MIN} — recurs in at least this many taught kanji`,
         RADICAL_MIN: `${RADICAL_MIN} — is KanjiVG's kvg:radical="general" for at least this many taught kanji`,
-        STANDALONE_MIN: `${STANDALONE_MIN} — is itself one of the 1000 taught kanji AND is a part of at least this many others`,
+        STANDALONE_MIN: `${STANDALONE_MIN} — is itself one of the taught kanji AND is a part of at least this many others`,
         VARIANT_MIN_KANJI: `${VARIANT_MIN_KANJI} — a kvg:original relation becomes a variants[] link only when attested in at least this many DISTINCT taught kanji`,
         KANGXI_MAJORITY: `${KANGXI_MAJORITY} — a split radical vote below this share is reported as ambiguous and kangxiNumber is left null`,
       },
@@ -1608,7 +1608,7 @@ function main() {
       provisional: plan.provisional,
       basis: 'frequency rank of the first taught kanji that needs the component, then stroke count, then breadth of reuse, then codepoint',
       whyProvisional:
-        'A component must be introduced strictly before the first kanji that needs it, and the kanji teaching order is owned by the curriculum build, not by this script. Until that order exists the frequency rank of data/kanji-top1000.json stands in.',
+        'A component must be introduced strictly before the first kanji that needs it, and the kanji teaching order is owned by the curriculum build, not by this script. Until that order exists the frequency rank of data/kanji-top1500.json stands in.',
       howToFinalise:
         "import { buildComponentModel, assignTeachingOrder } from 'scripts/content/build-components.mjs'; assignTeachingOrder(buildComponentModel(), { kanjiOrder, lessonIdForKanji }) returns the same records with final teachingOrder/lessonId plus `sequence`, the interleaved comp:/kanji: spine.",
       lessonIdsProvisional: true,
@@ -1646,7 +1646,7 @@ function main() {
       checks: [
         `every component glyph (and every glyph in variants[]) has an actual glyph in all ${SHIPPED_FACES.length} source typefaces (${SHIPPED_FACES.map((f) => f.key).join(', ')}) — the inclusion/folding gate, since that is a permanent property of the type design`,
         `every component glyph (and every glyph in variants[]) is ALSO checked against Kansei's actual shipped, subsetted webfonts today (public/fonts/index.json, unicodeRange minus missingCodepoints) — reported as font-subset-gap problems below rather than silently dropped, because build-fonts.mjs subsets FROM this file and a taught kanji's dictionary radical must resolve to a kept component regardless of today's subset`,
-        'every appearsIn id resolves to an entry in data/kanji-top1000.json; no empty and no duplicate appearsIn',
+        'every appearsIn id resolves to an entry in data/kanji-top1500.json; no empty and no duplicate appearsIn',
         'the component containment relation (KanjiVG nesting, folded, restricted to kept components) is acyclic — no component is its own ancestor, and no self-containment',
         'record shape: id matches glyph and ID_PATTERN, roles non-empty and from the allowed set, roles/kangxiNumber agree, kangxiNumber in 1..214, strokeCount >= 1, teachingOrder dense and unique over 1..N, non-empty lessonId, no self-variant, no gloss-less record claiming a reliable meaning',
         'every component named by the per-kanji decomposition is a kept component',
@@ -1674,7 +1674,7 @@ function main() {
       kanjivgCoverage: { taughtKanji: model.taught.size, withoutAnSvg: model.missingSvg.length, missing: model.missingSvg },
       shippedFontSubsetGap: {
         statement:
-          "A real, expected gap as of this task, not a defect: scripts/assets/build-fonts.mjs subsetted public/fonts/*.woff2 from data/kanji-top1000.json, the kana files and the frequency-crosscheck list, BEFORE data/components.json existed, so no bare KanjiVG component shape (氵 忄 扌 灬 刂 亻 …) or non-taught radical (糸 艸 貝 頁 舟 …) was ever requested. Every glyph below IS in the source typefaces (see folding/droppedUnrenderable, which gate on that instead) and IS a legitimate component or dictionary radical of a taught kanji — it just is not in today's shipped subset. Re-run scripts/assets/build-fonts.mjs with data/components.json (glyph + variants[]) added as a codepoint source to close this.",
+          "A real, expected gap as of this task, not a defect: scripts/assets/build-fonts.mjs subsetted public/fonts/*.woff2 from data/kanji-top1500.json, the kana files and the frequency-crosscheck list, BEFORE data/components.json existed, so no bare KanjiVG component shape (氵 忄 扌 灬 刂 亻 …) or non-taught radical (糸 艸 貝 頁 舟 …) was ever requested. Every glyph below IS in the source typefaces (see folding/droppedUnrenderable, which gate on that instead) and IS a legitimate component or dictionary radical of a taught kanji — it just is not in today's shipped subset. Re-run scripts/assets/build-fonts.mjs with data/components.json (glyph + variants[]) added as a codepoint source to close this.",
         glyphsAffected: check.shippedFontSubsetGap.length,
         componentsAffected: new Set(check.shippedFontSubsetGap.flatMap((g) => g.usedBy)).size,
         entries: check.shippedFontSubsetGap,

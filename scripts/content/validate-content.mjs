@@ -9,7 +9,7 @@ const check=(ok,message)=>{if(!ok)throw Error(message);};
 const index=await read('public/content/index.json'), {kana,lessons:kanaLessons}=await read('public/content/data/kana.json'), {kanji,components,readings,lessons:kanjiLessons}=await read('public/content/data/kanji.json'), {vocab}=await read('public/content/data/vocab.json');
 const lessons=[...kanaLessons,...kanjiLessons], characters=[...kana,...kanji], items=[...characters,...components,...readings,...vocab];
 const map=xs=>new Map(xs.map(x=>[x.id,x]));const itemMap=map(items), charMap=map(characters), lessonMap=map(lessons), readingMap=map(readings), vocabMap=map(vocab), componentMap=map(components);
-check(itemMap.size===items.length,'Duplicate item IDs');check(lessonMap.size===lessons.length,'Duplicate lesson IDs');check(kanji.length===1000,'Must cover 1,000 kanji');
+check(itemMap.size===items.length,'Duplicate item IDs');check(lessonMap.size===lessons.length,'Duplicate lesson IDs');check(kanji.length===1500,'Must cover 1,500 kanji');
 function refs(ids,label,lookup=itemMap){for(const id of ids)check(lookup.has(id),`${label}: missing ${id}`);}
 for(const item of items){check(item.id===item.id.normalize('NFC'),`Non-NFC ID ${item.id}`);if(item.glyph)check(item.glyph===item.glyph.normalize('NFC'),`Non-NFC glyph ${item.id}`);if(item.lessonId)check(lessonMap.has(item.lessonId),`Missing lesson ${item.id}`);}
 const order=characters.map(c=>c.teachingOrder).sort((a,b)=>a-b);check(order.every((n,i)=>n===i+1),'Character teaching order must be dense and unique');

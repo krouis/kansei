@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * build-kanji-list.mjs — derive data/kanji-top1000.json from KANJIDIC2.
+ * build-kanji-list.mjs — derive data/kanji-top1500.json from KANJIDIC2.
  *
  * Input:  data/sources/kanjidic2.xml.gz  (fetched by scripts/assets/fetch-sources.mjs)
- * Output: data/kanji-top1000.json
+ * Output: data/kanji-top1500.json
  *
  * What this script does NOT do:
  *   - it does not decide teaching order. `teachingOrder` is emitted as null for
@@ -31,9 +31,14 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..');
 const SRC_GZ = path.join(REPO, 'data', 'sources', 'kanjidic2.xml.gz');
 const LOCK = path.join(REPO, 'data', 'sources', 'SOURCES.lock.json');
-const OUT = path.join(REPO, 'data', 'kanji-top1000.json');
+const OUT = path.join(REPO, 'data', 'kanji-top1500.json');
 
-const DEFAULT_LIMIT = 1000;
+// Raised from 1000 to 1500 (see docs/content/KANJI-FREQUENCY.md §9): every
+// kanji KANJIDIC2 tags with the pre-2010 JLPT's two most elementary levels
+// (old level 4/N5-equivalent, old level 3/N4-equivalent — 284 characters
+// total) has a frequency rank of 1487 or better, so 1500 is the smallest
+// round cut that guarantees complete N5+N4 coverage with no exceptions.
+const DEFAULT_LIMIT = 1500;
 
 /**
  * Documented provenance of the ranking, quoted from upstream. Recorded in the
@@ -210,6 +215,19 @@ async function main() {
 
   const ranked = parsed.filter((e) => e.frequencyRank != null).sort((a, b) => a.frequencyRank - b.frequencyRank);
 
+  /**
+   * A small, explicit, human-reviewed exclusion for a character whose two
+   * independent stroke-count sources genuinely disagree with no resolution
+   * upstream — scripts/content/build-strokes.mjs's cross-check treats that as
+   * a hard failure by design (a wrong stroke count would corrupt the writing
+   * animation and the handwriting grader), and picking a side ourselves would
+   * be guessing, not sourcing. Excluding it and taking the next-ranked
+   * character instead keeps the round 1500 total intact.
+   */
+  const EXCLUDED_GLYPHS = new Map([
+    ['煕', 'KanjiVG draws 14 strokes; KANJIDIC2 <stroke_count> and <miscount> both say 13. Unresolved upstream disagreement (checked 2026-09-30); not a jōyō/jinmeiyō grade or JLPT-tagged character, so excluding it costs the curriculum nothing.'],
+  ]);
+
   /* ----- integrity checks on the ranking itself; reported, never silently fixed */
   const byRank = new Map();
   for (const e of ranked) {
@@ -221,16 +239,28 @@ async function main() {
   const gapsFull = [];
   for (let r = 1; r <= maxRank; r += 1) if (!byRank.has(r)) gapsFull.push(r);
 
-  const selected = ranked.filter((e) => e.frequencyRank <= limit);
-  const selTies = ties.filter((t) => t.rank <= limit);
-  const selGaps = gapsFull.filter((r) => r <= limit);
+  const excluded = [];
+  const selected = [];
+  for (const e of ranked) {
+    if (selected.length >= limit) break;
+    const reason = EXCLUDED_GLYPHS.get(e.glyph);
+    if (reason) { excluded.push({ glyph: e.glyph, frequencyRank: e.frequencyRank, reason }); continue; }
+    selected.push(e);
+  }
+  const boundaryRank = selected.length ? selected[selected.length - 1].frequencyRank : 0;
+  const selTies = ties.filter((t) => t.rank <= boundaryRank);
+  const selGaps = gapsFull.filter((r) => r <= boundaryRank);
 
   const anomalies = [];
   if (selected.length !== limit)
-    anomalies.push(`Selected ${selected.length} characters for ranks 1..${limit}; expected exactly ${limit}.`);
-  if (selGaps.length) anomalies.push(`Missing ranks within 1..${limit}: ${selGaps.join(', ')}.`);
+    anomalies.push(`Selected ${selected.length} characters; expected exactly ${limit}.`);
+  if (excluded.length)
+    anomalies.push(
+      `${excluded.length} character(s) excluded despite ranking within the cut, backfilled from rank ${boundaryRank} instead: ${excluded.map((x) => `${x.glyph} (rank ${x.frequencyRank}: ${x.reason})`).join(' / ')}.`,
+    );
+  if (selGaps.length) anomalies.push(`Missing ranks within 1..${boundaryRank}: ${selGaps.join(', ')}.`);
   if (selTies.length)
-    anomalies.push(`Tied ranks within 1..${limit}: ${selTies.map((t) => `${t.rank} (${t.glyphs.join(' ')})`).join('; ')}.`);
+    anomalies.push(`Tied ranks within 1..${boundaryRank}: ${selTies.map((t) => `${t.rank} (${t.glyphs.join(' ')})`).join('; ')}.`);
   if (ties.length)
     anomalies.push(
       `Tied ranks anywhere in the file: ${ties.map((t) => `${t.rank} (${t.glyphs.join(' ')})`).join('; ')}.`,
@@ -309,6 +339,8 @@ async function main() {
       maxRankInFile: maxRank,
       requestedLimit: limit,
       selected: selected.length,
+      excluded: excluded.length,
+      boundaryRank,
       denseRanksWithinLimit: selGaps.length === 0 && selTies.length === 0 && selected.length === limit,
       missingEnglishMeaning: withoutMeaning.length,
       missingAllReadings: withoutReadings.length,
@@ -318,6 +350,7 @@ async function main() {
     integrity: {
       inputWarnings,
       anomalies,
+      excludedGlyphs: excluded,
       tiedRanksWithinLimit: selTies,
       missingRanksWithinLimit: selGaps,
       tiedRanksInFile: ties,
@@ -363,11 +396,12 @@ async function main() {
 
   process.stderr.write(
     `KANJIDIC2 ${header.databaseVersion} (created ${header.dateOfCreation}): ` +
-      `${parsed.length} characters, ${ranked.length} ranked, max rank ${maxRank}; selected ${selected.length} for ranks 1..${limit}.\n`,
+      `${parsed.length} characters, ${ranked.length} ranked, max rank ${maxRank}; selected ${selected.length} of ${limit} requested (boundary rank ${boundaryRank}${excluded.length ? `, ${excluded.length} excluded` : ''}).\n`,
   );
   for (const w of inputWarnings) process.stderr.write(`INPUT WARNING: ${w}\n`);
   for (const a of anomalies) process.stderr.write(`ANOMALY: ${a}\n`);
-  if (!anomalies.length) process.stderr.write(`Ranks 1..${limit} are dense with no gaps and no ties.\n`);
+  if (selected.length === limit && selGaps.length === 0 && selTies.length === 0 && !excluded.length)
+    process.stderr.write(`Ranks 1..${limit} are dense with no gaps and no ties.\n`);
   process.stderr.write(
     `Coverage: meanings ${limit - withoutMeaning.length}/${limit}, readings ${limit - withoutReadings.length}/${limit}, ` +
       `classical radical ${limit - withoutRadical.length}/${limit}, stroke count ${limit - withoutStrokeCount.length}/${limit}.\n`,

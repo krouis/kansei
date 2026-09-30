@@ -63,7 +63,7 @@ shell — for a real test of offline behaviour, use a production build; see
 
 ## Known limits, plainly
 
-- The kanji (1,000 characters) and vocabulary (1,600 words) datasets are
+- The kanji (1,500 characters) and vocabulary (1,600 words) datasets are
   real, sourced, and pass their own validation — but they are generated
   draft material that has not had an editorial pass, and their explorer/
   course integration is not yet a finished experience the way kana practice

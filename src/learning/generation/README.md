@@ -106,7 +106,7 @@ through the generator refusing a rung it considers too low.
   recognition evidence, never pronunciation or handwriting mastery.
 - **Meaning recognition is available without aligned readings.**
   `meaning-to-kanji-choice` uses documented meanings, excluding distractors
-  whose glosses overlap. This supports all 1,000 kanji while uncertain
+  whose glosses overlap. This supports all 1,500 kanji while uncertain
   word-reading alignments remain unavailable for reading or handwriting.
   Dictionary gloss overlap checks are conservative; pedagogical review is
   still needed to catch semantic synonyms not explicitly shared by the data.

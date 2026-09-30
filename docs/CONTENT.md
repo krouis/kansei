@@ -1,19 +1,28 @@
 # Content inventory and reproduction
 
-The installable data contains 268 kana entries, 1,000 frequency-selected kanji,
-263 component records, 250 kanji lessons, 67 kana lessons and 1,600 JMdict-derived
-vocabulary entries. The kanji/vocabulary curriculum is generated draft material
-requiring Japanese-language review. It is not a proficiency-certified syllabus.
+The installable data contains 268 kana entries, 1,500 frequency-selected kanji,
+357 component records, 375 kanji lessons, 67 kana lessons and 1,600 JMdict-derived
+vocabulary entries. The kanji set was widened from 1,000 to 1,500 on 2026-09-30
+after cross-checking against a real beginner course (Minna no Nihongo) found
+basic everyday kanji like 犬, 兄, 茶 missing at 1,000; see
+[`KANJI-FREQUENCY.md`](content/KANJI-FREQUENCY.md) §9. The kanji/vocabulary
+curriculum is generated draft material requiring Japanese-language review. It is
+not a proficiency-certified syllabus. 15 of the 1,500 kanji (mostly place/name
+characters like 茨, 栃, 彦) have no demonstrating vocabulary word at all —
+`data/vocab-report.json`'s `kanjiWithoutVocabulary` records exactly which.
 
 **Audio is incomplete:** 71/104 modern kana sounds have recordings; all 33 yōon
-sounds are missing. Only a small fraction of selected vocabulary has matched
-recordings. Real speaker and license evidence is preserved, but human listening
-review remains outstanding. Per-character kanji reading alignment intentionally
-omits ambiguous cases; all selected words retain sourced whole-word readings.
-`data/vocab-report.json` records exact counts and omitted reading coverage.
-Canonical stroke references cover individual kana and all 1,000 kanji; combinations
-are composed from individual characters. Accepted alternate stroke orders are not
-comprehensively sourced. Handwriting assessment has synthetic validation only.
+sounds are missing and, as of a 2026-09-30 live re-check of Wikimedia Commons and
+Lingua Libre, none can currently be sourced without either an undocumented speaker
+or a dead source (Shtooka) — see `WORK.md`'s audio-sourcing research entry. 103 of
+1,600 selected vocabulary words have matched recordings. Real speaker and license
+evidence is preserved, but human listening review remains outstanding.
+Per-character kanji reading alignment intentionally omits ambiguous cases; all
+selected words retain sourced whole-word readings. `data/vocab-report.json`
+records exact counts and omitted reading coverage. Canonical stroke references
+cover individual kana and all 1,500 kanji; combinations are composed from
+individual characters. Accepted alternate stroke orders are not comprehensively
+sourced. Handwriting assessment has synthetic validation only.
 
 ## Reproduce
 
@@ -33,7 +42,7 @@ and SHA-256 for every file. Its fixed generatedAt is a build-format epoch, not a
 claim of source freshness. Installation verifies every file before readiness.
 Interrupted installation resumes at verified-file boundaries; byte-range resume
 within one file is not currently implemented. Packs are `kana`, `audio-kana`,
-`kanji-1000`, `vocab`, and `audio-vocab`. Kanji lesson bands are not separate packs
+`kanji-1500`, `vocab`, and `audio-vocab`. Kanji lesson bands are not separate packs
 yet. Bundled fonts and their license notices are app-shell assets precached by the
 service worker, rather than duplicated inside content packs.
 
@@ -42,7 +51,7 @@ service worker, rather than duplicated inside content packs.
 | Data | Source/version | License and derived work |
 | --- | --- | --- |
 | Kana inventory and teaching notes | Kansei-authored inventory; [inventory](content/KANA-INVENTORY.md) | Repository terms; modern, extended and historical forms explicitly distinguished |
-| Kanji list/meanings/source readings | KANJIDIC2, locked 2026-09-28 snapshot | EDRDG CC BY-SA 4.0; top-1,000 selection and ordered runtime records are adaptations |
+| Kanji list/meanings/source readings | KANJIDIC2, locked 2026-09-28 snapshot | EDRDG CC BY-SA 4.0; top-1,500 selection and ordered runtime records are adaptations |
 | Vocabulary/glosses | JMdict English, locked 2026-09-28 snapshot | EDRDG CC BY-SA 4.0; selection/reading alignment are adaptations, credited per entry |
 | Stroke references/components | KanjiVG r20250816 | Ulrich Apel and contributors, CC BY-SA 3.0; paths resampled to polylines and component records derived |
 | Radical equivalences | Unicode radical/equivalence source files in source lock | Unicode license; see component provenance and source lock |

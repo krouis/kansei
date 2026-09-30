@@ -57,7 +57,7 @@ function parseArgs(argv) {
   const opts = {
     kanjivgDir: join(REPO, 'data', 'sources', 'kanjivg'),
     outDir: join(REPO, 'public', 'content', 'strokes'),
-    kanjiList: join(REPO, 'data', 'kanji-top1000.json'),
+    kanjiList: join(REPO, 'data', 'kanji-top1500.json'),
     kanjidic: join(REPO, 'data', 'sources', 'kanjidic2.xml'),
     verify: true,
   };
@@ -110,7 +110,7 @@ function enumerateKana() {
 }
 
 /**
- * Read the taught kanji set from data/kanji-top1000.json when another build step
+ * Read the taught kanji set from data/kanji-top1500.json when another build step
  * has produced it. Tolerant of several plausible shapes; returns null when the
  * file is absent so the caller can report "kanji strokes pending" honestly
  * instead of pretending coverage.
@@ -715,7 +715,7 @@ function main() {
     if (got === null) {
       // Not generated. When the kanji set is pending this is expected, not a fault.
       const why = kanjiPending
-        ? 'SKIPPED — kanji set pending (data/kanji-top1000.json absent)'
+        ? 'SKIPPED — kanji set pending (data/kanji-top1500.json absent)'
         : 'NOT GENERATED — glyph missing from the requested set';
       spot.push({ glyph: c.glyph, got: null, expected, via, ok: null, status: why });
       if (!kanjiPending) problems.push(`spot-check glyph ${c.glyph} was not generated`);
@@ -797,7 +797,7 @@ function main() {
     kanjivgSource: svgDir,
     characters: Object.keys(characters).length,
     kana: kana.length,
-    kanji: kanji === null ? 'PENDING — data/kanji-top1000.json does not exist' : kanji.length,
+    kanji: kanji === null ? 'PENDING — data/kanji-top1500.json does not exist' : kanji.length,
     strokes: strokeTotal,
     bytesPerCharFiles: totalBytes,
     bytesIndex: Buffer.byteLength(indexJson),

@@ -116,13 +116,13 @@ Each file is a `StrokeReference` exactly as declared in `src/domain/content.ts`:
 
 | | |
 |---|---|
-| Characters | **1,177** |
+| Characters | **1,677** |
 | — kana | 177 |
-| — kanji | 1,000 |
-| Strokes | 10,211 |
-| Per-character files | 4,876,101 bytes (min 561, median 4,135, max 9,804) |
-| `index.json` | 157,834 bytes |
-| **Total** | **5,033,935 bytes** (≈1.67 MB gzipped) |
+| — kanji | 1,500 |
+| Strokes | 15,686 |
+| Per-character files | 7,470,239 bytes (updated 2026-09-30 for the 1500-kanji set; see `public/content/strokes/index.json` for exact current per-file sizes) |
+| `index.json` | 224,660 bytes |
+| **Total** | **7,694,899 bytes** |
 | Missing | none — every requested character had a KanjiVG file |
 
 The 177 kana are enumerated from the Unicode blocks rather than hand-listed, so the
@@ -136,7 +136,7 @@ dakuten U+3099–U+309C — none are written characters Kansei teaches. Yōon co
 like きゃ are two code points and compose from their parts, so they get no reference
 of their own.
 
-The 1,000 kanji are whatever `data/kanji-top1000.json` lists; the stroke build does
+The 1,500 kanji are whatever `data/kanji-top1500.json` lists; the stroke build does
 not choose the taught set.
 
 ## Method
@@ -168,7 +168,7 @@ the runtime never parses an SVG path:
 `strokes[].length` is the stroke's true arc length in design units, not the length of
 the 24-point polyline.
 
-**A fixed 24 points is coarse for a few very long strokes.** 6 of the 10,211 strokes
+**A fixed 24 points is coarse for a few very long strokes.** 6 of the 15,686 strokes
 have a 24-sample polyline shorter than 95% of their true arc length, because they
 curl back on themselves faster than the samples follow: ゑ stroke 1 (arc length 335.5,
 polyline 87.1%), そ/ぞ stroke 1 (92.9%), れ stroke 2 (94.3%), え stroke 2 (94.6%),
@@ -219,11 +219,15 @@ current output: **0 failures.**
   weaker basis is labelled as such in the script (`SPOT_CHECK[].via`).
   If KANJIDIC2 is not present the report says `stroke counts NOT cross-checked`
   rather than quietly passing.
-- **Stroke counts, everything.** Not just the 8: all 1,000 kanji are compared against
-  KANJIDIC2 (**1,000 checked, 0 disagreements**) *and* against the `strokeCount` that
-  `data/kanji-top1000.json` declares (**1,000 checked, 0 disagreements**). A mismatch
+- **Stroke counts, everything.** Not just the 8: all 1,500 kanji are compared against
+  KANJIDIC2 (**1,500 checked, 0 disagreements**) *and* against the `strokeCount` that
+  `data/kanji-top1500.json` declares (**1,500 checked, 0 disagreements**). A mismatch
   fails the build, because the animation contradicting the taught count is a real
   defect. The 177 kana have no KANJIDIC2 entry and are skipped, which the report says.
+  (0 disagreements is true again only because 煕, the one character the 2026-09-30
+  widening did surface a disagreement for, was excluded rather than fixed — see
+  below and `KANJI-FREQUENCY.md` §9. The build did exactly what the next paragraph
+  said it would: it failed on the first affected character once the set grew.)
 - **Geometry.** Every stroke: exactly 24 finite points; every point inside the
   0–109 box (actual extent 8.25–102.50 x, 5.77–101.76 y); strictly positive distance
   between consecutive samples, i.e. the polyline always progresses and never repeats
@@ -234,7 +238,11 @@ current output: **0 failures.**
 - **Independent cross-check** (one-off, not committed). The parser and resampler were
   re-implemented separately in Python — different tokenizer, t-uniform De Casteljau
   at 4,000 steps per segment instead of chord-targeted flattening — and compared
-  against the committed output for all 10,211 strokes. Worst arc-length disagreement
+  against the committed output for all 10,211 strokes (one-off check against the
+  1000-kanji set, 2026-09-28; not re-run for the 2026-09-30 widening to 1500 —
+  the geometry/resampling code did not change, only the input kanji list did, so
+  this is expected to still hold but is not independently re-confirmed). Worst
+  arc-length disagreement
   0.0054 design units (on 導); worst resampled point disagreement 0.0094 design units
   (on 島). Both are within the 2 dp rounding budget, so the two implementations agree
   to the precision the files store.
@@ -247,10 +255,15 @@ Measured across all 6,416 KanjiVG kanji that KANJIDIC2 also covers: **98.3% agre
 (6,307 agree, 109 disagree)**. 45 of the 109 are jōyō, e.g. 葛 (KanjiVG 12 / KANJIDIC2 11),
 謎 (17/16), 賭 (16/15), 餅 (15/14), 辻 (6/5), 牙 (4/5).
 
-None of the 109 falls in KANJIDIC2's top 1,000 by frequency, and none is in our taught
-set — hence the 0 disagreements above. This is a fact about the current taught set,
-not a guarantee: if the taught set grows, the build will fail on the first affected
-character and a human will have to choose which count Kansei teaches.
+This 109-kanji comparison predates the 2026-09-30 widening and has not been
+re-measured against KANJIDIC2's fuller ranking; whether any of the 109 now falls
+within the top 1,500 is unconfirmed. What did happen, exactly as predicted below:
+growing the taught set from 1,000 to 1,500 surfaced one real disagreement, 煕
+(KanjiVG 14 strokes vs KANJIDIC2 13, no listed miscount) — a human resolved it
+by excluding the character rather than picking a side; see `KANJI-FREQUENCY.md`
+§9. This is a fact about a taught set at a point in time, not a permanent
+guarantee: if the set grows again, the build will fail on the next affected
+character and a human will again have to choose which count Kansei teaches.
 
 ## Limitations
 

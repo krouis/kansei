@@ -5,7 +5,7 @@
  * Kansei ranks kanji by KANJIDIC2's <freq> field, which derives from a 1990s
  * Mainichi Shimbun word-frequency analysis (see docs/content/KANJI-FREQUENCY.md).
  * That is one corpus, from one register, from one decade. This script measures how
- * much a top-1000 cut from it agrees with a completely independent, modern set of
+ * much a top-N cut from it agrees with a completely independent, modern set of
  * character counts, so the app can state the robustness of its list instead of
  * asserting it.
  *
@@ -32,7 +32,7 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..');
 const CACHE = path.join(REPO, 'data', 'sources', 'kanji-frequency');
-const PRIMARY = path.join(REPO, 'data', 'kanji-top1000.json');
+const PRIMARY = path.join(REPO, 'data', 'kanji-top1500.json');
 const OUT = path.join(REPO, 'data', 'kanji-frequency-crosscheck.json');
 
 const REPO_REF = 'master';
@@ -132,7 +132,7 @@ function fetchText(url, hops = 0) {
  * `\p{Unified_Ideograph}` rather than `\p{Script=Han}` on purpose: the Wikipedia
  * CSV contains a tail of Kangxi-radical-block glyphs (⽉ ⼤ ⾦ …, U+2F00 block),
  * which are Script=Han but are radical symbols, not the kanji themselves. They sit
- * at rank 2700+ so they do not affect a top-1000 cut, but counting them as kanji
+ * at rank 2700+ so they do not affect the top-N cut, but counting them as kanji
  * would be wrong. The iteration mark 々 is likewise excluded by this test.
  */
 const isSingleKanji = (s) => [...s].length === 1 && /\p{Unified_Ideograph}/u.test(s);
@@ -340,9 +340,9 @@ async function main() {
       'node scripts/content/crosscheck-kanji-frequency.mjs',
     ],
     purpose:
-      'Evidence of robustness only. The primary ranking in data/kanji-top1000.json is KANJIDIC2 <freq> and is NOT modified by this comparison.',
+      'Evidence of robustness only. The primary ranking in data/kanji-top1500.json is KANJIDIC2 <freq> and is NOT modified by this comparison.',
     primary: {
-      file: 'data/kanji-top1000.json',
+      file: 'data/kanji-top1500.json',
       ranking: 'KANJIDIC2 <freq> (Mainichi Shimbun word-frequency analysis, Girardi 1998)',
       kanjidicDatabaseVersion: primary.source?.databaseVersion ?? null,
       topN: N,
@@ -372,12 +372,12 @@ async function main() {
       caveats: [
         'The comparison corpora count characters directly; KANJIDIC2 <freq> is derived from WORD frequencies. The two are measuring related but not identical things.',
         'The comparison corpora are modern (Wikipedia sampled 2023, Wikinews ~2005-2023); KANJIDIC2 <freq> reflects mid-1990s newspaper text. Some disagreement is genuine language change, not error in either list.',
-        'The Wikinews corpus is small (1.1M kanji), so its tail counts are low integers with heavy ties; its top-1000 boundary is correspondingly soft. See each comparison\'s `boundary` block.',
+        `The Wikinews corpus is small (1.1M kanji), so its tail counts are low integers with heavy ties; its top-${N} boundary is correspondingly soft. See each comparison's \`boundary\` block.`,
         'Aozora is literary and largely pre-war, which is the least similar register to a beginner curriculum; its lower overlap is expected and is not evidence against the primary list.',
-        'For every corpus, the number of distinct kanji found in the CSV is exactly one more than the "Uniq. kanji" figure published on the project website. The cause was not determined; it does not affect a top-1000 cut. Reported here rather than smoothed over.',
+        'For every corpus, the number of distinct kanji found in the CSV is exactly one more than the "Uniq. kanji" figure published on the project website. The cause was not determined; it does not affect a top-N cut. Reported here rather than smoothed over.',
       ],
       interpretation:
-        'A top-1000 cut is a threshold on a continuous, heavy-tailed distribution, so exact set equality between corpora is not expected and would be suspicious. Disagreement concentrates at the boundary and on register-specific vocabulary (newspaper/administrative kanji versus literary kanji). Read the overlap figure as: this fraction of the list is corroborated by an independent modern character count of a different corpus.',
+        `A top-${N} cut is a threshold on a continuous, heavy-tailed distribution, so exact set equality between corpora is not expected and would be suspicious. Disagreement concentrates at the boundary and on register-specific vocabulary (newspaper/administrative kanji versus literary kanji). Read the overlap figure as: this fraction of the list is corroborated by an independent modern character count of a different corpus.`,
     },
   };
 

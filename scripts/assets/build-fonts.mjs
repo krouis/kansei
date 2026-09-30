@@ -218,7 +218,7 @@ function curriculumKanji() {
   const sources = [];
 
   // 1. The frequency list: the authoritative kanji set.
-  const top = path.join(DATA_DIR, 'kanji-top1000.json');
+  const top = path.join(DATA_DIR, 'kanji-top1500.json');
   if (fs.existsSync(top)) {
     const doc = JSON.parse(fs.readFileSync(top, 'utf8'));
     const entries = Array.isArray(doc) ? doc : (doc.entries ?? []);
@@ -227,9 +227,9 @@ function curriculumKanji() {
       const g = e?.glyph ?? e?.character ?? e?.literal;
       if (typeof g === 'string') for (const ch of g) { const c = ch.codePointAt(0); if (isCjk(c)) { cps.add(c); n++; } }
     }
-    sources.push({ source: 'data/kanji-top1000.json', kanji: n });
+    sources.push({ source: 'data/kanji-top1500.json', kanji: n });
   } else {
-    sources.push({ source: 'data/kanji-top1000.json', kanji: 0, missing: true });
+    sources.push({ source: 'data/kanji-top1500.json', kanji: 0, missing: true });
   }
 
   // 2. Stroke-reference data, whose filenames are the codepoints the app can
@@ -251,7 +251,7 @@ function curriculumKanji() {
   //    cannot silently ship a glyph the fonts do not carry.
   if (fs.existsSync(DATA_DIR)) {
     for (const f of fs.readdirSync(DATA_DIR)) {
-      if (!f.endsWith('.json') || f === 'kanji-top1000.json') continue;
+      if (!f.endsWith('.json') || f === 'kanji-top1500.json') continue;
       let n = 0;
       const scan = (v) => {
         if (typeof v === 'string') {
@@ -366,9 +366,9 @@ async function main() {
   const { cps: kanji, sources: kanjiSources } = curriculumKanji();
   for (const c of base) kanji.delete(c); // the two groups must not overlap
 
-  const kanjiListPresent = fs.existsSync(path.join(DATA_DIR, 'kanji-top1000.json'));
+  const kanjiListPresent = fs.existsSync(path.join(DATA_DIR, 'kanji-top1500.json'));
   if (!kanjiListPresent) {
-    console.warn('WARNING: data/kanji-top1000.json is absent.');
+    console.warn('WARNING: data/kanji-top1500.json is absent.');
     console.warn('         Building a kana + Latin subset only. Re-run this script after');
     console.warn('         the kanji list is generated — the fonts will NOT render kanji.');
   }
@@ -403,7 +403,7 @@ async function main() {
       kanjiSources,
       note: kanjiListPresent
         ? 'Subset covers exactly the curriculum glyph set. Any character outside it falls back to a system font.'
-        : 'INCOMPLETE: built without data/kanji-top1000.json. Kanji are NOT in these files. Re-run required.',
+        : 'INCOMPLETE: built without data/kanji-top1500.json. Kanji are NOT in these files. Re-run required.',
     },
     files: [],
   };

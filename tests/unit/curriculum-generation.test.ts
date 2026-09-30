@@ -27,7 +27,7 @@ function target(id: string, skill: SelectedTarget['skill'], readingId: string | 
 }
 
 describe('installed kanji and vocabulary exercise generation', () => {
-  it('can produce an honest recognition screen for all 1,000 kanji, even without aligned readings', async () => {
+  it('can produce an honest recognition screen for all 1,500 kanji, even without aligned readings', async () => {
     const generator = new CompositeGenerator();
     for (const entry of dataset.kanji) {
       const result = await generator.generate(target(String(entry.id), 'recognition'), context());

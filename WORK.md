@@ -29,7 +29,7 @@ Updated as implementation proceeds; unchecked items are not release claims.
 - [x] Verify production build and network-disabled cold start with real content.
 
 ## Complete curriculum
-- [x] Derive all 1,000 kanji teaching positions and lessons; resolve prerequisite cycles explicitly.
+- [x] Derive all 1,500 kanji teaching positions and lessons; resolve prerequisite cycles explicitly.
 - [x] Finalize component introductions and implement component exercises.
 - [ ] Select useful JMdict vocabulary, gated on introduced characters.
 - [x] Derive word-specific readings conservatively; reject ambiguous alignment.
@@ -196,3 +196,102 @@ Sources consulted: docs/content/KANJI-FREQUENCY.md (in-repo, already cites
 KANJIDIC/EDRDG/scriptin-kanji-frequency); https://en-nihongo.com/japanesetips/kanji/kanji-list-for-minna-no-nihongo/;
 https://nihongokyoshi-net.com/minnano-nihongo-kanji/; https://www.3anet.co.jp/np/books/2358/
 (publisher page, confirms 220/536 kanji counts for Shokyu I / I+II).
+
+## Widened the kanji curriculum to 1500 and fixed teaching order (2026-09-30)
+User approved acting on both findings from the research pass above ("I'm not
+set on 1000... maybe 1500 ... go ahead"). Two changes, developed and verified
+together since the second was partly discovered while testing the first, but
+described separately here:
+
+**1. Widened `data/kanji-top1000.json` (1000) to `data/kanji-top1500.json`
+(1500).** Every old-JLPT N5/N4 kanji in the full KANJIDIC2 ranking (284 of
+them) has a frequency rank of 1487 or better — confirmed by scanning the
+complete 2501-ranked file, not just the previously-missing 20 — so 1500 is
+the smallest round cut with zero N5/N4 exceptions, using the same source and
+method as before (nothing new sourced). All 20 kanji Minna no Nihongo Shokyu I
+teaches that were missing at 1000 (兄 姉 弟 妹 犬 魚 茶 酒 昼 晩 冬 耳 勉 窓 寝
+暗 飯 奥 堂 漢) are now in, each with real demonstrating vocabulary — お茶
+itself is now buildable, closing the exact gap `vocab-report.json`'s
+`starterWordsUnavailable` had flagged. Re-running the Minna no Nihongo
+Shokyu I comparison end to end: 0 of its 243 kanji missing (was 20), 185/243
+within Kansei's own first-220 teaching slots (was 107/223), median teaching
+position 405 (was 497). Re-running the independent-corpus cross-check
+(§6/§9 of KANJI-FREQUENCY.md) found agreement *improved*, 87.5% mean overlap
+vs 84.3% at 1000 — the widening added ordinary vocabulary, not corpus-tail
+noise.
+  - One exclusion, found during the widening and handled the way this project
+    always handles a genuine source conflict — documented, not guessed away:
+    rank 1241 (煕) has KanjiVG (14 strokes) and KANJIDIC2 (13, no listed
+    miscount) genuinely disagreeing, which `build-strokes.mjs`'s cross-check
+    correctly treats as a hard failure (a wrong count would corrupt both the
+    writing animation and the handwriting grader). 煕 is not jōyō/jinmeiyō
+    either, so excluding it costs nothing; rank 1501 (添, ordinary grade-8
+    jōyō) was taken instead to keep the round 1500 total. Added a small,
+    documented `EXCLUDED_GLYPHS` mechanism to `build-kanji-list.mjs` for
+    exactly this class of problem, mirroring the vocabulary editorial
+    exclusion list added earlier this session.
+  - Rebuilt the entire dependent pipeline from scratch and verified each
+    stage: components (263 -> 357 records, font subset needed a rebuild to
+    cover ~25 new component glyphs, done via `npm run fonts:build`), kanji
+    order, strokes (1177 -> 1677 characters, 10,211 -> 15,686 strokes, 0
+    disagreements after the 煕 exclusion), vocab (still capped at 1600 words,
+    but 1406 aligned / 1930 word-specific readings now that more characters
+    are available to build words from), content pack, `content:validate`.
+    15 of the 1500 kanji (place/name
+    characters: 茨 栃 李 彦 浩 阿 之 宏 菱 也 曽 貞 梶 孜 盧) have no
+    demonstrating vocabulary at all — a new, honest gap `content:validate`
+    now surfaces (was 0 at 1000), not something forced closed.
+
+**2. Fixed kanji teaching order to respect pedagogical tier, not just
+frequency.** `build-kanji-order.mjs` now sorts primarily by old-JLPT tier
+(`4 - jlptOldLevel`, or MEXT `grade` banded the same way where jlptOldLevel is
+absent), with the original `frequencyRank + 18*strokeCount` heuristic
+demoted to a tie-breaker *within* a tier. Result, verified against the
+rebuilt data: every one of the 103 old-N5 kanji is taught before any N4
+kanji, every N4 before any N3/N2, every N3/N2 before any N1/ungraded — a
+completely clean graded progression (tier-by-hundred breakdown recorded in
+`kanji-order.json` and `KANJI-ORDER.md`). 氏 ("Mr./Ms.", old-JLPT level 1)
+moved from teaching position 33 to 1246.
+  - Fixing the primary sort surfaced a second, real bug in the *existing*
+    prerequisite mechanism, not something the tier change introduced: basic
+    N5 kanji like 年 (year), 午 (noon), 南 (south) were structurally blocked
+    behind 干 — a rare, harder (old-JLPT level 2) standalone kanji that
+    happens to be a simpler-stroke-count visual sub-shape of all three — so
+    the "wait for a simpler component" rule was dragging elementary
+    vocabulary down to position 1000+ purely because it shared a shape with
+    something obscure. Traced the exact dependency chains for every kanji
+    this affected (年, 午, 南, 週, 何, 空, 店, 駅, 国, 飲, 時, 読 — all 12
+    confirmed to be blocked on a harder-tier "shape" prerequisite, nothing
+    else) before changing anything. Fixed by requiring a component
+    prerequisite's tier to be no harder than its dependent's; the excluded
+    edge is now logged in `excludedContainmentEdges` exactly like a
+    not-strictly-simpler edge always was (184 total, was 1).
+  - Verified with a fresh, complete rebuild of every dependent file — same
+    pipeline as above — plus full app verification: `tsc --noEmit` clean,
+    127/127 unit+integration tests, production build, all 3 Playwright E2E
+    specs (`offline.spec.ts`), each run to completion after the final data
+    state, not against an intermediate one.
+
+**Renamed throughout**, since the filename itself said "1000": every script
+(`build-kanji-order.mjs`, `build-components.mjs`, `build-strokes.mjs`,
+`crosscheck-kanji-frequency.mjs`, `build-fonts.mjs`), test
+(`components-dataset.test.ts`, `curriculum-generation.test.ts`), the
+`kanji-1000` content pack id (-> `kanji-1500`), and every doc/UI string citing
+the old count (`README.md`, `docs/CONTENT.md`, `docs/content/KANJI-FREQUENCY.md`
+— substantially rewritten, all its measured numbers re-derived from the 1500
+set rather than search-replaced — `docs/content/KANJI-ORDER.md` — rewritten
+for the tier algorithm — `docs/content/STROKES.md`, `docs/content/COMPONENTS.md`,
+`src/app/App.tsx`, `src/learning/generation/README.md`). Where a specific
+narrative statistic in `COMPONENTS.md` would have needed re-running internal,
+not-otherwise-exposed build diagnostics to verify honestly (the phonetic-
+component count, 丿's recurrence count, the pre-threshold shape count, the
+containment-cycle count), left a dated caveat naming exactly which four
+numbers are unverified rather than guessing new ones or silently leaving old
+ones uncorrected.
+
+**Found but not fixed, recorded for whoever touches this next:**
+`data/provenance/strokes.json` is stale and orphaned — its comment says
+`build-strokes.mjs` writes it, but the script only ever writes to
+`public/content/strokes/`; the file still says "1000"/"top 1000" and was
+never regenerated by any committed script. `STROKES.md` now flags this
+inline rather than silently trusting the file's numbers.
