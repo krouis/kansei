@@ -13,6 +13,20 @@ export function Writing({ reference, strokes, onChange, guides, disabled = false
   const ref = useRef<SVGSVGElement>(null);
   const value = useRef(strokes); value.current = strokes;
   const change = useRef(onChange); change.current = onChange;
+  // `reference` loads asynchronously (Exercise.tsx fetches it after the
+  // question renders) and `guides` can flip mid-question (e.g. the
+  // "reference-animation" hint). Reading both through refs, rather than
+  // listing them as effect dependencies, keeps the stroke-capture listeners
+  // mounted continuously instead of being torn down and rebuilt whenever
+  // either changes. Rebuilding mid-stroke silently drops it: the new
+  // capture controller never saw the pointerdown that started it, so its
+  // `activePointerId` is null and the eventual pointerup is ignored — the
+  // learner lifts the pen, nothing was recorded, and "Check answer" just
+  // stays disabled with no explanation. Found live: drawing within the
+  // (normally sub-100ms, but not zero) window before the async reference
+  // fetch resolves reproduced this every time.
+  const referenceRef = useRef(reference); referenceRef.current = reference;
+  const guidesRef = useRef(guides); guidesRef.current = guides;
   const [partial, setPartial] = useState<CapturedStroke | null>(null);
   const [replay, setReplay] = useState<number | null>(null);
   const [coaching, setCoaching] = useState('');
@@ -26,7 +40,8 @@ export function Writing({ reference, strokes, onChange, guides, disabled = false
       onStrokeEnd: s => {
         setPartial(null);
         const size = svg.getBoundingClientRect().width;
-        if (guides && reference) {
+        const reference = referenceRef.current;
+        if (guidesRef.current && reference) {
           const tolerance = toleranceFor(size, s.pointerType);
           const coach = createTraceCoach(reference, tolerance);
           // Recompute the next expected stroke after undo/clear; a rejected
@@ -40,7 +55,7 @@ export function Writing({ reference, strokes, onChange, guides, disabled = false
       onStrokeCancelled: () => setPartial(null),
     });
     return () => controller.destroy();
-  }, [disabled, guides, reference]);
+  }, [disabled]);
   useEffect(() => { if (!strokes.length) setCoaching(''); }, [strokes.length]);
   useEffect(() => {
     if (replay === null || !reference) return;

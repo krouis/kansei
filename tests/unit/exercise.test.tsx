@@ -144,3 +144,51 @@ it('captures real pointer strokes and coaches reversed trace direction, with und
   expect(canvas.querySelectorAll('polyline')).toHaveLength(0);
   vi.unstubAllGlobals();
 });
+
+it('does not drop an in-progress stroke when the stroke reference resolves mid-draw', async () => {
+  // Exercise.tsx fetches the StrokeReference asynchronously after a
+  // handwriting question renders, so `reference` starts null and flips to
+  // the loaded value moments later — exactly the shape of a real "start
+  // writing the instant the question appears" scenario. Writing.tsx used to
+  // depend on `reference` (and `guides`) in the effect that mounts
+  // attachStrokeCapture, so that resolution tore the listeners down and
+  // rebuilt them mid-stroke: the new controller never saw the pointerdown
+  // that started the stroke, so the eventual pointerup was silently
+  // ignored — the learner lifts the pen, nothing is recorded, and "Check
+  // answer" just stays disabled with no explanation. Found live via a
+  // Playwright session against a real production build.
+  const { Writing } = await import('@/features/practice/Writing');
+  const { buildSamplesFor } = await import('../fixtures/handwriting-samples');
+  const { useState } = await import('react');
+  const sample = buildSamplesFor('一', '二');
+  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+  function Surface() {
+    const [strokes, setStrokes] = useState<import('@/domain').CapturedStroke[]>([]);
+    const [reference, setReference] = useState<import('@/domain').StrokeReference | null>(null);
+    return <>
+      <button onClick={() => setReference(sample.reference)}>resolve reference</button>
+      <Writing reference={reference} strokes={strokes} onChange={setStrokes} guides />
+    </>;
+  }
+  render(<Surface />);
+  const canvas = screen.getByRole('img', { name: /Handwriting canvas/ });
+  Object.assign(canvas, { setPointerCapture() {}, releasePointerCapture() {}, getBoundingClientRect: () => ({ width: 300, height: 300, left: 0, top: 0 }) });
+  const pointer = (type: string, x: number, y: number) => {
+    const event = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y });
+    Object.defineProperties(event, { pointerId: { value: 1 }, pointerType: { value: 'mouse' }, isPrimary: { value: true }, pressure: { value: 0.5 } });
+    fireEvent(canvas, event);
+  };
+  // Begin the stroke while `reference` is still null (the pre-load state).
+  pointer('pointerdown', 40, 150);
+  pointer('pointermove', 120, 150);
+  // The fetch resolves mid-stroke: guides has real reference data to trace
+  // against for the first time, which is exactly the prop change that used
+  // to tear the capture listeners down.
+  await userEvent.click(screen.getByRole('button', { name: 'resolve reference' }));
+  pointer('pointermove', 200, 150);
+  pointer('pointerup', 260, 150);
+  // The stroke must have been captured despite the mid-draw prop change.
+  expect(canvas.querySelectorAll('polyline')).toHaveLength(1);
+  expect(screen.getByRole('button', { name: 'Undo stroke' })).toBeEnabled();
+  vi.unstubAllGlobals();
+});

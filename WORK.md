@@ -444,3 +444,64 @@ E2E specs, plus the live multi-series playthrough above. Kanji lessons are
 now genuinely reachable end-to-end: toggle on, finish kana, meet real
 components and kanji through normal spaced practice, with working
 confusion repair.
+
+## Full dev test: handwriting, and a fourth bug (2026-10-01)
+User asked for "a full dev test live check" specifically covering
+handwriting — the one skill type left unexercised in every prior live pass
+(all of which used keyboard-only mode). Confirmed the underlying mechanism
+is sound first, via an isolated Node check against the real selection code
+(not a live browser): `applicable('kanji:一').handwriting` is `true` (needs
+both stroke data — present for all 1500 kanji — and a teachable reading —
+一 has 9), and `pickNewMaterial`'s "extensions" mechanism does correctly
+generate a `{item: kanji:一, skill: handwriting}` candidate once its
+recognition/readingRecall are done. Traced *why* it's slow to win the
+new-material quota live to `selector.ts`'s explicit, documented
+redistribution policy ("weak points first... so a learner with nothing due
+gets weak-point practice and new material rather than ten new characters")
+interacting with an artificially large seeded "weak" pool from my own test
+setup (268 simultaneous kana states) — a real characteristic of the
+existing selector, not a bug, and not specific to kanji (it paces kana's
+own handwriting/listening introduction exactly the same way). A completely
+fresh install with zero seeding reached a real handwriting question
+(kana:hi:え, "Write this in hiragana: e") within its very first series,
+confirming the mechanism works quickly once there's no artificial backlog.
+
+**Bug 4, found live while testing exactly this:** drawing a stroke on the
+canvas immediately upon a handwriting question appearing sometimes left
+"Check answer" permanently disabled, with no error. Traced to
+`Writing.tsx`: the `useEffect` that mounts `attachStrokeCapture` listed
+`reference` and `guides` as dependencies, but `reference` loads
+asynchronously (`Exercise.tsx` fetches it after the question renders) and
+`guides` can flip mid-question (the "reference-animation" hint). Either
+changing while a stroke is mid-draw tears the capture listeners down and
+rebuilds them — the new controller never saw the `pointerdown` that started
+the stroke, so its `activePointerId` is `null` and the eventual `pointerup`
+is silently ignored. Confirmed the exact mechanism two ways: (1) live,
+using `page.evaluate` to log real `PointerEvent`s reaching the canvas
+(pointerdown/move/up all arrived correctly, yet the stroke was still lost)
+and (2) a 2-second wait before drawing reliably avoided it, isolating the
+timing race. Fixed by reading `reference`/`guides` through refs inside the
+effect (the same pattern already used for `strokes`/`onChange`) instead of
+listing them as dependencies, so the listeners mount once per `disabled`
+change and read the *current* value at stroke-end time rather than
+resubscribing mid-draw.
+
+Added a deterministic component-level regression test
+(`exercise.test.tsx`, "does not drop an in-progress stroke when the stroke
+reference resolves mid-draw") rather than relying on a live browser to
+reproduce a race — starts a stroke with `reference={null}`, flips it to a
+real loaded reference mid-draw, finishes the stroke, and asserts it was
+still captured. Confirmed it fails without the fix (stashed `Writing.tsx`,
+watched it fail with the exact "Check answer" `disabled` assertion, restored
+it, watched it pass) before trusting it — full app-level live reproduction
+turned out to be too RNG-sensitive (which specific skill/round wins a given
+series' quota varies run to run) to use for reliably re-verifying this
+specific fix, so the component test is the right level for it, with the
+live Playwright session serving as the tool that *found* the bug in the
+first place, not as the regression guard for it.
+
+Full verification: `tsc --noEmit` clean, 129/129 tests (128 + the new
+regression test), production build, all 3 Playwright E2E specs. Live
+re-confirmed the fixed canvas end-to-end: a fast, undelayed draw correctly
+enabled "Check answer", the ink rendered, and Undo/Clear correctly reflected
+one captured stroke — screenshotted before and after.
