@@ -70,9 +70,40 @@ const vocab=[...selected.values()].sort((a,b)=>a.teachingOrder-b.teachingOrder||
 // Segment the whole reading against kana and dictionary stems. Ambiguous paths
 // are discarded; irregular/jukujikun words remain valid whole-word exercises.
 const voiced={'か':'が','き':'ぎ','く':'ぐ','け':'げ','こ':'ご','さ':'ざ','し':'じ','す':'ず','せ':'ぜ','そ':'ぞ','た':'だ','ち':'ぢ','つ':'づ','て':'で','と':'ど','は':'ば','ひ':'び','ふ':'ぶ','へ':'べ','ほ':'ぼ'};
-function options(g){const k=byGlyph.get(g);if(!k?.on)return [{surface:hira(g),type:null,note:null}];const out=[];for(const type of ['on','kun'])for(const raw of k[type]){const stem=hira(raw.replaceAll('-','').split('.')[0]);if(!stem)continue;out.push({surface:stem,type,note:null});if(voiced[stem[0]])out.push({surface:voiced[stem[0]]+stem.slice(1),type,note:`Voicing (rendaku) of ${stem} in this word.`});if(/[つくき]$/.test(stem))out.push({surface:stem.slice(0,-1)+'っ',type,note:`Gemination of ${stem} in this word.`});}return [...new Map(out.map(x=>[`${x.surface}:${x.type}`,x])).values()];}
+// KANJIDIC2 genuinely double-lists a few kanji's bare reading as BOTH on and kun
+// (気="キ"/on and "き"/kun; also 医, 死, 画, 差…), so the same kana surface can
+// come from two rows above with no note. Left alone, the segmenter below sees
+// that as two different solutions and calls the word ambiguous, even though the
+// character boundaries are identical and only the on/kun LABEL is unsettled.
+// followedByKana resolves the label with the ordinary textbook signal — kun
+// readings carry okurigana, on readings appear in bare kanji compounds — rather
+// than inventing a reading; a same-surface on/kun pair collapses to whichever
+// label that signal picks, and only when neither entry carries a derived
+// voicing/gemination note (a real phonological difference must not be merged).
+function options(g,ctx){const k=byGlyph.get(g);if(!k?.on)return [{surface:hira(g),type:null,note:null}];const out=[];for(const type of ['on','kun'])for(const raw of k[type]){const stem=hira(raw.replaceAll('-','').split('.')[0]);if(!stem)continue;out.push({surface:stem,type,note:null});if(voiced[stem[0]])out.push({surface:voiced[stem[0]]+stem.slice(1),type,note:`Voicing (rendaku) of ${stem} in this word.`});if(/[つくき]$/.test(stem))out.push({surface:stem.slice(0,-1)+'っ',type,note:`Gemination of ${stem} in this word.`});}
+ // Stage 1, unchanged from before: fold to one entry per surface+type (a kanji
+ // can list an on-reading that is itself already another on-reading's voiced
+ // form, e.g. 分's ブン beside フン's rendaku ぶん — last one written wins, same
+ // as always, so that dormant same-type coincidence stays exactly as settled).
+ const byTypeAndSurface=new Map();
+ for(const o of out)byTypeAndSurface.set(`${o.surface}:${o.type}`,o);
+ // Stage 2, new: KANJIDIC2 genuinely double-lists a few kanji's bare reading as
+ // BOTH on and kun (気="キ"/on and "き"/kun; also 医, 死, 画, 差…), so the same
+ // kana surface can survive stage 1 under both types with no note. That is a
+ // label disagreement, not a different segmentation, so collapse it using the
+ // ordinary textbook signal — kun readings carry okurigana, on readings appear
+ // in bare kanji compounds — rather than inventing a reading. Restricted to
+ // note===null on both sides so a genuine phonological difference (like the
+ // stage-1 case above) is never merged.
+ const preferredType=ctx?.followedByKana?'kun':'on', bySurface=new Map();
+ for(const o of byTypeAndSurface.values()){const prior=bySurface.get(o.surface);if(!prior||(o.note===null&&prior.note===null&&o.type===preferredType))bySurface.set(o.surface,o);}
+ return [...bySurface.values()];}
 const readings=new Map();let ambiguous=0,unaligned=0,aligned=0;const unmatched=[];
-for(const v of vocab){const glyphs=[...v.spelling], target=hira(v.reading), solutions=[];function walk(i,p,parts){if(solutions.length>1)return;if(i===glyphs.length){if(p===target.length)solutions.push(parts);return;}for(const o of options(glyphs[i]))if(target.startsWith(o.surface,p)){if(o.note?.startsWith('Gemination')&&!/^[かきくけこさしすせそたちつてとぱぴぷぺぽ]/.test(target.slice(p+o.surface.length)))continue;walk(i+1,p+o.surface.length,[...parts,{glyph:glyphs[i],...o}]);}}walk(0,0,[]);
+for(const v of vocab){const glyphs=[...v.spelling], target=hira(v.reading), solutions=[];function walk(i,p,parts){if(solutions.length>1)return;if(i===glyphs.length){if(p===target.length)solutions.push(parts);return;}
+ // Okurigana (kana right after this glyph in the SPELLING, not the reading) is
+ // the ordinary signal that a kun reading, not an on reading, is in play here.
+ const followedByKana=i+1<glyphs.length&&!byGlyph.get(glyphs[i+1])?.on;
+ for(const o of options(glyphs[i],{followedByKana}))if(target.startsWith(o.surface,p)){if(o.note?.startsWith('Gemination')&&!/^[かきくけこさしすせそたちつてとぱぴぷぺぽ]/.test(target.slice(p+o.surface.length)))continue;walk(i+1,p+o.surface.length,[...parts,{glyph:glyphs[i],...o}]);}}walk(0,0,[]);
  if(glyphs.some(g=>byGlyph.get(g)?.on)){if(solutions.length===0){unaligned++;unmatched.push(v.id);}else if(solutions.length>1){ambiguous++;unmatched.push(v.id);}else {aligned++;for(const part of solutions[0].filter(x=>x.type)){const id=`reading:${part.glyph}:${part.surface}:${v.spelling}`;let record=readings.get(id);if(record&&record.type!==part.type){continue;}if(!record){record={id,kanji:part.glyph,reading:part.surface,type:part.type,exampleVocab:[],frequencyShare:null,notes:part.note};readings.set(id,record);}if(!record.exampleVocab.includes(v.id))record.exampleVocab.push(v.id);if(!v.demonstratesReadings.includes(id))v.demonstratesReadings.push(id);}}}
  // A spelling with multiple dictionary readings cannot safely be assigned an
  // isolated recording by filename alone. Those clips await listening review.

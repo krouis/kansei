@@ -94,8 +94,10 @@ Japanese editorial certification of all 1,600 words. The generated report record
 current coverage and missing source-aligned readings. Every selected kanji has
 a vocabulary example, but not every example can be segmented confidently.
 
-The retained target size is 1,600 entries. The current build has 937 uniquely
-aligned kanji words, 16 ambiguous and 48 unaligned words, and 1,242 word-specific
-reading records. There are 61 metadata-matched recordings. The requested お茶
-spelling is unavailable because 茶 falls outside this selected frequency list;
-its source-backed pedagogical form おちゃ is included instead.
+The retained target size is 1,600 entries. The current build has 953 uniquely
+aligned kanji words and 48 unaligned words (the latter mostly jukujikun and
+other irregular readings that cannot be honestly segmented per character, by
+design — not a gap in the aligner), and 1,270 word-specific reading records.
+There are 61 metadata-matched recordings. The requested お茶 spelling is
+unavailable because 茶 falls outside this selected frequency list; its
+source-backed pedagogical form おちゃ is included instead.
