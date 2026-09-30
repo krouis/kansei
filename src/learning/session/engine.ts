@@ -305,7 +305,14 @@ export class KanseiSessionEngine implements SessionEngine {
     } else {
       const policy = policyFromSettings(settings);
       const allowedSkills = this.allowedSkillsFor(session);
-      const selection = await this.deps.db.transact('readonly', (tx) =>
+      // 'readwrite', not 'readonly': selector.select() legitimately writes at
+      // the end, marking any confusion pair it chose to repair as scheduled
+      // (see the comment in selector.ts). That write only ever fires once a
+      // real ConfusionRecord exists to repair, which kana practice rarely
+      // produced in testing — it surfaced as a hard failure ("its transaction
+      // was opened as read-only") only once kanji/component practice started
+      // generating real confusions.
+      const selection = await this.deps.db.transact('readwrite', (tx) =>
         this.deps.createSelector(tx).select({
           policy,
           screens: SERIES_LENGTH,

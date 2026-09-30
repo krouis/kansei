@@ -136,7 +136,18 @@ export function pickNewMaterial(args: {
   if (words.length) {
     anyUnstartedAnywhere = true;
     const ready = words.slice(0, group.length ? 2 : tuning.newGroupMax);
-    group = [...ready, ...group.slice(0, tuning.newGroupMax-ready.length)];
+    // Lesson-introduced characters/components go FIRST, vocabulary after: the
+    // selector's round-robin over this group (selector.ts) hands out screens
+    // in array order and stops once the new-material quota (2, by default) is
+    // filled, so whichever half of this concatenation comes first wins that
+    // quota. Vocabulary used to come first, which meant any of the (currently
+    // 127) all-kana words still unread would keep winning the quota over an
+    // actual new kanji lesson, every single pick, until all of them ran out —
+    // turning kanji on would not have produced a kanji character in practice
+    // for dozens of sessions. Advancing the taught-character curriculum is the
+    // more important use of a scarce "new" slot; vocabulary review still
+    // happens, just after real lesson content claims the quota first.
+    group = [...group.slice(0, tuning.newGroupMax-ready.length), ...ready];
     lessonId ??= ready[0]?.lessonId ?? null;
   }
 

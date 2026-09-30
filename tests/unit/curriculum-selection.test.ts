@@ -32,4 +32,30 @@ describe('curriculum selection',()=>{
   const selected=await selector.select({settings,now:new Date(),screens:10,policy:settings.selectionPolicy,focusItemId:null,allowedSkills:[...allowedSkills],exclude:[]});
   expect(selected.targets).toHaveLength(10);expect(selected.targets.some(x=>String(x.itemId).startsWith('kanji:'))).toBe(true);
  });
+ it('does not let ready all-kana vocabulary crowd out a real kanji lesson once kana is finished',async()=>{
+  // The realistic shape of a learner who turned kanji on after finishing kana:
+  // every kana item already started, both scripts plus kanji active. Before the
+  // fix, pickNewMaterial put ready vocabulary FIRST in its returned group, and
+  // the selector's round-robin fill stops at the (default) 2-item new-material
+  // quota — so with well over 100 all-kana words already eligible, an actual
+  // kanji character would never win a "new" slot for dozens of series.
+  const allKanaIds=kana.map((k:any)=>k.id);
+  const prefs={...settings,activeScripts:['hiragana','katakana','kanji'] as Settings['activeScripts']};
+  const group=pick(allKanaIds,prefs).group;
+  expect(group.some(x=>x.kind==='kanji'||x.kind==='component')).toBe(true);
+  // Mirror pick()'s manually-started set into the SkillState rows the real
+  // selector reads: it derives its own `startedItems` from skills.all(), not
+  // from anything passed directly, so a mock returning [] (as the other test
+  // above uses) would make every kana look unstarted to the selector too.
+  const states=allKanaIds.flatMap((itemId:string)=>(['recognition','readingRecall'] as const).map(skill=>({
+   itemId,skill,readingId:null,stage:'retained',stability:30,difficulty:3,streak:3,spacedSuccesses:3,
+   totalAttempts:3,unaidedFirstAttemptCorrect:3,aidedAttempts:0,lapses:0,firstSeenAt:new Date().toISOString(),
+   lastReviewedAt:new Date().toISOString(),lastUnaidedSuccessAt:new Date().toISOString(),
+   dueAt:new Date(Date.now()+30*86400000).toISOString(),lastIntervalDays:30,medianMsByInput:{},
+   scaffoldLevel:0,strongestEvidencePassed:'strong',
+  })));
+  const selector=new DefaultSelector({library,skills:{all:async()=>states as any,due:async()=>[]},confusions:{top:async()=>[],markRepairScheduled:async()=>{}}});
+  const selected=await selector.select({settings:prefs,now:new Date(),screens:10,policy:prefs.selectionPolicy,focusItemId:null,allowedSkills:[...allowedSkills],exclude:[]});
+  expect(selected.targets.some(x=>String(x.itemId).startsWith('kanji:')||String(x.itemId).startsWith('comp:'))).toBe(true);
+ });
 });

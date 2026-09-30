@@ -367,3 +367,80 @@ and after this fix, so kanji's own recognition path (`meaning-to-kanji-
 choice`/`component-in-kanji-choice`) was never in question. Worth a
 follow-up live check specifically reaching a kanji lesson if anyone wants
 belt-and-suspenders confirmation.
+
+## Belt-and-suspenders live check: reaching a real kanji lesson (2026-10-01)
+User asked for exactly the follow-up flagged above, plus to confirm learners
+can genuinely reach kanji lessons. Found and fixed two more real,
+previously-unreachable bugs in the process — both structural, both now
+covered by either a regression test or a live-verified fix.
+
+**Bug 2: ready all-kana vocabulary starves out an actual kanji lesson,
+potentially for dozens of sessions.** Traced the selector's consumption path
+precisely: `pickNewMaterial` (`newMaterial.ts`) placed ready vocabulary
+*first* in its returned `group`, and `selector.ts`'s `Picker.fill()` takes
+candidates in array order, stopping once the new-material quota (2 by
+default) is filled — so whichever half of the concatenation comes first
+wins the quota, every time. 127 vocabulary words require no kanji at all;
+with vocabulary going first, none of them would ever need to finish before
+an actual kanji character won a "new" slot, meaning a learner could turn
+kanji on and not see one for a very long time. Fixed by reordering the
+concatenation so lesson-introduced characters/components go first,
+vocabulary after — same items, same counts, just swapped array order, so
+lesson content wins the round-robin/quota race and vocabulary review still
+happens once it does. Added a regression test
+(`curriculum-selection.test.ts`, "does not let ready all-kana vocabulary
+crowd out a real kanji lesson once kana is finished") that mocks realistic
+`SkillState` rows (not just a bare `started` set, which the selector doesn't
+actually read) for every kana item and asserts a real `DefaultSelector.select()`
+call surfaces a kanji/component target — confirmed it fails without the fix
+(`git stash`ed the fix, watched it fail, restored it, watched it pass again)
+before trusting it.
+
+**Bug 3: `component-in-kanji-choice` and `meaning-to-kanji-choice` were
+silently unreachable for every user, no exceptions.** Live-checked the
+Settings-page kanji toggle by seeding real kana progress and playing an
+actual practice screen; the very first component question failed with
+"Every candidate format was rejected", but — unlike the earlier vocab bug —
+`component-in-kanji-choice` wasn't even in the list of rejected candidates.
+Cause: `defaultSettings()`'s `enabledQuestionTypes` (`settingsStore.ts`) is
+the literal original ten question types from the brief, and was never
+updated when these two kanji-specific generators were added later. There is
+no UI to edit this list, so that default is the only list any user will
+ever have — meaning these two fully-implemented, fully-tested generators
+have been completely dead code from a learner's perspective since the day
+they were written. Fixed by adding both to the default list.
+
+**Live-verified the whole chain, for real, not just asserted:** seeded only
+kana as started (no lesson-skipping), then actually played through real
+series — real answers, real "Check answer"/"Continue" clicks, real
+`localStorage`-free session state — letting natural lesson-by-lesson
+progression run. Series 0 introduced two components (`comp:亻`,
+`comp:一`) via `component-in-kanji-choice`, screenshotted mid-question
+(prompt, four kanji choices, keyboard hints) and after feedback (grading,
+distinction text, guided-correction offer) — all rendered correctly.
+Continued playing three more real series; series 4 (of 4) reached
+`kanji:一` as a genuine `recognition · confusion repair` screen — which is
+itself live proof that Bug 3 (the confusion-repair transaction) is fixed,
+since reaching that screen required `markRepairScheduled` to succeed on an
+earlier series.
+
+**Bug 4, found via that same confusion-repair screen appearing at all:**
+before this pass, `session/engine.ts`'s `buildSeries()` ran the *entire*
+`selector.select()` call inside a `'readonly'` IndexedDB transaction — but
+`select()` legitimately writes at the end, marking any confusion pair it
+chose to repair as scheduled (`selector.ts`, "Mark the confusions this
+series is repairing"). That write only fires once a real `ConfusionRecord`
+exists worth repairing, which kana practice rarely produced in prior
+testing; it surfaced as a hard, session-breaking failure ("marking a
+confusion repair is a write, but its transaction was opened as read-only")
+the moment kanji/component practice started generating real confusions.
+Fixed by changing that one call site from `'readonly'` to `'readwrite'` —
+the stores transaction scope already includes `confusions`
+(`REPO_TX_STORES`), so no other change was needed.
+
+Full verification after all three fixes: `tsc --noEmit` clean, 128/128
+tests (127 + the new regression test), production build, all 3 Playwright
+E2E specs, plus the live multi-series playthrough above. Kanji lessons are
+now genuinely reachable end-to-end: toggle on, finish kana, meet real
+components and kanji through normal spaced practice, with working
+confusion repair.

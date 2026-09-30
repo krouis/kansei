@@ -21,6 +21,14 @@ export function defaultSettings(): Settings {
       'audio-to-character-choice', 'romaji-to-kana-choice', 'character-to-reading-choice',
       'character-to-reading-typed', 'match-pairs', 'audio-to-typed', 'prompt-to-handwriting',
       'confusable-discrimination', 'word-reading', 'kanji-in-word-context',
+      // Added later than the original ten and never enabled here: with no UI
+      // to edit this list, that default is the only list any user ever gets,
+      // so omitting these silently made every component and every kanji
+      // meaning-recognition question unreachable ("Could not generate a
+      // question... candidates.push('component-in-kanji-choice',
+      // 'meaning-to-kanji-choice') in composite.ts never survives the
+      // enabledTypes filter). Found live once kanji was actually reachable.
+      'component-in-kanji-choice', 'meaning-to-kanji-choice',
     ],
     silentPractice: false,
     keyboardOnlyMode: false,
