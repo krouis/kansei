@@ -35,7 +35,16 @@ describe('installed kanji and vocabulary exercise generation', () => {
       expect(validateQuestion(result.question!).ok).toBe(true);
       expect(result.question!.skill).toBe('recognition');
     }
-  });
+    // Explicit generous timeout, not vitest's 5000ms default: this iterates
+    // every one of 1500 kanji through real question generation on purpose —
+    // it is exactly the test that would have caught this session's vocab/
+    // component/enabledQuestionTypes generation bugs, so the fix for it
+    // being slow is headroom, not a smaller kanji set. Widening from 1000 to
+    // 1500 kanji this session pushed it from comfortably under the default
+    // to intermittently over it on CI's slower runner (~3.7-4.9s locally,
+    // timing out at 5000ms on GitHub Actions) — confirmed via three
+    // consecutive CI failures all on this exact test before this fix.
+  }, 20000);
   it('generates word reading for every installed vocabulary entry', async () => {
     const generator = new CompositeGenerator();
     for (const word of vocab) {

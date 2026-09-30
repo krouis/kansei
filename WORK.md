@@ -505,3 +505,27 @@ regression test), production build, all 3 Playwright E2E specs. Live
 re-confirmed the fixed canvas end-to-end: a fast, undelayed draw correctly
 enabled "Check answer", the ink rendered, and Undo/Clear correctly reflected
 one captured stroke — screenshotted before and after.
+
+## CI timeouts (2026-10-01)
+User reported CI failing on timeouts. `gh run list` showed 3 of the last 4
+runs red; `gh run view --log-failed` on each pointed at the exact same
+place: `tests/unit/curriculum-generation.test.ts:30` — "can produce an
+honest recognition screen for all 1,500 kanji" — hitting vitest's 5000ms
+default per-test timeout on GitHub Actions' runner. Locally this test was
+already borderline (3.7-4.9s across runs this session) even before today;
+widening the kanji set from 1000 to 1500 earlier this session pushed its
+runtime up proportionally, and CI's shared runner is measurably slower than
+local, tipping it over 5000ms intermittently (one run in the same window
+did pass, at 2m45s total — consistent with a right-at-the-edge test, not a
+hang). The job-level `timeout-minutes: 20` in `.github/workflows/pages.yml`
+was never the limit here; this was vitest's own internal per-test timeout.
+
+Fixed by giving this one test an explicit, generous timeout (20000ms) via
+vitest's third `it()` argument, rather than raising the global default
+(which would quietly give every other test more rope to hang too) or
+trimming the test's own coverage (it iterates all 1500 kanji on purpose —
+it is exactly the test that caught this session's vocab-recognition and
+enabledQuestionTypes generation bugs, so shrinking its scope to make it
+faster would be trading away the thing that makes it valuable). Verified
+locally: passes cleanly at ~4-5.4s against a 20s ceiling, full suite still
+129/129, typecheck clean, production build, all 3 E2E specs.
