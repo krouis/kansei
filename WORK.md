@@ -32,7 +32,7 @@ Updated as implementation proceeds; unchecked items are not release claims.
 - [x] Derive all 1,000 kanji teaching positions and lessons; resolve prerequisite cycles explicitly.
 - [x] Finalize component introductions and implement component exercises.
 - [ ] Select useful JMdict vocabulary, gated on introduced characters.
-- [ ] Derive word-specific readings conservatively; reject ambiguous alignment.
+- [x] Derive word-specific readings conservatively; reject ambiguous alignment.
 - [x] Assemble complete curriculum packs and validate IDs, prerequisites, assets, hashes and licenses.
 - [ ] Expand real native-speaker audio coverage; review recording quality and matching.
 - [ ] Source legitimate handwriting variants; validate using real human input.
