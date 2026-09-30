@@ -94,10 +94,19 @@ Japanese editorial certification of all 1,600 words. The generated report record
 current coverage and missing source-aligned readings. Every selected kanji has
 a vocabulary example, but not every example can be segmented confidently.
 
-The retained target size is 1,600 entries. The current build has 953 uniquely
-aligned kanji words and 48 unaligned words (the latter mostly jukujikun and
+The retained target size is 1,600 entries. The current build has 945 uniquely
+aligned kanji words and 46 unaligned words (the latter mostly jukujikun and
 other irregular readings that cannot be honestly segmented per character, by
-design — not a gap in the aligner), and 1,270 word-specific reading records.
-There are 61 metadata-matched recordings. The requested お茶 spelling is
-unavailable because 茶 falls outside this selected frequency list; its
-source-backed pedagogical form おちゃ is included instead.
+design — not a gap in the aligner), and 1,269 word-specific reading records.
+There are 98 metadata-matched recordings. Selection prefers a word with a real
+recording over an otherwise-similar one without, so a working listening
+exercise is worth more than mere dictionary commonness once a word is already
+eligible — this does not override strong pedagogical signals like teaching
+order or documented common usage, so it only reshapes which words fill the
+"extra vocabulary beyond one per kanji" slots, never which word is guaranteed
+for a given character. Two JMdict entries that would have qualified this way
+are excluded by an explicit, human-reviewed list in build-vocab.mjs because
+they are not appropriate for a beginner-facing app, even though nothing in
+JMdict's own tagging flags them. The requested お茶 spelling is unavailable
+because 茶 falls outside this selected frequency list; its source-backed
+pedagogical form おちゃ is included instead.

@@ -25,8 +25,20 @@ const candidates=[], dictionaryReadings=new Map();
 const commonPriority=xs=>xs.some(x=>priorities.has(x));
 const kanaOnly=s=>values(s,'misc').includes('word usually written using kana alone');
 const acceptableSense=s=>!values(s,'field').some(x=>x!=='food, cooking')&&!values(s,'dial').length&&!values(s,'misc').some(m=>/archaic|obsolete|vulgar|derogatory|slang|rare term/.test(m))&&!values(s,'pos').some(p=>p.startsWith('auxiliary'))&&!values(s,'pos').every(p=>/^(prefix|suffix|auxiliary|particle|copula)/.test(p));
+// A handful of common, plainly-defined JMdict entries carry none of the misc
+// flags acceptableSense screens for (not archaic/vulgar/slang by JMdict's own
+// tagging) but are not something a beginner-facing app should teach by
+// default. This is an editorial judgment call, not something derivable from
+// the dictionary data, so it is a short, explicit, human-reviewed list rather
+// than an inferred rule — found while re-weighting selection toward
+// audio-backed words pulled these specific entries in for the first time.
+const EDITORIALLY_EXCLUDED_ENTRY_SEQ=new Set([
+ '1001370', // おっぱい — informal/crude term for breasts
+ '1052870', // コンドーム — condom
+]);
 for(const entry of blocks(xml,'entry')){
  const seq=values(entry,'ent_seq')[0], ks=blocks(entry,'k_ele'), rs=blocks(entry,'r_ele');
+ if(EDITORIALLY_EXCLUDED_ENTRY_SEQ.has(seq))continue;
  for(const [readingIndex,r] of rs.entries()){const reading=values(r,'reb')[0];if(!reading)continue;
  const restrictions=values(r,'re_restr');
  for(const k of ks){const spelling=values(k,'keb')[0];if(restrictions.length&&!restrictions.includes(spelling))continue;const set=dictionaryReadings.get(spelling)??new Set();set.add(reading);dictionaryReadings.set(spelling,set);}
@@ -53,7 +65,20 @@ for(const entry of blocks(xml,'entry')){
  }
 }
 // Beginner preference is an explicit product heuristic, not a proficiency label.
-const score=v=>(v._starterAdaptation?-1000:0)+v.teachingOrder+20*v.reading.length+(v._priority.includes('ichi1')?-120:0)+(audio[`vocab/${v.spelling}`]?-100:0);
+// AUDIO_BONUS was 100 (roughly tied with the -120 ichi1 common-word bonus, so
+// audio rarely won a close call). Raised to sit clearly above ichi1: a real
+// recording is worth more than mere commonness, since it is what turns a word
+// into a working listening exercise, but it must not swamp a large
+// teachingOrder gap and pull in an obscure late-taught word just because it
+// has audio. 300 was chosen empirically: wired audio coverage climbs steeply
+// with the bonus up to here (61 -> 100 words) then plateaus (103 at 400, 108
+// at 900+, the ceiling being the heteronym-ambiguity gate in the reading
+// aligner below, not this score), and a full diff of every word swapped in
+// at this level against the previous selection found the churn was all
+// kana/katakana "extra vocabulary" slots (no kanji-coverage word changed),
+// with two entries needing an explicit editorial exclusion above.
+const AUDIO_BONUS=300;
+const score=v=>(v._starterAdaptation?-1000:0)+v.teachingOrder+20*v.reading.length+(v._priority.includes('ichi1')?-120:0)+(audio[`vocab/${v.spelling}`]?-AUDIO_BONUS:0);
 candidates.sort((a,b)=>score(a)-score(b)||Number(a._seq)-Number(b._seq)||a.spelling.localeCompare(b.spelling,'ja'));
 // Prefer the dictionary's first eligible reading within an entry; length is
 // useful for selecting words but must not select their pronunciation.
