@@ -133,8 +133,17 @@ export function buildItemIndex(library: SelectionLibrary): ItemIndex {
           result = { recognition: library.kanji().some(k => k.components.includes(item.id) && item.appearsIn.includes(k.id)), readingRecall: false, listening: false, handwriting: false };
           break;
         case 'vocab':
-          // The drawing assessor accepts one character, not a whole word.
-          result = { recognition: true, readingRecall: true, listening: audio, handwriting: false };
+          // The drawing assessor accepts one character, not a whole word — and
+          // for the same reason, no generator implements a multiple-choice
+          // "recognition" format for a whole word either (every recognition
+          // candidate in composite.ts's candidatesFor() is single-character:
+          // romaji-to-kana-choice, character-to-reading-choice, match-pairs,
+          // confusable-discrimination). Claiming recognition here made a vocab
+          // word's very first new-material attempt (NEW_ITEM_SKILL_ORDER tries
+          // recognition first) fail to generate a question at all. Reading
+          // recall (word-reading) is the real, implemented, primary skill for
+          // a word.
+          result = { recognition: false, readingRecall: true, listening: audio, handwriting: false };
           break;
       }
       applicabilityCache.set(String(item.id), result);

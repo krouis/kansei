@@ -65,11 +65,12 @@ shell — for a real test of offline behaviour, use a production build; see
 
 - The kanji (1,500 characters) and vocabulary (1,600 words) datasets are
   real, sourced, and pass their own validation — but they are generated
-  draft material that has not had an editorial pass, and their explorer/
-  course integration is not yet a finished experience the way kana practice
-  is.
+  draft material that has not had an editorial pass. Kanji/vocabulary
+  practice can be switched on in Settings (off by default) and runs through
+  the same engine as kana practice; expect the occasional rough edge from
+  the unreviewed content, not a missing feature.
 - Kana audio covers 71 of the 104 modern sounds; yōon (contracted)
-  combinations have no recordings yet. Only 61 of the 1,600 vocabulary
+  combinations have no recordings yet. Only 103 of the 1,600 vocabulary
   entries have a matching recording — most of the 358 recorded words
   available upstream simply aren't in the beginner-selected set.
 - Handwriting assessment is real and runs locally, but it has only been
