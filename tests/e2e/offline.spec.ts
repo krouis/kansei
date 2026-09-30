@@ -49,7 +49,8 @@ test('installs real kana, completes ten questions, and cold starts offline', asy
     await expect(page.getByRole('button',{name:'Continue · +1 XP'})).toBeVisible();
     await page.getByRole('button',{name:'Continue · +1 XP'}).click();
   }
-  await expect(page.getByRole('heading',{name:'Series complete. Nicely practised.'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'10 of 10, first try.'})).toBeVisible();
+  await expect(page.getByText('You practised')).toBeVisible();
   await expect(page.getByRole('heading',{name:'20 / 20 XP today'})).toBeVisible();
   const userData = async () => page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve,reject) => {const r=indexedDB.open('kansei');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
@@ -80,7 +81,7 @@ test('installs real kana, completes ten questions, and cold starts offline', asy
   await expect(page.getByRole('button', {name:'Download content update'})).toBeVisible();
   await page.getByRole('button', {name:'Download content update'}).click();
   await page.waitForEvent('load');
-  await expect(page.getByRole('heading', {name:'Make space for practice.'})).toBeVisible({timeout:60000});
+  await expect(page.getByRole('heading', {name:'Set things up your way.'})).toBeVisible({timeout:60000});
   expect(await userData()).toEqual(beforeUpdate);
   expect(await page.evaluate(async () => (await caches.keys()).some(name => name.includes('content-v1-generation-')))).toBe(true);
   } finally { await writeFile(workerPath, oldWorker); await writeFile(contentIndexPath, oldIndex); }

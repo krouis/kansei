@@ -1,1 +1,110 @@
 .stack{display:grid;gap:1.5rem}.welcome{max-width:680px;margin:4vh auto;padding:1.5rem}.welcome h1,.hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:500;max-width:16ch}.eyebrow{text-transform:uppercase;font-size:.72rem;letter-spacing:.15em;color:var(--ink-soft);margin-bottom:.6rem}.seal-large{background:var(--seal);color:var(--paper);font-family:var(--font-jp-serif);width:64px;height:72px;font-size:42px;text-align:center;border-radius:5px;transform:rotate(-3deg)}.hero{position:relative;padding-right:25%!important;overflow:hidden}.hero p{max-width:45ch;margin:1rem 0}.hero-glyph{position:absolute;right:5%;top:20%;font-size:clamp(5rem,13vw,10rem);color:var(--ink-soft);opacity:.3}.jp{font-family:var(--font-jp)}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem}.field{display:grid;gap:.4rem;margin:.6rem 0}.field input,.field select{padding:.75rem;border:1px solid var(--rule-strong);border-radius:.5rem;background:var(--surface);min-width:0}label{display:block}input[type=checkbox]{margin-right:.6rem;width:1.1rem;height:1.1rem}.actions{display:flex;flex-wrap:wrap;gap:.65rem;margin:1rem 0}.notice{border:1px solid var(--danger-text);padding:1rem;margin-bottom:1rem;border-radius:.6rem}.practice-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem}.exercise{max-width:760px;width:100%;margin:auto;display:grid;gap:1rem}.exercise h2{font-size:1.25rem}.prompt{font-size:clamp(3rem,11vw,6rem);line-height:1.5;text-align:center;padding:.5rem;overflow-wrap:anywhere}.choices{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}.choice{min-height:90px!important;font-size:1.8rem!important;position:relative}.keycap{font-size:.75rem;color:var(--ink-soft);position:absolute;top:.4rem;left:.6rem}[aria-pressed=true]{outline:2px solid var(--accent);outline-offset:2px;background:var(--accent-soft)!important}.answer{font-size:3rem}.feedback{display:grid;gap:.8rem;border-top:1px solid var(--rule);padding-top:1rem}.matching{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin:1rem 0}.matching>div{display:grid;gap:.75rem}.writing{max-width:360px;width:100%;margin:auto}.writing-canvas{display:block;width:100%;aspect-ratio:1;touch-action:none;border:1px solid var(--rule-strong);border-radius:.5rem;background:var(--canvas-paper)}.writing small{font-size:.7rem;color:var(--ink-soft)}.intro-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin:1.2rem 0}.intro-grid .prompt{font-size:3.5rem}.intro-grid p{font-size:.8rem}.character-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:.65rem}.character{display:grid;gap:.2rem;justify-items:center;padding:.85rem .25rem;background:var(--surface);border:1px solid var(--rule-strong);border-radius:.65rem;cursor:pointer}.character .jp{font-size:2rem}.character small{font-size:.66rem}.stage-learning{border-bottom:3px solid var(--stage-learning)}.stage-consolidating{border-bottom:3px solid var(--stage-consolidating)}.stage-retained{border-bottom:3px solid var(--stage-retained)}.group-title{font-size:1.05rem;margin:1.4rem 0 .7rem;text-transform:capitalize}.footnote{font-size:.75rem;color:var(--ink-soft);padding:3rem 0 1rem}.stack h1{font-size:clamp(2rem,4vw,3rem)}.stack h2{margin-bottom:.5rem}.stack p+p{margin-top:.75rem}table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{text-align:left;padding:.65rem .25rem;border-bottom:1px solid var(--rule)}progress{width:100%;height:8px;accent-color:var(--accent)}@media(max-width:600px){.two-col{grid-template-columns:1fr}.hero{padding-right:1.5rem!important}.hero-glyph{display:none}.welcome{margin:0 auto;padding:.5rem}.practice-head{font-size:.8rem}.character-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+/* ---------------------------------------------------------------------
+ * Warmth pass: the seal-stamp completion moment, a felt "notebook"
+ * surface, live press feedback, and the ink-flourish loading mark.
+ * Kept as real rules (not minified) so the intent stays legible; the
+ * file above this point predates this pass and is left as-is.
+ * ------------------------------------------------------------------- */
+
+/* A faint ruled-paper texture, used sparingly on a handful of key
+   surfaces (the practice hero, the welcome/install cards) — not on
+   every card, which would read as clutter rather than warmth. */
+.notebook-lines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 27px,
+    var(--rule) 27px,
+    var(--rule) 28px
+  );
+  background-position: 0 0.5rem;
+}
+
+/* Character tiles: a small paper-lift on press, so choosing one feels
+   tactile rather than just re-coloring on click. */
+.character {
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+.character:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: var(--shadow-sm);
+}
+
+/* The seal stamping down once, on series completion.
+ *
+ * Deliberately its OWN complete rule, composing neither `.hero-glyph` (a
+ * large, absolutely-positioned, low-opacity background glyph) nor the base
+ * `.seal-large` (a small, statically-sized brand mark) — the two disagree on
+ * font-size and position, and combining them clipped the seal off the card
+ * edge. `.seal-stamp` is mounted fresh (a new `key`) each time a series
+ * completes, so the animation always plays from its start rather than
+ * relying on a class toggle a re-render could race with.
+ */
+.seal-stamp {
+  position: absolute;
+  right: 7%;
+  top: 18%;
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 5rem;
+  background: var(--seal);
+  color: var(--paper);
+  font-family: var(--font-jp-serif);
+  font-size: 2.5rem;
+  border-radius: 8px;
+  animation: seal-stamp 480ms var(--ease-spring) both;
+}
+@keyframes seal-stamp {
+  0%   { transform: rotate(-3deg) scale(2.4); opacity: 0; }
+  55%  { transform: rotate(-3deg) scale(0.94); opacity: 1; }
+  75%  { transform: rotate(-3deg) scale(1.04); }
+  100% { transform: rotate(-3deg) scale(1); }
+}
+:root[data-motion='reduce'] .seal-stamp,
+.reduce-motion .seal-stamp { animation: none; transform: rotate(-3deg); opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .seal-stamp { animation: none; transform: rotate(-3deg); opacity: 1; }
+}
+@media (max-width: 600px) {
+  .seal-stamp { display: none; }
+}
+
+/* A short list of the characters just practiced, on the completion card. */
+.practiced-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.75rem 0; }
+.practiced-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 2.25rem; padding: 0.2rem 0.5rem;
+  border: 1px solid var(--rule-strong); border-radius: 0.5rem;
+  background: var(--surface); font-size: 1.15rem;
+}
+
+/* The ink-flourish loading mark: a brush stroke that draws itself in a
+   loop. Decorative only — never presented as a real curriculum stroke
+   reference, which is why it draws an abstract mark rather than a
+   specific taught character (content packs, including stroke data, are
+   exactly what may still be installing when this is shown). */
+.ink-flourish { display: block; margin: 0.5rem auto; }
+.ink-flourish path {
+  fill: none;
+  stroke: var(--seal);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 90;
+  stroke-dashoffset: 90;
+  animation: ink-draw 1800ms var(--ease-in-out) infinite;
+}
+@keyframes ink-draw {
+  0%   { stroke-dashoffset: 90; opacity: 0.35; }
+  45%  { stroke-dashoffset: 0; opacity: 1; }
+  70%  { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: -90; opacity: 0.35; }
+}
+:root[data-motion='reduce'] .ink-flourish path,
+.reduce-motion .ink-flourish path {
+  animation: none; stroke-dashoffset: 0; opacity: 0.8;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ink-flourish path { animation: none; stroke-dashoffset: 0; opacity: 0.8; }
+}
