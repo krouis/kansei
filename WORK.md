@@ -139,3 +139,60 @@ work; use truthful Codex attribution for new work. Do not commit build caches.
 - Quantified the vocabulary-audio gap precisely: 102 of the 1,600 selected words already have a matching native recording, but only 61 get wired into `VocabEntry.audio`. The other 41 (一, 一日, 上, 行く, 山, 先生, 明日…) are correctly withheld by the existing `possible.size===1` check in build-vocab.mjs — their spelling has more than one dictionary-attested reading across JMdict, so a filename-only match can't prove the recording says the specific reading being taught. This is the script's own documented "awaiting human listening review" limitation, not a bug, and was not touched.
 - Found one real, unactioned opportunity: 162 more words with a genuine native recording and only kana+top-1000-kanji characters exist but are not in the current 1,600-word selection at all. Recovering audio for them would mean re-weighting vocabulary selection (score() already gives a -100 audio bonus, but teaching-order/frequency/common-priority terms currently outweigh it for these), which changes which words the curriculum actually teaches — a content decision, not a technical fix, so left for an explicit decision rather than done unilaterally.
 - **Actioned in the next pass** (user approved re-weighting): raised the audio score bonus from 100 to 300, chosen empirically (coverage climbs steeply to here then plateaus) and verified by diffing the entire word-set swap before committing — see the "Re-weight vocabulary selection" commit. 98 words now have wired audio (was 61). Also found and excluded two JMdict entries (おっぱい, コンドーム) that the reweighting would otherwise have pulled in: both pass every automated content filter but are not appropriate for a beginner-facing app, so a short human-reviewed exclusion list was added specifically for this class of gap.
+
+## Cross-check against real beginner courses (2026-09-30, research only — no code changed)
+User asked to check authoritative Japanese-learning methods (named Minna no Nihongo)
+against which characters Kansei teaches and in what order. Two distinct findings,
+one already-known/accepted, one newly discovered and unaddressed.
+
+**1. Kanji SELECTION bias is real, already documented, and independently confirmed.**
+docs/content/KANJI-FREQUENCY.md already states the source (KANJIDIC2's `<freq>`
+field, a word-frequency analysis of ~4 years of Mainichi Shimbun newspaper text,
+Girardi 1998) is newspaper-biased, and even names 犬 as an example everyday word
+this pushes out of the top 1000. Cross-checked this directly against Minna no
+Nihongo Shokyu I (via two independent web sources — en-nihongo.com and
+nihongokyoshi-net.com — which agree closely but not exactly, 243 vs 220 kanji;
+the lower figure matches the publisher's (3anet.co.jp/Bonjinsha) own stated count
+for the 2nd edition, so treat 243 as the upper bound of an approximate scrape, not
+a verified exact list). Of that course's ~223 overlapping kanji, **20 are entirely
+absent from Kansei's kanji set**: 兄 姉 弟 妹 (siblings), 犬 魚 (dog, fish), 茶 酒
+(tea, alcohol — 茶's absence was already known, see vocab-report.json's
+`starterWordsUnavailable`), 昼 晩 冬 (noon, evening, winter), 耳 (ear), 勉 窓 寝
+暗 飯 奥 堂 漢 (as in 勉強, 漢字 itself). This is a known, accepted tradeoff of
+the corpus choice (KANJI-FREQUENCY.md §6 shows 84% mean agreement with three
+independent modern corpora), not a new bug — flagged here for visibility, not
+fixed. Fixing it for real means picking a different or blended frequency source
+and re-deriving the whole 1000-kanji set, which cascades through every kanji,
+vocab, reading, component and audio file built on top of it — too large a change
+to make without an explicit decision to widen the character set itself.
+
+**2. Kanji teaching ORDER contradicts its own documented design intent — new finding.**
+docs/content/KANJI-FREQUENCY.md §4 states plainly: "Sequencing is owned by the
+curriculum build, which orders by stroke complexity, component reuse and
+vocabulary availability" — i.e. frequency rank should pick the *set*, never the
+*order*. But scripts/content/build-kanji-order.mjs's actual sort key is
+`frequencyRank + 18 × strokeCount` (plus a topological pass only for genuine
+component prerequisites) — frequency rank is a full, undiluted term in the
+ordering itself, not excluded from it. Concretely: 氏 (surname/"Mr./Ms.", old-JLPT
+level 1 — the hardest pre-2010 tier, frequency rank 84 purely because news
+articles constantly say "Yamada-shi") lands at teaching position 33, ahead of
+hundreds of genuinely elementary characters. Quantified with data already
+verified and licensed in the repo (KANJIDIC2's `jlptOldLevel` field, no new
+sourcing needed): of Kansei's first 100 taught kanji, only 47 are old-JLPT-N5
+(the beginner tier); 25 are N4, 27 are N3/N2, and one (氏) is N1. Cross-checked
+against the same Minna no Nihongo Shokyu I list: of its ~223 kanji that do exist
+in Kansei's set, only 107 (48%) land within Kansei's own first 220 teaching
+positions (matching that course's own scope), median position 497 — more than
+half of what a real beginner course teaches first gets deferred, in some cases
+past position 1200. This is a genuine implementation/documentation mismatch,
+not a content-sourcing problem, and it is fixable without touching which 1000
+kanji are taught or requiring any new external data (jlptOldLevel and grade are
+already in data/kanji-top1000.json). Not yet acted on — awaiting a decision on
+scope, since re-deriving order for all 1000 kanji also reshuffles
+data/components-ordered.json, data/kanji-lessons.json and every vocabulary
+entry's teachingOrder/lessonId that depends on it.
+
+Sources consulted: docs/content/KANJI-FREQUENCY.md (in-repo, already cites
+KANJIDIC/EDRDG/scriptin-kanji-frequency); https://en-nihongo.com/japanesetips/kanji/kanji-list-for-minna-no-nihongo/;
+https://nihongokyoshi-net.com/minnano-nihongo-kanji/; https://www.3anet.co.jp/np/books/2358/
+(publisher page, confirms 220/536 kanji counts for Shokyu I / I+II).
