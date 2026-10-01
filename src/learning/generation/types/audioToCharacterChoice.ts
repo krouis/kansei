@@ -77,6 +77,7 @@ export function generateAudioToCharacterChoice(
     related: ladder.relatedDistractors,
     forbid: (c) => soundAlikeStandalone(entry.glyph, c.glyph),
     random: ctx.random,
+    settings: ctx.settings,
   });
   if (!distractors) return reject('Could not assemble three safe character distractors.');
   const options = buildChoiceOptions(entry.glyph, entry.id, distractors, randomOrder(4, ctx.random));

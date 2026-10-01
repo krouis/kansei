@@ -1,4 +1,4 @@
-import type { CharacterEntry, KanaCharacter, KanjiCharacter, VocabEntry } from '@/domain';
+import type { CharacterEntry, KanaCharacter, KanjiCharacter, Settings, VocabEntry } from '@/domain';
 import { isKana, isKanji } from './pool';
 import { shuffle } from './rng';
 import type { Rng } from './rng';
@@ -47,6 +47,23 @@ export interface CharacterDistractorRequest {
    */
   forbid: (entry: CharacterEntry) => boolean;
   random: Rng;
+  /**
+   * Gates distractor tier the same way passesNewMaterialGate/passesGlobalGate
+   * (selection/items.ts) gate what can be selected as a target — a learner who
+   * turned extended or historical content off has never been taught those
+   * glyphs, so meeting one as a wrong-answer option is exactly as confusing as
+   * meeting it as new material would be, and for the same reason. Found live:
+   * ぉ (small-o, extended, "hiragana almost never uses it") offered as a
+   * confusable distractor for お to a learner who had not opted into extended
+   * forms — visually near-identical to the real answer, and never taught.
+   */
+  settings: Settings;
+}
+
+function admissibleDistractorTier(entry: CharacterEntry, settings: Settings): boolean {
+  if (entry.tier === 'historical') return settings.includeHistorical;
+  if (entry.tier === 'extended') return settings.includeExtended;
+  return true;
 }
 
 function kanaTiers(target: KanaCharacter, pool: readonly CharacterEntry[]): Array<[DistractorReason, CharacterEntry[]]> {
@@ -89,7 +106,7 @@ function kanjiTiers(
  */
 export function pickCharacterDistractors(req: CharacterDistractorRequest): CharacterDistractor[] | null {
   const targetId = String(req.target.id);
-  const usable = req.candidates.filter((c) => String(c.id) !== targetId && c.glyph !== req.target.glyph && !req.forbid(c));
+  const usable = req.candidates.filter((c) => String(c.id) !== targetId && c.glyph !== req.target.glyph && !req.forbid(c) && admissibleDistractorTier(c, req.settings));
 
   const tiers = isKana(req.target)
     ? kanaTiers(req.target, usable)

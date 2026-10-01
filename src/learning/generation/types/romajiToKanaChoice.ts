@@ -34,6 +34,7 @@ export function generateRomajiToKanaChoice(
     related: ladder.relatedDistractors,
     forbid: () => false,
     random: ctx.random,
+    settings: ctx.settings,
   });
   if (!distractors) return reject('Could not assemble three distractors from the same script.');
 
