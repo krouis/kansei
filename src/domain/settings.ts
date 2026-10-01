@@ -38,6 +38,8 @@ export interface Settings {
   /** Rōmaji scaffolding: how quickly support is withdrawn. */
   scaffoldWithdrawal: 'slow' | 'standard' | 'fast';
   showStreak: boolean;
+  /** Short procedural chimes on a graded answer and on finishing a session. */
+  playChimes: boolean;
   reminders: ReminderPreferences;
   /** Set once onboarding has been completed. */
   onboardingCompletedAt: string | null;

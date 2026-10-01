@@ -3,6 +3,7 @@ import type { AnswerSubmission, CapturedStroke, Grade, HintKind, PairResult, Que
 import { normaliseAnswer } from '@/domain';
 import type { Services } from '@/app/services';
 import { Button, Card } from '@/ui/primitives';
+import { chimeCorrect, chimeIncorrect } from '@/audio/chime';
 import { Writing } from './Writing';
 
 interface Draft {
@@ -81,6 +82,23 @@ export function Exercise({ question: q, result, retryResult, services, busy, onS
   // on every keystroke (same reasoning as Writing.tsx's referenceRef/guidesRef).
   const sendRef = useRef(send); sendRef.current = send;
   const advanceRef = useRef(advance); advanceRef.current = advance;
+  // Chimes once per reveal: the first-attempt grade when it first lands, and
+  // again for a guided correction's own result once that re-reveals the
+  // feedback view. Compared by reference, not a boolean flag, so a fresh
+  // Grade object (a new attempt) always re-triggers even if its outcome
+  // happens to match the last one chimed for.
+  const chimedFor = useRef<Grade | null>(null);
+  useEffect(() => {
+    if (!showing) return;
+    const latest = retryResult ?? result;
+    if (!latest || chimedFor.current === latest) return;
+    chimedFor.current = latest;
+    if (services.settings.silentPractice || services.settings.playChimes === false) return;
+    // 'uncertain' (e.g. ambiguous handwriting) is never a judged pass/fail,
+    // so it gets no verdict sound either.
+    if (latest.outcome === 'correct') chimeCorrect();
+    else if (latest.outcome === 'incorrect') chimeIncorrect();
+  }, [showing, result, retryResult, services]);
   useEffect(() => { let active = true; if (q.requiredStrokeData[0]) void services.content.strokes(q.requiredStrokeData[0]).then(r => { if (active) setReference(r ?? null); }).catch(e => setError(String(e))); return () => { active = false; }; }, [q, services]);
   useEffect(() => { if (q.response === 'typed' && !showing) input.current?.focus(); }, [q, showing]);
   useEffect(() => {

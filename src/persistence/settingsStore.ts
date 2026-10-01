@@ -36,6 +36,7 @@ export function defaultSettings(): Settings {
     selectionPolicy: { dueReview: 6, weakSkillOrConfusion: 2, newOrExtending: 2 },
     scaffoldWithdrawal: 'standard',
     showStreak: true,
+    playChimes: true,
     reminders: {
       enabled: false,
       times: [],
@@ -70,7 +71,12 @@ export function createSettingsStore(idb: IDBPDatabase<KanseiSchema>): SettingsSt
     async load(): Promise<Settings> {
       return guard('loading settings', async () => {
         const row = await idb.get('settings', SETTINGS_KEY);
-        if (row) return row.value;
+        // Merged with defaults, not returned raw: a field added to Settings
+        // after a learner's first install (showStreak and playChimes both
+        // shipped this way) is simply absent from their stored row, and
+        // without this merge it would read as `undefined` — falsy, and
+        // silently off — rather than the documented default.
+        if (row) return { ...defaultSettings(), ...row.value };
         const fresh = defaultSettings();
         // A brand-new install: write the defaults immediately rather than
         // leaving the store empty, so export()/backup never has to treat

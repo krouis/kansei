@@ -4,8 +4,13 @@ import userEvent from '@testing-library/user-event';
 import { Exercise } from '@/features/practice/Exercise';
 import type { Services } from '@/app/services';
 import { asItemId, asQuestionId, type Grade, type Question } from '@/domain';
+import { chimeCorrect, chimeIncorrect } from '@/audio/chime';
+
+vi.mock('@/audio/chime', () => ({ chimeCorrect: vi.fn(), chimeIncorrect: vi.fn() }));
 
 const incorrect: Grade = { outcome: 'incorrect', unaidedFirstAttempt: false, message: 'Try again.', distinction: null, handwriting: null, confusedWith: null };
+const correct: Grade = { outcome: 'correct', unaidedFirstAttempt: true, message: 'Correct.', distinction: null, handwriting: null, confusedWith: null };
+const uncertain: Grade = { outcome: 'uncertain', unaidedFirstAttempt: false, message: 'Could not tell.', distinction: null, handwriting: null, confusedWith: null };
 function question(overrides: Partial<Question> = {}): Question {
   return { id: asQuestionId('exercise-test'), type: 'character-to-reading-typed', targetItemId: asItemId('kana:hi:ga'), targetReadingId: null,
     skill: 'readingRecall', direction: 'glyph-to-reading', response: 'typed', inputScript: 'kana', evidence: 'strong',
@@ -14,12 +19,48 @@ function question(overrides: Partial<Question> = {}): Question {
     allowedHints: ['reveal-answer'], distinction: null, selectionReason: 'due-review', focusedPractice: false, requiredAudio: [], requiredStrokeData: [], ...overrides };
 }
 function mount(q = question(), extra: Partial<React.ComponentProps<typeof Exercise>> = {}) {
-  const props = { question: q, result: null, busy: false, services: { content: { audio: () => undefined, strokes: async () => undefined }, audio: { unlock: vi.fn(async () => true), play: vi.fn(async () => {}) } } as unknown as Services,
+  const props = { question: q, result: null, busy: false, services: { content: { audio: () => undefined, strokes: async () => undefined }, audio: { unlock: vi.fn(async () => true), play: vi.fn(async () => {}) }, settings: { silentPractice: false, playChimes: false } } as unknown as Services,
     onSubmit: vi.fn(async () => {}), onRetry: vi.fn(async () => {}), onAdvance: vi.fn(async () => {}), ...extra };
   return { ...render(<Exercise {...props} />), props };
 }
-beforeEach(() => sessionStorage.clear());
+function mountGraded(result: Grade, settings: { silentPractice: boolean; playChimes: boolean }) {
+  return mount(question(), { result, services: { content: { audio: () => undefined, strokes: async () => undefined }, audio: { unlock: vi.fn(async () => true), play: vi.fn(async () => {}) }, settings } as unknown as Services });
+}
+beforeEach(() => { sessionStorage.clear(); vi.clearAllMocks(); });
 afterEach(cleanup);
+
+describe('exercise chimes', () => {
+  it('chimes once when a correct answer is revealed, with chimes on', () => {
+    mountGraded(correct, { silentPractice: false, playChimes: true });
+    expect(chimeCorrect).toHaveBeenCalledTimes(1);
+    expect(chimeIncorrect).not.toHaveBeenCalled();
+  });
+  it('chimes once when an incorrect answer is revealed, with chimes on', () => {
+    mountGraded(incorrect, { silentPractice: false, playChimes: true });
+    expect(chimeIncorrect).toHaveBeenCalledTimes(1);
+    expect(chimeCorrect).not.toHaveBeenCalled();
+  });
+  it('does not chime for an uncertain outcome — it is never a judged pass or fail', () => {
+    mountGraded(uncertain, { silentPractice: false, playChimes: true });
+    expect(chimeCorrect).not.toHaveBeenCalled();
+    expect(chimeIncorrect).not.toHaveBeenCalled();
+  });
+  it('stays silent when chimes are turned off', () => {
+    mountGraded(correct, { silentPractice: false, playChimes: false });
+    expect(chimeCorrect).not.toHaveBeenCalled();
+  });
+  it('stays silent during silent practice even if chimes are otherwise on', () => {
+    mountGraded(correct, { silentPractice: true, playChimes: true });
+    expect(chimeCorrect).not.toHaveBeenCalled();
+  });
+  it('chimes again for a guided correction’s own result once it re-reveals feedback', () => {
+    const { rerender, props } = mountGraded(incorrect, { silentPractice: false, playChimes: true });
+    expect(chimeIncorrect).toHaveBeenCalledTimes(1);
+    const retried = { ...incorrect, outcome: 'correct' as const, unaidedFirstAttempt: false, message: 'Correct.' };
+    rerender(<Exercise {...props} retryResult={retried} />);
+    expect(chimeCorrect).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('exercise input evidence', () => {
   it('does not submit during IME composition, then submits NFC-normalized text with IME evidence', async () => {

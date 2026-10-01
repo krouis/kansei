@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS: Settings = {
   selectionPolicy: { dueReview: 6, weakSkillOrConfusion: 2, newOrExtending: 2 },
   scaffoldWithdrawal: 'standard',
   showStreak: true,
+  playChimes: true,
   reminders: {
     enabled: false, times: [], weekdays: [], afterLastSeries: false, quietHours: null,
     snoozeMinutes: 15, pausedUntil: null, skipWhenGoalMet: true, notificationPermission: 'default',
