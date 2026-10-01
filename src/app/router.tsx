@@ -1,5 +1,19 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { flushSync } from 'react-dom';
 import type { ReactNode } from 'react';
+
+/**
+ * Mirrors theme.tsx's reduced-motion resolution without needing its context:
+ * RouterProvider sits above ThemeProvider in the tree (see App.tsx), so
+ * `navigate` cannot consume `useReducedMotion()`. ThemeProvider stamps the
+ * same explicit choice onto `<html data-motion>`, which is reachable from
+ * anywhere via the DOM.
+ */
+function prefersReducedMotion(): boolean {
+  const explicit = document.documentElement.getAttribute('data-motion');
+  if (explicit) return explicit === 'reduce';
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+}
 
 /**
  * A minimal history router.
@@ -80,7 +94,17 @@ export function RouterProvider({ children }: { children: ReactNode }) {
       window.history.pushState(null, '', target);
       setDepth((d) => d + 1);
     }
-    setRoute(parseRoute(window.location.href));
+    const apply = () => setRoute(parseRoute(window.location.href));
+    // A soft cross-fade between sections instead of a hard cut, skipped
+    // entirely under reduced motion rather than left to animate at 0ms —
+    // document.startViewTransition is undeclared in some supported browsers'
+    // lib.dom typings yet, hence the cast.
+    const withViewTransition = (document as Document & { startViewTransition?: (cb: () => void) => void }).startViewTransition;
+    if (withViewTransition && !prefersReducedMotion()) {
+      withViewTransition.call(document, () => flushSync(apply));
+    } else {
+      apply();
+    }
     // A route change is a new view: move focus to the main region so keyboard
     // and screen-reader users are not left at the bottom of the previous page.
     requestAnimationFrame(() => {

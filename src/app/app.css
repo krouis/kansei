@@ -1,4 +1,4 @@
-.stack{display:grid;gap:1.5rem}.welcome{max-width:680px;margin:4vh auto;padding:1.5rem}.welcome h1,.hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:500;max-width:16ch}.eyebrow{text-transform:uppercase;font-size:.72rem;letter-spacing:.15em;color:var(--ink-soft);margin-bottom:.6rem}.seal-large{background:var(--seal);color:var(--paper);font-family:var(--font-jp-serif);width:64px;height:72px;font-size:42px;text-align:center;border-radius:5px;transform:rotate(-3deg)}.hero{position:relative;padding-right:25%!important;overflow:hidden}.hero p{max-width:45ch;margin:1rem 0}.hero-glyph{position:absolute;right:5%;top:20%;font-size:clamp(5rem,13vw,10rem);color:var(--ink-soft);opacity:.3}.jp{font-family:var(--font-jp)}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem}.field{display:grid;gap:.4rem;margin:.6rem 0}.field input,.field select{padding:.75rem;border:1px solid var(--rule-strong);border-radius:.5rem;background:var(--surface);min-width:0}label{display:block}input[type=checkbox]{margin-right:.6rem;width:1.1rem;height:1.1rem}.actions{display:flex;flex-wrap:wrap;gap:.65rem;margin:1rem 0}.notice{border:1px solid var(--danger-text);padding:1rem;margin-bottom:1rem;border-radius:.6rem}.practice-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem}.exercise{max-width:760px;width:100%;margin:auto;display:grid;gap:1rem}.exercise h2{font-size:1.25rem}.prompt{font-size:clamp(3rem,11vw,6rem);line-height:1.5;text-align:center;padding:.5rem;overflow-wrap:anywhere}.choices{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}.choice{min-height:90px!important;font-size:1.8rem!important;position:relative}.keycap{font-size:.75rem;color:var(--ink-soft);position:absolute;top:.4rem;left:.6rem}[aria-pressed=true]{outline:2px solid var(--accent);outline-offset:2px;background:var(--accent-soft)!important}.answer{font-size:3rem}.feedback{display:grid;gap:.8rem;border-top:1px solid var(--rule);padding-top:1rem}.matching{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin:1rem 0}.matching>div{display:grid;gap:.75rem}.writing{max-width:360px;width:100%;margin:auto}.writing-canvas{display:block;width:100%;aspect-ratio:1;touch-action:none;border:1px solid var(--rule-strong);border-radius:.5rem;background:var(--canvas-paper)}.writing small{font-size:.7rem;color:var(--ink-soft)}.intro-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin:1.2rem 0}.intro-grid .prompt{font-size:3.5rem}.intro-grid p{font-size:.8rem}.character-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:.65rem}.character{display:grid;gap:.2rem;justify-items:center;padding:.85rem .25rem;background:var(--surface);border:1px solid var(--rule-strong);border-radius:.65rem;cursor:pointer}.character .jp{font-size:2rem}.character small{font-size:.66rem}.stage-learning{border-bottom:3px solid var(--stage-learning)}.stage-consolidating{border-bottom:3px solid var(--stage-consolidating)}.stage-retained{border-bottom:3px solid var(--stage-retained)}.group-title{font-size:1.05rem;margin:1.4rem 0 .7rem;text-transform:capitalize}.footnote{font-size:.75rem;color:var(--ink-soft);padding:3rem 0 1rem}.stack h1{font-size:clamp(2rem,4vw,3rem)}.stack h2{margin-bottom:.5rem}.stack p+p{margin-top:.75rem}table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{text-align:left;padding:.65rem .25rem;border-bottom:1px solid var(--rule)}progress{width:100%;height:8px;accent-color:var(--accent)}@media(max-width:600px){.two-col{grid-template-columns:1fr}.hero{padding-right:1.5rem!important}.hero-glyph{display:none}.welcome{margin:0 auto;padding:.5rem}.practice-head{font-size:.8rem}.character-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+.stack{display:grid;gap:1.5rem}.welcome{max-width:680px;margin:4vh auto;padding:1.5rem}.welcome h1,.hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:500;max-width:16ch}.eyebrow{text-transform:uppercase;font-size:.72rem;letter-spacing:.15em;color:var(--ink-soft);margin-bottom:.6rem}.seal-large{background:var(--seal);color:var(--paper);font-family:var(--font-jp-serif);width:64px;height:72px;font-size:42px;text-align:center;border-radius:5px;transform:rotate(-3deg)}.hero{position:relative;padding-right:25%!important;overflow:hidden}.hero p{max-width:45ch;margin:1rem 0}.hero-glyph{position:absolute;right:5%;top:20%;font-size:clamp(5rem,13vw,10rem);color:var(--ink-soft);opacity:.3}.jp{font-family:var(--font-jp)}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem}.field{display:grid;gap:.4rem;margin:.6rem 0}.field input,.field select{padding:.75rem;border:1px solid var(--rule-strong);border-radius:.5rem;background:var(--surface);min-width:0}label{display:block}input[type=checkbox]{margin-right:.6rem;width:1.1rem;height:1.1rem;accent-color:var(--accent)}.actions{display:flex;flex-wrap:wrap;gap:.65rem;margin:1rem 0}.notice{border:1px solid var(--danger-text);padding:1rem;margin-bottom:1rem;border-radius:.6rem}.practice-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem}.exercise{max-width:760px;width:100%;margin:auto;display:grid;gap:1rem}.exercise h2{font-size:1.25rem}.prompt{font-size:clamp(3rem,11vw,6rem);line-height:1.5;text-align:center;padding:.5rem;overflow-wrap:anywhere}.choices{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}.choice{min-height:90px!important;font-size:1.8rem!important;position:relative}.keycap{font-size:.75rem;color:var(--ink-soft);position:absolute;top:.4rem;left:.6rem}[aria-pressed=true]{outline:2px solid var(--accent);outline-offset:2px;background:var(--accent-soft)!important}.answer{font-size:3rem}.feedback{display:grid;gap:.8rem;border-top:1px solid var(--rule);padding-top:1rem}.matching{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin:1rem 0}.matching>div{display:grid;gap:.75rem}.writing{max-width:360px;width:100%;margin:auto}.writing-canvas{display:block;width:100%;aspect-ratio:1;touch-action:none;border:1px solid var(--rule-strong);border-radius:.5rem;background:var(--canvas-paper)}.writing small{font-size:.7rem;color:var(--ink-soft)}.intro-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin:1.2rem 0}.intro-grid .prompt{font-size:3.5rem}.intro-grid p{font-size:.8rem}.character-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:.65rem}.character{display:grid;gap:.2rem;justify-items:center;padding:.85rem .25rem;background:var(--surface);border:1px solid var(--rule-strong);border-radius:.65rem;cursor:pointer}.character .jp{font-size:2rem}.character small{font-size:.66rem}.stage-learning{border-bottom:3px solid var(--stage-learning)}.stage-consolidating{border-bottom:3px solid var(--stage-consolidating)}.stage-retained{border-bottom:3px solid var(--stage-retained)}.group-title{font-size:1.05rem;margin:1.4rem 0 .7rem;text-transform:capitalize}.footnote{font-size:.75rem;color:var(--ink-soft);padding:3rem 0 1rem}.stack h1{font-size:clamp(2rem,4vw,3rem)}.stack h2{margin-bottom:.5rem}.stack p+p{margin-top:.75rem}table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{text-align:left;padding:.65rem .25rem;border-bottom:1px solid var(--rule)}progress{width:100%;height:8px;accent-color:var(--accent)}@media(max-width:600px){.two-col{grid-template-columns:1fr}.hero{padding-right:1.5rem!important}.hero-glyph{display:none}.welcome{margin:0 auto;padding:.5rem}.practice-head{font-size:.8rem}.character-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 
 /* ---------------------------------------------------------------------
  * Warmth pass: the seal-stamp completion moment, a felt "notebook"
@@ -24,7 +24,13 @@
 /* Character tiles: a small paper-lift on press, so choosing one feels
    tactile rather than just re-coloring on click. */
 .character {
-  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+  /* Spring on the release transition (back to resting) is what reads as a
+     settle; the press-down itself stays a quick ease-out so it feels
+     instant rather than springy on the way in. */
+  transition: transform var(--dur-fast) var(--ease-spring), box-shadow var(--dur-fast) var(--ease-spring);
+}
+.character:active {
+  transition-timing-function: var(--ease-out), var(--ease-out);
 }
 .character:active {
   transform: translateY(1px) scale(0.98);
@@ -149,3 +155,50 @@
   font-size: var(--text-xs);
   font-weight: 600;
 }
+
+/* ---------------------------------------------------------------------
+ * Polish pass: a soft cross-fade between sections (router.tsx skips this
+ * entirely under reduced motion, rather than calling it and animating at
+ * near-zero duration), tied to the existing motion tokens instead of the
+ * View Transitions API's own default timing.
+ * ------------------------------------------------------------------- */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-slow);
+  animation-timing-function: var(--ease-in-out);
+}
+
+/* The raw <select>/<input> elements used directly in Settings/onboarding
+   JSX (not routed through the Input primitive) still showed each browser's
+   own dropdown arrow and number spinner against otherwise custom-styled
+   surfaces. Brought in line with ui.module.css's .input: same hover/focus
+   language, no native chrome. */
+.field select {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%),
+    linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+  background-position: right 1.1rem center, right 0.85rem center;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 2.25rem;
+}
+.field input[type='number'] { appearance: textfield; }
+.field input[type='number']::-webkit-outer-spin-button,
+.field input[type='number']::-webkit-inner-spin-button { appearance: none; margin: 0; }
+.field input:hover, .field select:hover { border-color: var(--ink-faint); }
+.field input:focus-visible, .field select:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Selecting an answer or matching-pair tile previously snapped straight to
+   its [aria-pressed=true] outline with no transition at all. A quick spring
+   pop gives the single most-repeated action in the app (picking an answer)
+   the same satisfying, tactile quality the character tiles already have. */
+.choice, .matching button {
+  transition: background-color var(--dur-fast) var(--ease-spring), outline-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-spring);
+}
+.choice[aria-pressed='true'], .matching button[aria-pressed='true'] { transform: scale(1.02); }
+
