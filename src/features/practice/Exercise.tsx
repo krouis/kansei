@@ -11,6 +11,10 @@ interface Draft {
   retry: boolean; ime: boolean; elapsedMs: number; played: boolean;
 }
 
+const SKILL_LABEL: Record<string, string> = { recognition: 'Recognition', readingRecall: 'Reading', listening: 'Listening', handwriting: 'Writing' };
+const REASON_LABEL: Record<string, string> = { 'due-review': 'Review', 'weak-skill': 'Review', 'confusion-repair': 'Easy to mix up', 'new-material': 'New', retry: 'Retry', focused: 'Focused practice' };
+const OUTCOME_MARK: Record<string, string> = { correct: '✓', incorrect: '✕', uncertain: '〜' };
+
 function readDraft(question: Question): Partial<Draft> {
   try {
     const value: unknown = JSON.parse(sessionStorage.getItem(`kansei:answer:${question.id}`) ?? 'null');
@@ -40,6 +44,7 @@ export function Exercise({ question: q, result, retryResult, services, busy, onS
   const submitting = useRef(false);
   const input = useRef<HTMLInputElement>(null);
   const showing = result && !retry;
+  const answered = q.response === 'choice' ? choice !== null : q.response === 'typed' ? text.trim().length > 0 : q.response === 'matching' ? pairs.length === q.pairs?.length : strokes.length > 0;
   useEffect(() => {
     try {
       sessionStorage.setItem(`kansei:answer:${q.id}`, JSON.stringify({ text, choice, hints, replays, strokes, canvasPx, pairs, left, retry, played, ime: ime.current, elapsedMs: performance.now() - started.current } satisfies Draft));
@@ -52,15 +57,6 @@ export function Exercise({ question: q, result, retryResult, services, busy, onS
       sessionStorage.removeItem(`kansei:answer:${q.id}`);
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
-  useEffect(() => { let active = true; if (q.requiredStrokeData[0]) void services.content.strokes(q.requiredStrokeData[0]).then(r => { if (active) setReference(r ?? null); }).catch(e => setError(String(e))); return () => { active = false; }; }, [q, services]);
-  useEffect(() => { if (q.response === 'typed' && !showing) input.current?.focus(); }, [q, showing]);
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => {
-      if (busy || showing || e.isComposing || composing.current || e.ctrlKey || e.metaKey || e.altKey) return;
-      if (e.target instanceof Element && e.target.closest('input,textarea,select,[contenteditable]')) return;
-      if (/^[1-4]$/.test(e.key) && q.options?.[Number(e.key) - 1]) { e.preventDefault(); setChoice(q.options[Number(e.key) - 1]!.key); }
-    }; window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
-  }, [q, busy, showing]);
   const send = async (declined = false) => {
     if (composing.current || busy || submitting.current) return;
     submitting.current = true;
@@ -79,9 +75,36 @@ export function Exercise({ question: q, result, retryResult, services, busy, onS
     }
   };
   const play = async () => { const audio = showing ? services.content.audio(q.targetItemId) : q.prompt.audio; if (!audio) return; try { await services.audio.unlock(); await services.audio.play(audio); if (played) setReplays(n => n + 1); setPlayed(true); } catch (e) { setError(String(e)); } };
-  const answered = q.response === 'choice' ? choice !== null : q.response === 'typed' ? text.trim().length > 0 : q.response === 'matching' ? pairs.length === q.pairs?.length : strokes.length > 0;
+  // Mirrors of send/advance, read inside the keydown listener instead of
+  // listed as its dependencies: both are recreated every render, so
+  // depending on them directly would tear the listener down and rebuild it
+  // on every keystroke (same reasoning as Writing.tsx's referenceRef/guidesRef).
+  const sendRef = useRef(send); sendRef.current = send;
+  const advanceRef = useRef(advance); advanceRef.current = advance;
+  useEffect(() => { let active = true; if (q.requiredStrokeData[0]) void services.content.strokes(q.requiredStrokeData[0]).then(r => { if (active) setReference(r ?? null); }).catch(e => setError(String(e))); return () => { active = false; }; }, [q, services]);
+  useEffect(() => { if (q.response === 'typed' && !showing) input.current?.focus(); }, [q, showing]);
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (busy || e.isComposing || composing.current || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.target instanceof Element && e.target.closest('input,textarea,select,[contenteditable]')) return;
+      // A focused button already handles its own Enter/Space activation
+      // natively; only step in when nothing is — the common case right
+      // after submitting, when the just-removed "Check answer" button
+      // leaves focus on nothing in particular.
+      const onButton = e.target instanceof Element && e.target.closest('button');
+      if (showing) {
+        if (onButton || (e.key !== 'Enter' && e.key !== ' ')) return;
+        e.preventDefault();
+        void advanceRef.current();
+        return;
+      }
+      if (/^[1-4]$/.test(e.key) && q.options?.[Number(e.key) - 1]) { e.preventDefault(); setChoice(q.options[Number(e.key) - 1]!.key); return; }
+      if (!onButton && e.key === 'Enter' && answered) { e.preventDefault(); void sendRef.current(); }
+    };
+    window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
+  }, [q, busy, showing, answered]);
   return <Card padding="lg" className="exercise">
-    <p className="eyebrow">{q.skill === 'readingRecall' ? 'Reading recall' : q.skill} · {q.focusedPractice ? 'Focused practice — weaker recognition evidence' : q.selectionReason.replaceAll('-', ' ')}</p>
+    <p className="eyebrow">{SKILL_LABEL[q.skill] ?? q.skill} · {q.focusedPractice ? 'Focused practice' : (REASON_LABEL[q.selectionReason] ?? q.selectionReason)}</p>
     <h2>{q.prompt.instruction}</h2>
     {q.prompt.text && <div className={`prompt ${q.prompt.textIsJapanese ? 'jp' : ''}`} lang={q.prompt.textIsJapanese ? 'ja' : undefined} style={{ fontFamily: q.prompt.face === 'serif' ? 'var(--font-jp-serif)' : q.prompt.face === 'textbook' ? 'var(--font-jp-hand)' : undefined }}>{q.prompt.text}</div>}
     {q.prompt.context && <p>{q.prompt.context}</p>}{q.prompt.scaffold && <p>{q.prompt.scaffold}</p>}
@@ -96,6 +119,6 @@ export function Exercise({ question: q, result, retryResult, services, busy, onS
       {(retry || hints.includes('reveal-answer')) && <p className="answer jp" lang="ja">{q.canonicalAnswer}</p>}
       <div className="actions"><Button type="submit" variant="primary" disabled={busy || !answered}>Check answer</Button><Button disabled={busy} onClick={() => void send(true)}>I don’t know</Button></div>
       <div className="actions"><Button disabled={busy} onClick={() => setHints(h => [...new Set([...h, 'reveal-answer' as const])])}>Reveal answer</Button>{q.response === 'handwriting' && q.allowedHints.includes('reference-animation') && <Button disabled={busy || !reference} onClick={() => setHints(h => [...new Set([...h, 'reference-animation' as const])])}>Show writing guide</Button>}</div>
-    </form> : <div className="feedback" role="status" aria-live="polite"><h3>First attempt: {result.message}</h3>{retryResult && <p>Guided correction: {retryResult.message}</p>}<div className="answer jp" lang="ja">{q.canonicalAnswer}</div>{result.distinction && <p>{result.distinction}</p>}{q.alsoAcceptableNote && <p>{q.alsoAcceptableNote}</p>}{result.handwriting && <ul>{(['identity','strokeCount','strokeOrder','strokeDirection','shape'] as const).map(k => <li key={k}>{k}: {result.handwriting![k].status}</li>)}</ul>}{result.handwriting?.uncertaintyReason && <p>{result.handwriting.uncertaintyReason}</p>}{result.handwriting?.strokeNotes.map((note, index) => <p key={index}>Stroke {note.strokeIndex + 1}: {note.note}</p>)}<p>First attempt kept. A guided correction does not change its result.</p><div className="actions"><Button variant="primary" disabled={busy} onClick={() => void advance()}>Continue · +1 XP</Button>{result.outcome !== 'correct' && <Button disabled={busy} onClick={() => { setRetry(true);setStrokes([]);setText('');setChoice(null);setPairs([]);setLeft(null);setError(''); }}>Guided correction</Button>}</div></div>}
+    </form> : <div className={`feedback feedback-${result.outcome}`} role="status" aria-live="polite"><h3><span className="feedback-mark" aria-hidden="true">{OUTCOME_MARK[result.outcome]}</span>{retryResult ? `First attempt: ${result.message}` : result.message}</h3>{retryResult && <p>Second try: {retryResult.message}</p>}<div className="answer jp" lang="ja">{q.canonicalAnswer}</div>{result.distinction && <p>{result.distinction}</p>}{q.alsoAcceptableNote && <p>{q.alsoAcceptableNote}</p>}{result.handwriting && <ul>{(['identity','strokeCount','strokeOrder','strokeDirection','shape'] as const).map(k => <li key={k}>{k}: {result.handwriting![k].status}</li>)}</ul>}{result.handwriting?.uncertaintyReason && <p>{result.handwriting.uncertaintyReason}</p>}{result.handwriting?.strokeNotes.map((note, index) => <p key={index}>Stroke {note.strokeIndex + 1}: {note.note}</p>)}<div className="actions"><Button variant="primary" disabled={busy} onClick={() => void advance()}>Continue · +1 XP</Button>{result.outcome !== 'correct' && <Button disabled={busy} title="Practising the correct motion again — it will not change the grade above." onClick={() => { setRetry(true);setStrokes([]);setText('');setChoice(null);setPairs([]);setLeft(null);setError(''); }}>Guided correction</Button>}</div></div>}
   </Card>;
 }

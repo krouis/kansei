@@ -108,3 +108,44 @@
 @media (prefers-reduced-motion: reduce) {
   .ink-flourish path { animation: none; stroke-dashoffset: 0; opacity: 0.8; }
 }
+
+/* ---------------------------------------------------------------------
+ * Gamification pass: right/wrong gets a felt signal instead of looking
+ * identical to every other screen, the glyph prompt and footer are
+ * tightened so a question fits without scrolling on a normal laptop, and
+ * a quiet streak chip appears only during a genuine hot streak.
+ * ------------------------------------------------------------------- */
+
+/* The feedback card's top divider is already there for layout; recolouring
+   it by outcome turns it into a mark, like a line drawn across a corrected
+   notebook page. Colour is never the only signal — .feedback-mark glyph
+   and the message text carry the same information. */
+.feedback { border-top-width: 3px; }
+.feedback-correct { border-top-color: var(--ok); }
+.feedback-incorrect { border-top-color: var(--danger); }
+.feedback-uncertain { border-top-color: var(--warn); }
+.feedback-mark { margin-right: 0.4em; font-size: 1.1em; }
+.feedback-correct .feedback-mark { color: var(--ok-text); }
+.feedback-incorrect .feedback-mark { color: var(--danger-text); }
+.feedback-uncertain .feedback-mark { color: var(--warn-text); }
+
+/* The glyph prompt previously carried a lot of unused vertical space from
+   its 1.5 line-height at display sizes up to 6rem — the single biggest
+   contributor to needing a scroll to reach "Check answer" on a normal
+   laptop height. Tightened here rather than shrinking the glyph itself. */
+.prompt { line-height: 1.15; padding: 0.25rem; }
+.choices { margin: 0.9rem 0; }
+
+/* A quiet, in-session streak signal — shown only once it means something
+   (3 in a row), gone otherwise, no flame or sound. Vermilion is reserved
+   for the seal and genuine emphasis; a real streak qualifies. */
+.streak-chip {
+  display: inline-block;
+  margin-left: 0.6rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--seal-soft);
+  color: var(--seal-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}

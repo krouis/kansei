@@ -97,7 +97,36 @@ describe('exercise input evidence', () => {
   it('keeps original feedback distinct from a successful guided correction', () => {
     mount(question(), { result: incorrect, retryResult: { ...incorrect, outcome: 'correct', message: 'Correct.' } });
     expect(screen.getByText('First attempt: Try again.')).toBeInTheDocument();
-    expect(screen.getByText('Guided correction: Correct.')).toBeInTheDocument();
+    expect(screen.getByText('Second try: Correct.')).toBeInTheDocument();
+  });
+
+  it('submits a keyboard-selected choice by pressing Enter, with nothing focused', async () => {
+    const options = [
+      { key: 'a', display: 'あ', itemId: null, correct: true, distractorReason: null },
+      { key: 'b', display: 'い', itemId: null, correct: false, distractorReason: 'random-in-pool' },
+    ];
+    const { props } = mount(question({ response: 'choice', options }));
+    fireEvent.keyDown(window, { key: '1' });
+    expect(screen.getByRole('button', { name: 'Check answer' })).toBeEnabled();
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() => expect(props.onSubmit).toHaveBeenCalledWith(expect.objectContaining({ chosenOptionKey: 'a' })));
+  });
+
+  it('advances past feedback by pressing Enter, with nothing focused', async () => {
+    const { props } = mount(question(), { result: incorrect });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() => expect(props.onAdvance).toHaveBeenCalled());
+  });
+
+  it('leaves Enter to a focused button instead of also advancing past feedback', async () => {
+    const { props } = mount(question(), { result: incorrect });
+    const user = userEvent.setup();
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Guided correction' })).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(props.onAdvance).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Check answer' })).toBeInTheDocument();
   });
 
   it('does not start a second submission while the first is pending', async () => {

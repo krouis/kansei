@@ -47,6 +47,33 @@ function summarizeSession(session: SessionState, s: Services): { correct: number
   const glyphs = [...new Set(screens.map(sc => s.content.character(sc.question.targetItemId)?.glyph).filter((g): g is string => Boolean(g)))];
   return { correct, total: screens.length, glyphs };
 }
+
+/** Consecutive correct screens ending at the most recently answered one, across the whole session. */
+export function currentStreak(session: SessionState | undefined): number {
+  if (!session) return 0;
+  const screens = session.series.flatMap(series => series.screens).filter(sc => sc.result);
+  let streak = 0;
+  for (let i = screens.length - 1; i >= 0; i -= 1) {
+    if (screens[i]!.result!.grade.outcome !== 'correct') break;
+    streak += 1;
+  }
+  return streak;
+}
+
+export function addDays(localDate: string, delta: number): string {
+  const [y, m, d] = localDate.split('-').map(Number);
+  const date = new Date(y!, m! - 1, d! + delta);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+/** Consecutive calendar days with any completed practice, counting back from today (or yesterday, if today hasn't happened yet). */
+export function dailyStreak(daily: DailyRecord[], today: string): number {
+  const practiced = new Set(daily.filter(d => d.xp > 0).map(d => d.localDate));
+  let cursor = practiced.has(today) ? today : addDays(today, -1);
+  let streak = 0;
+  while (practiced.has(cursor)) { streak += 1; cursor = addDays(cursor, -1); }
+  return streak;
+}
 let boot: ReturnType<typeof createServices> | undefined;
 export function App() {
   const [services, setServices] = useState<Services>(); const [error,setError] = useState('');
@@ -99,7 +126,7 @@ function Workspace({services:s}:{services:Services}) {
       <div className="stack">
       {session?.status!=='active'&&<ReminderNotice settings={settings} dailyXp={stats.xp} lastCompletedAt={stats.sessions.flatMap(x=>x.series.map(y=>y.completedAt)).filter((x):x is string=>Boolean(x)).sort().at(-1)??null} onChange={save}/>}
       {route.section==='practice'&&<>
-        {session?.status==='active'&&screen&&series?<><div className="practice-head"><span>Series {session.activeSeriesIndex+1} of {session.seriesCount??1}</span><span>Question {series.cursor+1} / 10</span><Button disabled={busy} onClick={()=>run(async()=>{const wasPlacement=session?.kind==='placement';await s.engine.abandon(new Date());setSession(undefined);if(wasPlacement&&!settings.onboardingCompletedAt)await finishOnboarding();})}>End session</Button></div><progress aria-label="Session progress" value={series.cursor} max={10}/>
+        {session?.status==='active'&&screen&&series?<><div className="practice-head"><span>Series {session.activeSeriesIndex+1} of {session.seriesCount??1}</span><span>Question {series.cursor+1} / 10{currentStreak(session)>=3&&<span className="streak-chip">{currentStreak(session)} in a row</span>}</span><Button disabled={busy} onClick={()=>run(async()=>{const wasPlacement=session?.kind==='placement';await s.engine.abandon(new Date());setSession(undefined);if(wasPlacement&&!settings.onboardingCompletedAt)await finishOnboarding();})}>End session</Button></div><progress aria-label="Session progress" value={series.cursor} max={10}/>
           {intro?<Card padding="lg"><p className="eyebrow">Meet this group</p><h2>Look, listen, then try from memory.</h2><div className="intro-grid">{[...new Set(series.screens.map(x=>x.question.targetItemId))].map(id=>s.content.character(id)).filter((c):c is KanaCharacter=>c?.kind==='kana').map(c=><div key={c.id}><div className="prompt jp" lang="ja">{c.glyph}</div><p>{c.romaji}</p>{s.content.audio(c.id)&&<Button onClick={()=>run(()=>s.audio.play(s.content.audio(c.id)!))}>Listen to {c.romaji}</Button>}<p>{c.note}</p></div>)}</div><Button variant="primary" onClick={()=>setIntro(false)}>Start questions</Button></Card>:
           <Exercise key={screen.question.id} question={screen.question} result={screen.result?.grade??null} retryResult={screen.retries.at(-1)?.grade??null} services={s} busy={busy} onSubmit={a=>act(async()=>{await s.engine.submit(a,new Date());setSession(structuredClone((await s.engine.resume())!));},true)} onRetry={a=>act(async()=>{await s.engine.submitRetry(a,new Date());setSession(structuredClone((await s.engine.resume())!));},true)} onAdvance={()=>act(async()=>{const x=await s.engine.advance(new Date());setSession(structuredClone(x.state));})}/>}</>:
           <>{(() => {
@@ -116,14 +143,14 @@ function Workspace({services:s}:{services:Services}) {
                 : <div className="hero-glyph jp" lang="ja">{heroGlyph}</div>}
               <Button size="lg" variant="primary" disabled={busy} onClick={()=>run(()=>start())}>{justFinished ? 'Keep going' : 'Begin practice'}</Button>
             </Card>;
-          })()}<div className="two-col"><Card><h2>{stats.xp} / {goal} XP today</h2><progress aria-label="Daily XP" value={stats.xp} max={Math.max(goal,stats.xp)}/><p>{stats.xp>=goal?'Today’s goal is done — anything more is a bonus.':'XP records practice, not mastery.'}</p></Card><Card><h2>Your notebook is local</h2><p>{ready?'Ready offline for installed content. Audio coverage is incomplete.':'Offline readiness is not confirmed. Verify content installation in Settings.'}</p><Link to="/characters">Explore your characters →</Link></Card></div></>}
+          })()}<div className="two-col"><Card><h2>{stats.xp} / {goal} XP today</h2><progress aria-label="Daily XP" value={stats.xp} max={Math.max(goal,stats.xp)}/><p>{stats.xp>=goal?'Today’s goal is done — anything more is a bonus.':'XP records practice, not mastery.'}{dailyStreak(stats.daily,today)>=2&&` ${dailyStreak(stats.daily,today)} day streak.`}</p></Card><Card><h2>Your notebook is local</h2><p>{ready?'Ready offline for installed content. Audio coverage is incomplete.':'Offline readiness is not confirmed. Verify content installation in Settings.'}</p><Link to="/characters">Explore your characters →</Link></Card></div></>}
       </>}
       {route.section==='characters'&&<CharactersPage services={s} skills={stats.skills} busy={busy} focus={id=>run(()=>start(id))}/>}
       {route.section==='progress'&&<ProgressPage services={s}/>}
       {route.section==='settings'&&<SettingsPage services={s} settings={settings} save={next=>run(()=>save(next))} busy={busy} run={run} ready={ready} install={install} installPacks={installPacks}/>}
       {route.section==='about'&&<About services={s}/>}
       </div>}
-      <footer className="footnote">Kansei · local by default · Kana practice preview. Draft kanji/vocabulary packs included; course integration pending.</footer>
+      {session?.status!=='active'&&<footer className="footnote">Kansei · local by default · Kana practice preview. Draft kanji/vocabulary packs included; course integration pending.</footer>}
     </Shell>
   </ThemeProvider>;
 }
